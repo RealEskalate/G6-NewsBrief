@@ -118,7 +118,6 @@ func (uc *UserUsecase) Register(ctx context.Context, username, email, password, 
 		Email:        email,
 		PasswordHash: hashedPassword,
 		Role:         entity.UserRoleUser,
-		IsActive:     !uc.config.GetSendActivationEmail(), // Activate user immediately if email verification is off
 		AvatarURL:    nil,
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
@@ -164,7 +163,7 @@ func (uc *UserUsecase) Login(ctx context.Context, email, password string) (*enti
 	}
 
 	// Check if the user's email is active/verified
-	if !user.IsActive {
+	if !user.IsVerified {
 		return nil, "", "", errors.New("account not active. Please verify your email")
 	}
 
@@ -534,10 +533,6 @@ func (uc *UserUsecase) UpdateProfile(ctx context.Context, userID string, updates
 			if avatarURL, ok := v.(string); ok {
 				user.AvatarURL = &avatarURL
 			}
-		case "is_active":
-			if isActive, ok := v.(bool); ok {
-				user.IsActive = isActive
-			}
 		}
 	}
 	user.UpdatedAt = time.Now()
@@ -587,7 +582,6 @@ func (uc *UserUsecase) LoginWithOAuth(ctx context.Context, firstName, lastName, 
 			PasswordHash: "", // No password for OAuth users
 			Role:         entity.UserRoleUser,
 			IsVerified:   true,
-			IsActive:     true, // OAuth users are active by default
 			AvatarURL:    nil,
 			CreatedAt:    time.Now(),
 			UpdatedAt:    time.Now(),

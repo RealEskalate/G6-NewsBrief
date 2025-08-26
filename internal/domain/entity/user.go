@@ -11,7 +11,6 @@ type User struct {
 	Email        string    `bson:"email" json:"email"`
 	PasswordHash string    `bson:"password_hash" json:"-"`
 	Role         UserRole  `bson:"role" json:"role"`
-	IsActive     bool      `bson:"is_active" json:"is_active"`
 	IsVerified   bool      `bson:"is_verified" json:"is_verified"`
 	CreatedAt    time.Time `bson:"created_at" json:"created_at"`
 	UpdatedAt    time.Time `bson:"updated_at" json:"updated_at"`

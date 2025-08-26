@@ -66,7 +66,6 @@ func (h *EmailHandler) HandleVerifyEmailToken(ctx *gin.Context) {
 		return
 	}
 	user.IsVerified = true
-	user.IsActive = true
 	// update the user
 	if _, err := h.userRepository.UpdateUser(ctx, user); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user"})
