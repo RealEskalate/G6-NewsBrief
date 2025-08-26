@@ -1,11 +1,13 @@
 class User {
-  String email;
-  String password;
-  List<String> interests;
+  final String fullName;
+  final String email;
+  final String password;
+  List<String>? interests;
 
   User({
+    required this.fullName,
     required this.email,
     required this.password,
-    List<String>? interests,
-  }) : interests = interests ?? [];
+    this.interests,
+  });
 }

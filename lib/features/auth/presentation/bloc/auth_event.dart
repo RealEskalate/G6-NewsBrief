@@ -6,13 +6,14 @@ abstract class AuthEvent extends Equatable {
 }
 
 class SignUpEvent extends AuthEvent {
+  final String fullName;
   final String email;
   final String password;
 
-  SignUpEvent(this.email, this.password);
+  SignUpEvent(this.fullName, this.email, this.password);
 
   @override
-  List<Object?> get props => [email, password];
+  List<Object?> get props => [fullName, email, password];
 }
 
 class LoadInterestsEvent extends AuthEvent {}
