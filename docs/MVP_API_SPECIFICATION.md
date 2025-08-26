@@ -4,24 +4,24 @@
 
 **Audience:** Frontend developers building the MVP  
 **Scope:** Essential endpoints for 2-week implementation  
-**Architecture:** 2 microservices (Core API + Scraper) + RabbitMQ + VectorDB
+**Architecture:** 2 microservices (Core API + Scraper) + VectorDB + MongoDB
 
 ---
 
 ## 🌐 MVP Service Architecture (2-Service Model)
 
-| Service                  | URL                       | Responsibility                                     |
-| ------------------------ | ------------------------- | -------------------------------------------------- |
-| **Core API** (Go Gin)    | `http://localhost:8080`   | User Auth, Feed, Stories, Summaries, Notifications |
-| **Scraper** (FastAPI)    | `http://localhost:8001`   | Content extraction from URLs                       |
-| **RabbitMQ**             | `amqp://localhost:5672`   | Message broker for asynchronous scraping           |
-| **Vector DB** (Pinecone) | `https://api.pinecone.io` | Stores vector embeddings for semantic search       |
+| Service                  | URL                         | Responsibility                                     |
+| ------------------------ | --------------------------- | -------------------------------------------------- |
+| **Core API** (Go Gin)    | `http://localhost:8080`     | User Auth, Feed, Stories, Summaries, Notifications |
+| **Scraper** (FastAPI)    | `http://localhost:8001`     | Content extraction from URLs (HTTP)                |
+| **Vector DB** (Pinecone) | `https://api.pinecone.io`   | Stores vector embeddings for semantic search       |
+| **MongoDB**              | `mongodb://localhost:27017` | Primary data store                                 |
 
 ### **Architectural Changes:**
 
-- **Monolithic Core API**: The Core API now handles all primary business logic, including authentication, user management, content processing (summarization), and notifications, simplifying deployment.
-- **Dedicated Scraper**: The Scraper remains a separate service to isolate external dependencies and Python-specific libraries.
-- **Asynchronous Processing**: RabbitMQ is used to decouple the Core API from the Scraper. The Core API requests a scrape, and the Scraper pushes results back. The Core API also uses RabbitMQ internally for background jobs like summarization and sending notifications.
+- Eliminated RabbitMQ for MVP: Core API directly calls Scraper over HTTP and processes results synchronously.
+- Core API remains a monolith for auth, user, stories, summarization, briefs, and notifications.
+- Embeddings are generated and stored by the Core API (Scraper returns clean text and metadata).
 
 ---
 
@@ -411,6 +411,50 @@ Update user preferences, including notification settings.
 }
 ```
 
+### **PUT /v1/me/topics** 🔐
+
+Replace the entire list of selected topics for the user.
+
+**Request Body:**
+
+```json
+{ "topics": ["economy", "agriculture", "technology"] }
+```
+
+**Success Response (200):**
+
+```json
+{
+  "topics": ["economy", "agriculture", "technology"],
+  "updated_at": "2025-08-25T10:30:00Z"
+}
+```
+
+### **PATCH /v1/me/topics** 🔐
+
+Add or remove specific topics from the user's selection.
+
+**Request Body (add):**
+
+```json
+{ "action": "add", "topics": ["politics"] }
+```
+
+**Request Body (remove):**
+
+```json
+{ "action": "remove", "topics": ["technology"] }
+```
+
+**Success Response (200):**
+
+```json
+{
+  "topics": ["economy", "agriculture", "politics"],
+  "updated_at": "2025-08-25T10:31:00Z"
+}
+```
+
 ### **GET /v1/me/subscriptions** 🔐
 
 Get user's source subscriptions.
@@ -496,7 +540,7 @@ Change user password.
 
 ---
 
-## 큐 Daily Briefs & Notifications
+## Daily Briefs & Notifications
 
 ### **GET /v1/briefs** 🔐
 
@@ -575,18 +619,13 @@ Mark one or more notifications as read.
 
 ---
 
-## 🔧 Asynchronous Operations (RabbitMQ)
+## 🔁 Synchronous Scraping Flow (No Queue)
 
-The Core API uses RabbitMQ to delegate scraping to the Scraper service and to handle its own background tasks.
+The Core API calls the Scraper via HTTP and processes the response inline. This keeps deployment simple on Render and avoids managing a message broker.
 
-### **Scraping Queue**
+- Core API -> Scraper: `POST {SCRAPER_BASE_URL}/v1/scrape`
 
-- **Queue**: `scrape_requests`
-- **Publisher**: Core API
-- **Consumer**: Scraper Service
-- **Action**: Core API requests a URL to be scraped.
-
-**Sample Message:**
+**Request:**
 
 ```json
 {
@@ -595,31 +634,19 @@ The Core API uses RabbitMQ to delegate scraping to the Scraper service and to ha
 }
 ```
 
-### **Scraping Results Queue**
-
-- **Queue**: `scrape_results`
-- **Publisher**: Scraper Service
-- **Consumer**: Core API
-- **Action**: Scraper service sends back the scraped content and vector embeddings.
-
-**Sample Message:**
+**Response:**
 
 ```json
 {
-  "story_id": "507f1f77bcf86cd799439012",
-  "text": "The Ethiopian government today announced...",
   "title": "Ethiopia launches new agricultural initiative",
-  "vector_embedding": [0.1, 0.2, ...]
+  "text": "The Ethiopian government today announced...",
+  "published_at": "2025-08-25T09:10:00Z",
+  "author": "...",
+  "language": "en"
 }
 ```
 
-### **Internal Core API Queues**
-
-The Core API also uses queues internally for its own background jobs.
-
-- **`summarize_tasks`**: Core API consumes scraped text to generate summaries.
-- **`brief_generation_tasks`**: A scheduled job in the Core API triggers the creation of daily briefs.
-- **`notification_tasks`**: Core API sends notifications (email, push) after events like brief generation.
+- Core API actions: sanitize -> summarize (Gemini) -> embed and upsert to Pinecone -> persist story to MongoDB.
 
 ---
 
@@ -634,22 +661,15 @@ services:
     ports:
       - "27017:27017"
 
-  rabbitmq:
-    image: rabbitmq:3-management
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-
   core-api:
     build: ./core-api
     ports:
       - "8080:8080"
     depends_on:
       - mongodb
-      - rabbitmq
     environment:
       MONGODB_URI: "mongodb://mongodb:27017/newsbrief"
-      RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
+      SCRAPER_BASE_URL: "http://scraper:8001"
       PINECONE_API_KEY: ${PINECONE_API_KEY}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
 
@@ -657,11 +677,9 @@ services:
     build: ./scraper
     ports:
       - "8001:8001"
-    depends_on:
-      - rabbitmq
     environment:
-      RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
-      PINECONE_API_KEY: ${PINECONE_API_KEY}
+      # Scraper does not need Pinecone in this simplified flow
+      LOG_LEVEL: info
 ```
 
 ---
@@ -696,4 +714,4 @@ All endpoints use consistent error format:
 
 ---
 
-This MVP API specification provides **everything needed for the 2-week implementation** with the consolidated 2-service architecture.
+This MVP API specification provides everything needed for the 2-week implementation with the consolidated 2-service architecture and a simple, queue-less scraping flow.
