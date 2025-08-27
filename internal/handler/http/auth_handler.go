@@ -60,7 +60,7 @@ func (h *AuthHandler) HandleGoogleCallback(ctx *gin.Context) {
 		ctx.String(http.StatusUnauthorized, "invalid CSRF state token\n")
 		return
 	}
-	ctx.SetCookie("oauthState", "", -1, "/", "localhost", false, true)
+	ctx.SetCookie("oauthState", "", -1, "/", "", true, true)
 
 	code := ctx.Query("code")
 	if code == "" {
