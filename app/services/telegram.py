@@ -20,6 +20,10 @@ async def fetch_telegram(channels: List[str], limit: int) -> List[Dict]:
     client = TelegramClient('anon', api_id, api_hash)  # Anonymous session for public access
     await client.start()
     
+    # Check if the user is already authorized
+    if not await client.is_user_authorized():
+        await client.start()
+        
     messages = []
     for channel in channels:
         entity = await client.get_entity(channel)

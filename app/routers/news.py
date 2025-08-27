@@ -23,7 +23,7 @@ async def gather_news(
     raw_data = []
     try:
         if crawl_req:
-            raw_data.extend(await crawl_news(crawl_req.urls, crawl_req.query))
+            raw_data.extend(await crawl_news(crawl_req.urls, crawl_req.query, vector_db))
         if api_req:
             raw_data.extend(await fetch_news_api(api_req))
         if tg_req:
