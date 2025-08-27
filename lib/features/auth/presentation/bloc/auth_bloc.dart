@@ -5,7 +5,6 @@ import 'auth_state.dart';
 import '../../domain/usecases/get_interests_usecase.dart';
 import '../../domain/usecases/sign_up_usecase.dart';
 
-
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final SignUpUseCase signUpUseCase;
   final GetInterestsUseCase getInterestsUseCase;
@@ -19,7 +18,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<SignUpEvent>((event, emit) async {
       emit(AuthLoading());
       try {
-        _user = User(email: event.email, password: event.password);
+        _user = User(
+          fullName: event.fullName,
+          email: event.email,
+          password: event.password,
+        );
         await signUpUseCase(_user!);
         emit(AuthSuccess(_user!));
       } catch (e) {

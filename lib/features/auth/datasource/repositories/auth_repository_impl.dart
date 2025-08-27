@@ -17,8 +17,8 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<void> signUp(User user) async {
     try {
-      if (user.email.isEmpty || user.password.isEmpty) {
-        throw Exception('Email and password cannot be empty');
+      if (user.fullName.isEmpty || user.email.isEmpty || user.password.isEmpty) {
+        throw Exception('Full Name, Email, and Password cannot be empty');
       }
       _users.add(user);
       await Future.delayed(const Duration(seconds: 1));
@@ -26,6 +26,7 @@ class AuthRepositoryImpl implements AuthRepository {
       throw ServerException(e.toString());
     }
   }
+
 
   @override
   Future<List<String>> getAvailableInterests() async {
