@@ -5,14 +5,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"net/http"
-	"os"
-	"strings"
-
 	"github.com/RealEskalate/G6-NewsBrief/internal/domain/contract"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
+	"net/http"
+	"os"
 )
 
 type AuthHandler struct {
@@ -60,7 +58,8 @@ func (h *AuthHandler) HandleGoogleCallback(ctx *gin.Context) {
 		ctx.String(http.StatusUnauthorized, "invalid CSRF state token\n")
 		return
 	}
-	ctx.SetCookie("oauthState", "", -1, "/", "localhost", false, true)
+	cookieSecure := os.Getenv("OAUTH2_SET_COOKIE_SECURE")
+	ctx.SetCookie("oauthState", "", -1, "/", "", cookieSecure == "true", true) // Secure cookie == 'bool' is used to set default value
 
 	code := ctx.Query("code")
 	if code == "" {
@@ -91,16 +90,9 @@ func (h *AuthHandler) HandleGoogleCallback(ctx *gin.Context) {
 		ctx.String(http.StatusInternalServerError, fmt.Sprintf("Failed to decode user info: %v\n", err))
 	}
 
-	nameParts := strings.Split(userInfo.Name, " ")
-	var fName, lName string
-	if len(nameParts) >= 1 {
-		fName = nameParts[0]
-	}
-	if len(nameParts) == 2 {
-		lName = nameParts[1]
-	}
+	fullname := userInfo.Name
 
-	accessToken, refershToken, err := h.UserUseCase.LoginWithOAuth(requestCtx, fName, lName, userInfo.Email)
+	accessToken, refreshToken, err := h.UserUseCase.LoginWithOAuth(requestCtx, fullname, userInfo.Email)
 
 	if err != nil {
 		ctx.String(http.StatusInternalServerError, fmt.Sprintf("failed to login with OAuth: %v\n", err))
@@ -110,6 +102,6 @@ func (h *AuthHandler) HandleGoogleCallback(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"message":       "login successful",
 		"access token":  accessToken,
-		"refresh token": refershToken,
+		"refresh token": refreshToken,
 	})
 }
