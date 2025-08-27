@@ -16,10 +16,14 @@ class SignupLandingPage extends StatelessWidget {
         child: BlocConsumer<AuthBloc, AuthState>(
           listener: (context, state) {
             if (state is AuthSuccess) {
-              // Navigate to Interests page after Google signup
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (_) => const InterestsScreen()),
+                MaterialPageRoute(
+                  builder: (_) => BlocProvider.value(
+                    value: context.read<AuthBloc>(),
+                    child: const InterestsScreen(),
+                  ),
+                ),
               );
             } else if (state is AuthFailure) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -37,8 +41,6 @@ class SignupLandingPage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Spacer(),
-
-                  // Title
                   const Text(
                     "NewsBrief",
                     style: TextStyle(
@@ -50,8 +52,6 @@ class SignupLandingPage extends StatelessWidget {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
-
-                  // Subtitle
                   const Text(
                     "From headings to understanding",
                     style: TextStyle(
@@ -63,8 +63,6 @@ class SignupLandingPage extends StatelessWidget {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 12),
-
-                  // Description
                   const Text(
                     "Discover topics that deepen your understanding",
                     style: TextStyle(
@@ -76,8 +74,6 @@ class SignupLandingPage extends StatelessWidget {
                     textAlign: TextAlign.center,
                   ),
                   const Spacer(),
-
-                  // Sign up with Email
                   SizedBox(
                     width: double.infinity,
                     height: 50,
@@ -86,7 +82,10 @@ class SignupLandingPage extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const SignupEmailPage(),
+                            builder: (_) => BlocProvider.value(
+                              value: context.read<AuthBloc>(),
+                              child: const SignupEmailPage(),
+                            ),
                           ),
                         );
                       },
@@ -111,8 +110,6 @@ class SignupLandingPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-
-                  // Sign up with Google
                   SizedBox(
                     width: double.infinity,
                     height: 50,
@@ -123,7 +120,14 @@ class SignupLandingPage extends StatelessWidget {
                         width: 24,
                       ),
                       label: state is AuthLoading
-                          ? const CircularProgressIndicator()
+                          ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.black,
+                        ),
+                      )
                           : const Flexible(
                         child: Text(
                           "Sign up with Google",
@@ -141,14 +145,16 @@ class SignupLandingPage extends StatelessWidget {
                         ),
                         side: const BorderSide(color: Colors.black),
                       ),
-                      onPressed: () {
-                        context.read<AuthBloc>().add(SignUpWithGoogleEvent());
+                      onPressed: state is AuthLoading
+                          ? null
+                          : () {
+                        context
+                            .read<AuthBloc>()
+                            .add(SignUpWithGoogleEvent());
                       },
                     ),
                   ),
                   const SizedBox(height: 20),
-
-                  // Already have an account
                   const Text(
                     "Already have an account? Login",
                     style: TextStyle(
