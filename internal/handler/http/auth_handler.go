@@ -46,7 +46,7 @@ func (h *AuthHandler) HandleGoogleLogin(ctx *gin.Context) {
 	b := make([]byte, 16)
 	rand.Read(b)
 	oauthStateString := base64.URLEncoding.EncodeToString(b)
-	ctx.SetCookie("oauthState", oauthStateString, 300, "/", "localhost", false, true)
+	ctx.SetCookie("oauthState", oauthStateString, 300, "/", "", false, true)
 
 	url := h.googleOauthConfig().AuthCodeURL(oauthStateString)
 	ctx.Redirect(http.StatusTemporaryRedirect, url)
