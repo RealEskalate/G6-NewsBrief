@@ -19,6 +19,12 @@ func NewSourceRepository(db *mongo.Database) *sourceRepository {
 	}
 }
 
+// create sources
+func (r *sourceRepository) Create(ctx context.Context, source *entity.Source) error {
+	_, err := r.collection.InsertOne(ctx, source)
+	return err
+}
+
 // Exists checks if a source with the given key exists. (Your code was perfect)
 func (r *sourceRepository) Exists(ctx context.Context, key string) (bool, error) {
 	count, err := r.collection.CountDocuments(ctx, bson.M{"key": key})

@@ -102,16 +102,6 @@ func (uc *UserUsecase) Register(ctx context.Context, username, email, password, 
 		return nil, fmt.Errorf("failed to process password")
 	}
 
-	// Initialize firstName and lastName as pointers, setting to nil if empty
-	var pFirstName *string
-	if firstName != "" {
-		pFirstName = &firstName
-	}
-	var pLastName *string
-	if lastName != "" {
-		pLastName = &lastName
-	}
-
 	// Create new user entity, initializing new fields to their zero values or nil
 	user := &entity.User{
 		ID:           uc.uuidGenerator.NewUUID(),
@@ -119,11 +109,8 @@ func (uc *UserUsecase) Register(ctx context.Context, username, email, password, 
 		Email:        email,
 		PasswordHash: hashedPassword,
 		Role:         entity.UserRoleUser,
-		AvatarURL:    nil,
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
-		FirstName:    pFirstName,
-		LastName:     pLastName,
 	}
 
 	// Save user to database
@@ -522,18 +509,6 @@ func (uc *UserUsecase) UpdateProfile(ctx context.Context, userID string, updates
 			if username, ok := v.(string); ok {
 				user.Username = username
 			}
-		case "first_name":
-			if firstName, ok := v.(string); ok {
-				user.FirstName = &firstName
-			}
-		case "last_name":
-			if lastName, ok := v.(string); ok {
-				user.LastName = &lastName
-			}
-		case "avatar_url":
-			if avatarURL, ok := v.(string); ok {
-				user.AvatarURL = &avatarURL
-			}
 		}
 	}
 	user.UpdatedAt = time.Now()
@@ -566,15 +541,6 @@ func (uc *UserUsecase) LoginWithOAuth(ctx context.Context, firstName, lastName, 
 
 	// If user does not exist, create a new one
 	if user == nil {
-		// Create a new user entity
-		var pFirstName *string
-		if firstName != "" {
-			pFirstName = &firstName
-		}
-		var pLastName *string
-		if lastName != "" {
-			pLastName = &lastName
-		}
 
 		newUser := &entity.User{
 			ID:           uc.uuidGenerator.NewUUID(),
@@ -583,11 +549,8 @@ func (uc *UserUsecase) LoginWithOAuth(ctx context.Context, firstName, lastName, 
 			PasswordHash: "", // No password for OAuth users
 			Role:         entity.UserRoleUser,
 			IsVerified:   true,
-			AvatarURL:    nil,
 			CreatedAt:    time.Now(),
 			UpdatedAt:    time.Now(),
-			FirstName:    pFirstName,
-			LastName:     pLastName,
 		}
 
 		// Save the new user to the database
@@ -659,17 +622,6 @@ func (uc *UserUsecase) UpdatePreferences(ctx context.Context, userID string, req
 		return nil, err
 	}
 
-	// 2. Selectively update the preferences based on the request.
-	// We check if the pointers in the DTO are non-nil to allow partial updates.
-	if req.Lang != nil {
-		user.Preferences.Lang = *req.Lang
-	}
-	if req.BriefType != nil {
-		user.Preferences.BriefType = *req.BriefType
-	}
-	if req.DataSaver != nil {
-		user.Preferences.DataSaver = *req.DataSaver
-	}
 	// Note: Topic and subscription updates are handled by their dedicated usecases.
 
 	// 3. Save the updated user object back to the repository.
