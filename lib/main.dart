@@ -1,4 +1,3 @@
-// main.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -7,7 +6,8 @@ import 'features/auth/domain/usecases/get_interests_usecase.dart';
 import 'features/auth/domain/usecases/sign_up_usecase.dart';
 import 'features/auth/domain/usecases/sign_up_with_google_usecase.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
-import 'features/auth/presentation/pages/signup.dart';
+import 'features/auth/presentation/pages/signup_email.dart';
+import 'features/auth/presentation/pages/signup_landing.dart';
 
 void main() {
   final authRepository = AuthRepositoryImpl();
@@ -34,7 +34,12 @@ class NewsBriefApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         useMaterial3: true,
       ),
-      home: const SignUpScreen(),
+        routes: {
+          "/signup-landing": (context) => const SignupLandingPage(),
+          "/signup-email": (context) => const SignupEmailPage(),
+        },
+
+        home: const SignupLandingPage(),
       debugShowCheckedModeBanner: false,
     );
   }
