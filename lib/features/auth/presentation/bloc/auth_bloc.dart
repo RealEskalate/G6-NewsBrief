@@ -1,19 +1,23 @@
+// feature/auth/presentation/bloc/auth_bloc.dart
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/user.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 import '../../domain/usecases/get_interests_usecase.dart';
 import '../../domain/usecases/sign_up_usecase.dart';
+import '../../domain/usecases/sign_up_with_google_usecase.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final SignUpUseCase signUpUseCase;
   final GetInterestsUseCase getInterestsUseCase;
+  final SignUpWithGoogleUseCase signUpWithGoogleUseCase;
 
   User? _user;
 
   AuthBloc({
     required this.signUpUseCase,
     required this.getInterestsUseCase,
+    required this.signUpWithGoogleUseCase,
   }) : super(AuthInitial()) {
     on<SignUpEvent>((event, emit) async {
       emit(AuthLoading());
@@ -24,6 +28,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           password: event.password,
         );
         await signUpUseCase(_user!);
+        emit(AuthSuccess(_user!));
+      } catch (e) {
+        emit(AuthFailure(e.toString()));
+      }
+    });
+
+    // Google signup handler
+    on<SignUpWithGoogleEvent>((event, emit) async {
+      emit(AuthLoading());
+      try {
+        _user = await signUpWithGoogleUseCase();
         emit(AuthSuccess(_user!));
       } catch (e) {
         emit(AuthFailure(e.toString()));

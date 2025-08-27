@@ -5,4 +5,5 @@ abstract class AuthRepository {
   Future<List<String>> getAvailableInterests();
   User? get lastUser;
   void updateLastUser(User user);
+  Future<User> signUpWithGoogle();
 }

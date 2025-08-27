@@ -46,4 +46,20 @@ class AuthRepositoryImpl implements AuthRepository {
     if (_users.isNotEmpty) _users[_users.length - 1] = user;
     else _users.add(user);
   }
+
+  @override
+  Future<User> signUpWithGoogle() async {
+    try {
+      await Future.delayed(const Duration(seconds: 1));
+      final user = User(
+        fullName: "Google User",
+        email: "dummy.google.user@gmail.com",
+        password: "google_dummy_password", // not real, just placeholder
+      );
+      _users.add(user);
+      return user;
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
 }

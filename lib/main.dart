@@ -1,9 +1,11 @@
+// main.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'features/auth/datasource/repositories/auth_repository_impl.dart';
 import 'features/auth/domain/usecases/get_interests_usecase.dart';
 import 'features/auth/domain/usecases/sign_up_usecase.dart';
+import 'features/auth/domain/usecases/sign_up_with_google_usecase.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/pages/signup.dart';
 
@@ -15,12 +17,12 @@ void main() {
       create: (_) => AuthBloc(
         signUpUseCase: SignUpUseCase(authRepository),
         getInterestsUseCase: GetInterestsUseCase(authRepository),
+        signUpWithGoogleUseCase: SignUpWithGoogleUseCase(authRepository), // NEW
       ),
       child: const NewsBriefApp(),
     ),
   );
 }
-
 class NewsBriefApp extends StatelessWidget {
   const NewsBriefApp({super.key});
 

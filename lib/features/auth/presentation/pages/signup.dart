@@ -16,7 +16,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController fullNameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+  TextEditingController();
   bool agreeToTerms = false;
 
   @override
@@ -32,7 +33,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
               const Text(
                 'NewsBrief',
                 style: TextStyle(
-                    fontSize: 32, fontWeight: FontWeight.bold, color: Colors.black),
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black),
               ),
               const SizedBox(height: 40),
               Container(
@@ -45,11 +48,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 child: Column(
                   children: [
                     const Text('Sign up with email',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 24),
                     TextField(
                       controller: fullNameController,
-                      decoration: const InputDecoration(hintText: 'Full Name'),
+                      decoration:
+                      const InputDecoration(hintText: 'Full Name'),
                     ),
                     const SizedBox(height: 16),
                     TextField(
@@ -65,7 +70,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     const SizedBox(height: 16),
                     TextField(
                       controller: confirmPasswordController,
-                      decoration: const InputDecoration(hintText: 'Confirm Password'),
+                      decoration:
+                      const InputDecoration(hintText: 'Confirm Password'),
                       obscureText: true,
                     ),
                     const SizedBox(height: 16),
@@ -88,6 +94,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
+
+                    /// BlocConsumer handles both email signup and Google signup states
                     BlocConsumer<AuthBloc, AuthState>(
                       listener: (context, state) {
                         if (state is AuthSuccess) {
@@ -106,41 +114,72 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         }
                       },
                       builder: (context, state) {
-                        return SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: agreeToTerms
-                                ? () {
-                              if (passwordController.text !=
-                                  confirmPasswordController.text) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content:
-                                    Text('Passwords do not match'),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
-                                return;
-                              }
+                        return Column(
+                          children: [
+                            /// Email Signup Button
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: agreeToTerms
+                                    ? () {
+                                  if (passwordController.text !=
+                                      confirmPasswordController.text) {
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                            'Passwords do not match'),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                    return;
+                                  }
 
-                              context.read<AuthBloc>().add(SignUpEvent(
-                                fullNameController.text,
-                                emailController.text,
-                                passwordController.text,
-                              ));
-                            }
-                                : null,
-                            style: ElevatedButton.styleFrom(
-                                padding:
-                                const EdgeInsets.symmetric(vertical: 16)),
-                            child: state is AuthLoading
-                                ? const CircularProgressIndicator(
-                                color: Colors.white)
-                                : const Text('Sign Up'),
-                          ),
+                                  context.read<AuthBloc>().add(
+                                    SignUpEvent(
+                                      fullNameController.text,
+                                      emailController.text,
+                                      passwordController.text,
+                                    ),
+                                  );
+                                }
+                                    : null,
+                                style: ElevatedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 16),
+                                ),
+                                child: state is AuthLoading
+                                    ? const CircularProgressIndicator(
+                                    color: Colors.white)
+                                    : const Text('Sign Up'),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+
+                            /// Google Signup Button
+                            SizedBox(
+                              width: double.infinity,
+                              child: OutlinedButton.icon(
+                                icon: const Icon(
+                                  Icons.g_mobiledata,
+                                  color: Colors.red,
+                                  size: 28,
+                                ),
+                                onPressed: () {
+                                  context
+                                      .read<AuthBloc>()
+                                      .add(SignUpWithGoogleEvent());
+                                },
+                                label: state is AuthLoading
+                                    ? const CircularProgressIndicator()
+                                    : const Text("Sign Up with Google"),
+                              ),
+                            ),
+                          ],
                         );
                       },
                     ),
+
                     const SizedBox(height: 16),
                     GestureDetector(
                       onTap: () {
@@ -149,7 +188,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       child: const Text(
                         'Already have an account? Log in',
                         style: TextStyle(
-                            color: Colors.blue, fontWeight: FontWeight.w600),
+                            color: Colors.blue,
+                            fontWeight: FontWeight.w600),
                       ),
                     ),
                   ],
