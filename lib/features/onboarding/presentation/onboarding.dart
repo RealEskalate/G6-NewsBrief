@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-
+import 'package:google_fonts/google_fonts.dart';
+import 'package:animated_text_kit/animated_text_kit.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final VoidCallback onFinish;
 
   const OnboardingScreen({super.key, required this.onFinish});
+
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
@@ -12,26 +14,28 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _controller = PageController();
   int _currentPage = 0;
+  bool _acceptedTerms = false;
 
   final List<_OnboardingPageData> _pages = [
     _OnboardingPageData(
       image: 'assets/images/onboarding_1.png',
       title: 'Welcome to NewsBrief!',
-      description: "Stay informed in Amharic or English.",
+      description:
+          "Stay informed with concise news summaries in Amharic or English.",
       buttonText: 'Continue',
+      padding: EdgeInsets.all(40),
     ),
     _OnboardingPageData(
-      image: 'assets/images/onboarding_2.png',
+      image: '',
       title: 'News made simple',
       description:
-          "Read or listen to quick summaries.",
+          "Summarized in Amharic & English • Audio playback • Chatbot integration",
       buttonText: 'Next',
     ),
     _OnboardingPageData(
-      image: 'assets/images/onboarding_3.png',
-      title: 'Stay updated, anywhere',
-      description:
-          "Access news even with low data or no internet.",
+      image: '',
+      title: 'Always in the Loop',
+      description: "Never miss a headline, even without internet connection.",
       buttonText: 'Get started',
       isLast: true,
     ),
@@ -44,7 +48,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         curve: Curves.easeInOut,
       );
     } else {
-      widget.onFinish();
+      if (_acceptedTerms) {
+        widget.onFinish();
+      }
     }
   }
 
@@ -76,6 +82,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       return _OnboardingPage(
                         data: page,
                         onButtonPressed: _nextPage,
+                        acceptedTerms: _acceptedTerms,
+                        onTermsChanged: (val) {
+                          setState(() {
+                            _acceptedTerms = val;
+                          });
+                        },
                       );
                     },
                   ),
@@ -92,9 +104,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       width: _currentPage == index ? 24 : 8,
                       height: 8,
                       decoration: BoxDecoration(
-                        color: _currentPage == index
-                            ? Colors.white
-                            : Colors.black,
+                        color:
+                            _currentPage == index ? Colors.white : Colors.black,
                         borderRadius: BorderRadius.circular(4),
                       ),
                     );
@@ -115,6 +126,7 @@ class _OnboardingPageData {
   final String description;
   final String buttonText;
   final bool isLast;
+  final EdgeInsets padding;
 
   const _OnboardingPageData({
     required this.image,
@@ -122,63 +134,195 @@ class _OnboardingPageData {
     required this.description,
     required this.buttonText,
     this.isLast = false,
+    this.padding = EdgeInsets.zero,
   });
 }
 
-class _OnboardingPage extends StatelessWidget {
+class _OnboardingPage extends StatefulWidget {
   final _OnboardingPageData data;
   final VoidCallback onButtonPressed;
+  final bool acceptedTerms;
+  final ValueChanged<bool> onTermsChanged;
 
-  const _OnboardingPage({required this.data, required this.onButtonPressed});
+  const _OnboardingPage({
+    required this.data,
+    required this.onButtonPressed,
+    required this.acceptedTerms,
+    required this.onTermsChanged,
+  });
+
+  @override
+  State<_OnboardingPage> createState() => _OnboardingPageState();
+}
+
+class _OnboardingPageState extends State<_OnboardingPage> {
+  bool _showTitle = false;
+  bool _showDescription = false;
+  bool _showFeatures = false;
+  double _imageOpacity = 0;
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.data.image.isNotEmpty) {
+      Future.delayed(const Duration(milliseconds: 1200), () {
+        setState(() {
+          _imageOpacity = 1;
+          _showTitle = true;
+        });
+      });
+    } else {
+      _showTitle = true;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final data = widget.data;
+
     return Column(
       children: [
         const SizedBox(height: 32),
-        // Image
         SizedBox(
-          height: 490,
-          child: Image.asset(
-            data.image,
-            fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) =>
-                const Icon(Icons.image, size: 120, color: Colors.grey),
-          ),
+          height: 300,
+          child: data.image.isNotEmpty
+              ? Padding(
+                  padding: data.padding,
+                  child: TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0, end: _imageOpacity),
+                    duration: const Duration(seconds: 1),
+                    builder: (context, value, child) {
+                      return Opacity(
+                        opacity: value,
+                        child: Transform.scale(
+                          scale: 0.9 + (0.1 * value),
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: Image.asset(
+                      data.image,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Icon(Icons.image,
+                              size: 120, color: Colors.grey),
+                    ),
+                  ),
+                )
+              : const SizedBox.shrink(),
         ),
         const SizedBox(height: 24),
-        // Title
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Text(
-            data.title,
-            textAlign: TextAlign.center,
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(color: Colors.white),
+
+        if (_showTitle)
+          AnimatedTextKit(
+            isRepeatingAnimation: false,
+            animatedTexts: [
+              TyperAnimatedText(
+                data.title,
+                textStyle: GoogleFonts.merriweather(
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+                speed: const Duration(milliseconds: 80),
+              ),
+            ],
+            onFinished: () {
+              setState(() {
+                _showDescription = true;
+                if (data.title == "News made simple") {
+                  _showFeatures = true;
+                }
+              });
+            },
           ),
-        ),
         const SizedBox(height: 16),
-        // Description
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32.0),
-          child: Text(
-            data.description,
-            textAlign: TextAlign.center,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: Colors.black),
-          ),
-        ),
+
+        if (_showDescription)
+          data.title == "News made simple"
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    if (_showFeatures) ...[
+                      _AnimatedFeatureRow(
+                        icon: Icons.language,
+                        text: "Summarized in Amharic & English",
+                        delay: 0,
+                      ),
+                      const SizedBox(height: 12),
+                      _AnimatedFeatureRow(
+                        icon: Icons.volume_up,
+                        text: "Audio playback",
+                        delay: 300,
+                      ),
+                      const SizedBox(height: 12),
+                      _AnimatedFeatureRow(
+                        icon: Icons.chat,
+                        text: "Chatbot integration",
+                        delay: 600,
+                      ),
+                    ],
+                  ],
+                )
+              : _DescriptionAnimated(text: data.description),
+
         const Spacer(),
-        // Button
+
+        if (data.isLast)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Checkbox(
+                  value: widget.acceptedTerms,
+                  onChanged: (val) => widget.onTermsChanged(val ?? false),
+                  checkColor: Colors.black,
+                  activeColor: Colors.white,
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: const Text("Terms & Conditions"),
+                        content: const Text(
+                          "Here you can display your Terms & Conditions in detail...",
+                          textAlign: TextAlign.justify,
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            child: const Text("Close"),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  child: Text(
+                    " I agree to the Terms and Conditions",
+                    style: GoogleFonts.lora(
+                      fontSize: 14,
+                      color: Colors.white,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24),
           child: SizedBox(
             width: double.infinity,
             height: 48,
             child: ElevatedButton(
-              onPressed: onButtonPressed,
+              onPressed: widget.data.isLast && !widget.acceptedTerms
+                  ? null
+                  : widget.onButtonPressed,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: Colors.black,
@@ -205,6 +349,85 @@ class _OnboardingPage extends StatelessWidget {
               ),
             ),
           ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AnimatedFeatureRow extends StatefulWidget {
+  final IconData icon;
+  final String text;
+  final int delay;
+
+  const _AnimatedFeatureRow({
+    required this.icon,
+    required this.text,
+    required this.delay,
+  });
+
+  @override
+  State<_AnimatedFeatureRow> createState() => _AnimatedFeatureRowState();
+}
+
+class _AnimatedFeatureRowState extends State<_AnimatedFeatureRow> {
+  bool _visible = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(Duration(milliseconds: widget.delay), () {
+      if (mounted) {
+        setState(() {
+          _visible = true;
+        });
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedOpacity(
+      opacity: _visible ? 1.0 : 0.0,
+      duration: const Duration(milliseconds: 500),
+      child: AnimatedSlide(
+        offset: _visible ? Offset.zero : const Offset(0, 0.5),
+        duration: const Duration(milliseconds: 500),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(widget.icon, color: Colors.white),
+            const SizedBox(width: 8),
+            Text(
+              widget.text,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.lora(fontSize: 16, color: Colors.white),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DescriptionAnimated extends StatelessWidget {
+  final String text;
+
+  const _DescriptionAnimated({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedTextKit(
+      isRepeatingAnimation: false,
+      animatedTexts: [
+        TyperAnimatedText(
+          text,
+          textStyle: GoogleFonts.lora(
+            fontSize: 18,
+            color: Colors.white,
+          ),
+          textAlign: TextAlign.center,
+          speed: const Duration(milliseconds: 50),
         ),
       ],
     );

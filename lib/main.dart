@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'NewsBrief',
-      debugShowCheckedModeBanner: true,
+      debugShowCheckedModeBanner: false,
       home: FutureBuilder<bool>(
         future: checkFirstRun.shouldShowOnboarding(),
         builder: (context, snapshot) {
