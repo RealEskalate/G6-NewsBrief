@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+crawl4ai
+pydantic
+spacy
+openai
+sqlalchemy
+python-dotenv
+asyncio
+requests
+telethon
