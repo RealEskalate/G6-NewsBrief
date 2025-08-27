@@ -8,7 +8,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 NEWSAPI_KEY = os.getenv("NEWSAPI_KEY")
 TELEGRAM_API_ID = os.getenv("TELEGRAM_API_ID")
 TELEGRAM_API_HASH = os.getenv("TELEGRAM_API_HASH")
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./news.db")
+CHROMA_DB_PATH = os.getenv("CHROMA_DB_PATH", "./chroma_data")
 
 # News site configurations for Crawl4AI
 SITE_CONFIGS = {

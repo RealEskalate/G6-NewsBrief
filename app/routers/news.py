@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+import chromadb
 from app.services.crawler import crawl_news
 from app.services.news_api import fetch_news_api
 from app.services.telegram import fetch_telegram
