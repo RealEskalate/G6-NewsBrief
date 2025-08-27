@@ -26,3 +26,11 @@ SITE_CONFIGS = {
         }
     }
 }
+
+NEWS_SOURCES = [
+    {"name": "addisstandard", "feed": "https://addisstandard.com/feed/", "homepage": "https://addisstandard.com/"},
+    {"name": "fanatv", "feed": "https://www.fanabc.com/feed/", "homepage": "https://www.fanabc.com/"},
+    {"name": "Ethiopian Reporter", "feed": "https://ethiopianreporter.com/feed/", "homepage": "https://ethiopianreporter.com/"},
+    {"name": "Oromia Broadcasting Network", "feed": "https://obn.com.et/feed/", "homepage": "https://obn.com.et/"},
+    {"name": "EHPEA", "feed": "https://ehpea.org/feed/", "homepage": "https://ehpea.org/"}
+]

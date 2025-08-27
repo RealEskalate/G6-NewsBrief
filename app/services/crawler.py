@@ -1,4 +1,5 @@
 import asyncio
+from app.config import NEWS_SOURCES
 import chromadb
 from typing import List, Dict
 from app.services.rss_crawler import crawl_rss_feeds
@@ -17,20 +18,11 @@ async def crawl_news(urls: List[str], query: str, vector_db: chromadb.Client = N
         semaphore = asyncio.Semaphore(3)
         news_data = []
 
-        # Define sources
-        sources = [
-            {"name": "addisstandard", "feed": "https://addisstandard.com/feed/", "homepage": "https://addisstandard.com/"},
-            {"name": "fanatv", "feed": "https://www.fanabc.com/feed/", "homepage": "https://www.fanabc.com/"},
-            {"name": "Ethiopian Reporter", "feed": "https://ethiopianreporter.com/feed/", "homepage": "https://ethiopianreporter.com/"},
-            {"name": "Oromia Broadcasting Network", "feed": "https://obn.com.et/feed/", "homepage": "https://obn.com.et/"},
-            {"name": "EHPEA", "feed": "https://ehpea.org/feed/", "homepage": "https://ehpea.org/"}
-        ]
-
         # Step 1: Crawl RSS feeds
-        rss_articles = await crawl_rss_feeds(sources, query)
+        rss_articles = await crawl_rss_feeds(NEWS_SOURCES, query)
 
         # Step 2: Crawl homepages
-        scrape_articles = await crawl_homepages(crawler, sources, urls, query, semaphore)
+        scrape_articles = await crawl_homepages(crawler, NEWS_SOURCES, urls, query, semaphore)
 
         # Step 3: Crawl Addis Standard daily-scoop
         if "https://addisstandard.com" in urls:
