@@ -9,3 +9,6 @@ python-dotenv
 asyncio
 requests
 telethon
+beautifulsoup4
+chromadb
+sentence-transformers
