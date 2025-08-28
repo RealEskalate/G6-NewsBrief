@@ -64,7 +64,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 ],
               ),
             ),
-            const SizedBox(height: 30),
+            const SizedBox(height: 40),
 
             // Change Name button
             ListTile(
