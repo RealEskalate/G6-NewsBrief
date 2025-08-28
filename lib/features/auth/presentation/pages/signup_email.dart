@@ -111,10 +111,15 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
               BlocConsumer<AuthBloc, AuthState>(
                 listener: (context, state) {
                   if (state is AuthSuccess) {
+                    // Navigate to InterestsScreen with existing AuthBloc
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                          builder: (_) => const InterestsScreen()),
+                        builder: (_) => BlocProvider.value(
+                          value: context.read<AuthBloc>(),
+                          child: const InterestsScreen(),
+                        ),
+                      ),
                     );
                   } else if (state is AuthFailure) {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -161,7 +166,6 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
     );
   }
 }
-
 
 class CustomHoverButton extends StatefulWidget {
   final Widget iconWidget;
