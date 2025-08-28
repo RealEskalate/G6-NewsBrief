@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
+import '../../auth/presentation/pages/signup_landing.dart';
+
 
 class OnboardingScreen extends StatefulWidget {
-  final VoidCallback onFinish;
+  final VoidCallback? onFinish;
 
-  const OnboardingScreen({super.key, required this.onFinish});
+  const OnboardingScreen({super.key, this.onFinish});
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -21,7 +23,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       image: 'assets/images/onboarding_1.png',
       title: 'Welcome to NewsBrief!',
       description:
-          "Stay informed with concise news summaries in Amharic or English.",
+      "Stay informed with concise news summaries in Amharic or English.",
       buttonText: 'Continue',
       padding: EdgeInsets.all(40),
     ),
@@ -29,7 +31,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       image: '',
       title: 'News made simple',
       description:
-          "Summarized in Amharic & English • Audio playback • Chatbot integration",
+      "Summarized in Amharic & English • Audio playback • Chatbot integration",
       buttonText: 'Next',
     ),
     _OnboardingPageData(
@@ -49,7 +51,25 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       );
     } else {
       if (_acceptedTerms) {
-        widget.onFinish();
+        if (widget.onFinish != null) {
+          widget.onFinish!();
+        } else {
+          Navigator.of(context).pushReplacement(
+            PageRouteBuilder(
+              pageBuilder: (_, __, ___) => const SignupLandingPage(),
+              transitionsBuilder: (_, animation, __, child) {
+                return FadeTransition(opacity: animation, child: child);
+              },
+              transitionDuration: const Duration(milliseconds: 500),
+            ),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please accept Terms & Conditions to continue.'),
+          ),
+        );
       }
     }
   }
@@ -105,7 +125,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       height: 8,
                       decoration: BoxDecoration(
                         color:
-                            _currentPage == index ? Colors.white : Colors.black,
+                        _currentPage == index ? Colors.white : Colors.black,
                         borderRadius: BorderRadius.circular(4),
                       ),
                     );
@@ -188,32 +208,31 @@ class _OnboardingPageState extends State<_OnboardingPage> {
           height: 300,
           child: data.image.isNotEmpty
               ? Padding(
-                  padding: data.padding,
-                  child: TweenAnimationBuilder<double>(
-                    tween: Tween(begin: 0, end: _imageOpacity),
-                    duration: const Duration(seconds: 1),
-                    builder: (context, value, child) {
-                      return Opacity(
-                        opacity: value,
-                        child: Transform.scale(
-                          scale: 0.9 + (0.1 * value),
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: Image.asset(
-                      data.image,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) =>
-                          const Icon(Icons.image,
-                              size: 120, color: Colors.grey),
-                    ),
+            padding: data.padding,
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: _imageOpacity),
+              duration: const Duration(seconds: 1),
+              builder: (context, value, child) {
+                return Opacity(
+                  opacity: value,
+                  child: Transform.scale(
+                    scale: 0.9 + (0.1 * value),
+                    child: child,
                   ),
-                )
+                );
+              },
+              child: Image.asset(
+                data.image,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) =>
+                const Icon(Icons.image,
+                    size: 120, color: Colors.grey),
+              ),
+            ),
+          )
               : const SizedBox.shrink(),
         ),
         const SizedBox(height: 24),
-
         if (_showTitle)
           AnimatedTextKit(
             isRepeatingAnimation: false,
@@ -238,37 +257,34 @@ class _OnboardingPageState extends State<_OnboardingPage> {
             },
           ),
         const SizedBox(height: 16),
-
         if (_showDescription)
           data.title == "News made simple"
               ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    if (_showFeatures) ...[
-                      _AnimatedFeatureRow(
-                        icon: Icons.language,
-                        text: "Summarized in Amharic & English",
-                        delay: 0,
-                      ),
-                      const SizedBox(height: 12),
-                      _AnimatedFeatureRow(
-                        icon: Icons.volume_up,
-                        text: "Audio playback",
-                        delay: 300,
-                      ),
-                      const SizedBox(height: 12),
-                      _AnimatedFeatureRow(
-                        icon: Icons.chat,
-                        text: "Chatbot integration",
-                        delay: 600,
-                      ),
-                    ],
-                  ],
-                )
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              if (_showFeatures) ...[
+                _AnimatedFeatureRow(
+                  icon: Icons.language,
+                  text: "Summarized in Amharic & English",
+                  delay: 0,
+                ),
+                const SizedBox(height: 12),
+                _AnimatedFeatureRow(
+                  icon: Icons.volume_up,
+                  text: "Audio playback",
+                  delay: 300,
+                ),
+                const SizedBox(height: 12),
+                _AnimatedFeatureRow(
+                  icon: Icons.chat,
+                  text: "Chatbot integration",
+                  delay: 600,
+                ),
+              ],
+            ],
+          )
               : _DescriptionAnimated(text: data.description),
-
         const Spacer(),
-
         if (data.isLast)
           Padding(
             padding: const EdgeInsets.only(bottom: 8.0),
@@ -313,14 +329,13 @@ class _OnboardingPageState extends State<_OnboardingPage> {
               ],
             ),
           ),
-
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24),
           child: SizedBox(
             width: double.infinity,
             height: 48,
             child: ElevatedButton(
-              onPressed: widget.data.isLast && !widget.acceptedTerms
+              onPressed: data.isLast && !widget.acceptedTerms
                   ? null
                   : widget.onButtonPressed,
               style: ElevatedButton.styleFrom(
