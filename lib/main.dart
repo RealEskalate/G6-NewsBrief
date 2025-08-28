@@ -27,6 +27,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'NewsBrief',
       debugShowCheckedModeBanner: false,
+
       // define routes so LoginPage can easily navigate to SignUp/Home
       routes: {
         '/login': (context) => const LoginPage(),
@@ -40,6 +41,8 @@ class MyApp extends StatelessWidget {
         '/saved': (context) => const SavedPage(),
         '/profile': (context) => const ProfilePage(),
       },
+=======
+
       home: FutureBuilder<bool>(
         future: checkFirstRun.shouldShowOnboarding(),
         builder: (context, snapshot) {
