@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-class LoginPage extends StatelessWidget {
-  const LoginPage({super.key});
+class SignUpPage extends StatelessWidget {
+  const SignUpPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Login")),
+      appBar: AppBar(title: const Text("Sign Up")),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -22,22 +22,28 @@ class LoginPage extends StatelessWidget {
               ),
               obscureText: true,
             ),
+            const TextField(
+              decoration: InputDecoration(
+                labelText: "Confirm Password",
+              ),
+              obscureText: true,
+            ),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
                 Navigator.pushReplacementNamed(context, '/');
               },
-              child: const Text("Login"),
+              child: const Text("Sign Up"),
             ),
             TextButton(
               onPressed: () {
-                Navigator.pushNamed(context, '/signup');
+                Navigator.pushReplacementNamed(context, '/login');
               },
-              child: const Text("Don’t have an account? Sign Up"),
+              child: const Text("Already have an account? Login"),
             ),
             TextButton(
               onPressed: () {
-                Navigator.pushNamed(context, '/root');
+                Navigator.pushReplacementNamed(context, '/root');
               },
               child: const Text("Continue as guest"),
             ),
