@@ -4,16 +4,25 @@ import 'auth_event.dart';
 import 'auth_state.dart';
 import '../../domain/usecases/get_interests_usecase.dart';
 import '../../domain/usecases/sign_up_usecase.dart';
+import '../../domain/usecases/sign_up_with_google_usecase.dart';
+import '../../domain/usecases/login_usecase.dart';
+import '../../domain/usecases/login_with_google_usecase.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final SignUpUseCase signUpUseCase;
   final GetInterestsUseCase getInterestsUseCase;
+  final SignUpWithGoogleUseCase signUpWithGoogleUseCase;
+  final LoginUseCase loginUseCase; // Add login use case
+  final LoginWithGoogleUseCase loginWithGoogleUseCase; // Add Google login use case
 
   User? _user;
 
   AuthBloc({
     required this.signUpUseCase,
     required this.getInterestsUseCase,
+    required this.signUpWithGoogleUseCase,
+    required this.loginUseCase,
+    required this.loginWithGoogleUseCase,
   }) : super(AuthInitial()) {
     on<SignUpEvent>((event, emit) async {
       emit(AuthLoading());
@@ -24,6 +33,39 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           password: event.password,
         );
         await signUpUseCase(_user!);
+        emit(AuthSuccess(_user!));
+      } catch (e) {
+        emit(AuthFailure(e.toString()));
+      }
+    });
+
+
+    on<SignUpWithGoogleEvent>((event, emit) async {
+      emit(AuthLoading());
+      try {
+        _user = await signUpWithGoogleUseCase();
+        emit(AuthSuccess(_user!));
+      } catch (e) {
+        emit(AuthFailure(e.toString()));
+      }
+    });
+
+    // Login handler
+    on<LoginEvent>((event, emit) async {
+      emit(AuthLoading());
+      try {
+        _user = await loginUseCase(event.email, event.password);
+        emit(AuthSuccess(_user!));
+      } catch (e) {
+        emit(AuthFailure(e.toString()));
+      }
+    });
+    
+    //google login handler
+    on<LoginWithGoogleEvent>((event, emit) async {
+      emit(AuthLoading());
+      try {
+        _user = await loginWithGoogleUseCase();
         emit(AuthSuccess(_user!));
       } catch (e) {
         emit(AuthFailure(e.toString()));
