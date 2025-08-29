@@ -20,8 +20,6 @@ import 'package:newsbrief/features/onboarding/datasources/local_storage.dart';
 import 'package:newsbrief/features/onboarding/presentation/onboarding.dart';
 
 import 'features/onboarding/domain/check_first_run.dart';
-import 'features/onboarding/datasources/local_storage.dart';
-import 'features/onboarding/presentation/onboarding.dart';
 
 void main() {
   runApp(MyApp());
@@ -29,7 +27,6 @@ void main() {
 
 class MyApp extends StatelessWidget {
   final CheckFirstRun checkFirstRun = CheckFirstRun(LocalStorage());
-
 
   final AuthBloc authBloc = AuthBloc(
     signUpUseCase: SignUpUseCase(AuthRepositoryImpl()),
@@ -46,11 +43,31 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'NewsBrief',
         debugShowCheckedModeBanner: false,
+        // define routes so LoginPage can easily navigate to SignUp/Home
+        routes: {
+          '/login': (context) => const LoginPage(),
+          '/signup': (context) => const SignUpPage(),
+          '/edit': (context) => const EditProfilePage(),
+          '/setting': (context) => const SettingsPage(),
+          '/root': (context) => const RootPage(),
+          '/home': (context) => const HomePage(),
+          '/following': (context) => const FollowingPage(),
+          '/search': (context) => const SearchPage(),
+          '/saved': (context) => const SavedPage(),
+          '/profile': (context) => const ProfilePage(),
+        },
         home: FutureBuilder<bool>(
           future: checkFirstRun.shouldShowOnboarding(),
           builder: (context, snapshot) {
-            if (!snapshot.hasData) {
-              return const Center(child: CircularProgressIndicator());
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
+            }
+            if (snapshot.hasError) {
+              return Scaffold(
+                body: Center(child: Text('Error: ${snapshot.error}')),
+              );
             }
             if (snapshot.data == true) {
               return OnboardingScreenWrapper(checkFirstRun: checkFirstRun);
@@ -59,45 +76,6 @@ class MyApp extends StatelessWidget {
             }
           },
         ),
-    return MaterialApp(
-      title: 'NewsBrief',
-      debugShowCheckedModeBanner: false,
-
-      // define routes so LoginPage can easily navigate to SignUp/Home
-      routes: {
-        '/login': (context) => const LoginPage(),
-        '/signup': (context) => const SignUpPage(),
-        '/edit': (context) => const EditProfilePage(),
-        '/setting': (context) => const SettingsPage(),
-        '/root': (context) => const RootPage(),
-        '/home': (context) => const HomePage(),
-        '/following': (context) => const FollowingPage(),
-        '/search': (context) => const SearchPage(),
-        '/saved': (context) => const SavedPage(),
-        '/profile': (context) => const ProfilePage(),
-      },
-
-
-      home: FutureBuilder<bool>(
-        future: checkFirstRun.shouldShowOnboarding(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Scaffold(
-              body: Center(child: Text('Error: ${snapshot.error}')),
-            );
-          }
-          if (!snapshot.hasData) {
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
-          }
-          if (snapshot.data == true) {
-            return OnboardingScreenWrapper(checkFirstRun: checkFirstRun);
-          } else {
-            return const LoginPage();
-          }
-        },
-
       ),
     );
   }
@@ -113,14 +91,8 @@ class OnboardingScreenWrapper extends StatelessWidget {
     return OnboardingScreen(
       onFinish: () async {
         await checkFirstRun.completeOnboarding();
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (_) => const SignupLandingPage(),
-          ),
-        );
-
+        // Use a single navigation method to avoid redundancy
         Navigator.of(context).pushReplacementNamed('/login');
-
       },
     );
   }

@@ -1,10 +1,8 @@
-
 import 'package:flutter/material.dart';
 import 'package:newsbrief/core/widgets/custom_dropdown_button.dart';
 import 'package:newsbrief/core/widgets/topic_chip.dart';
 import 'package:newsbrief/features/auth/presentation/pages/manage_subscription.dart';
 import 'package:newsbrief/features/auth/presentation/widgets/indicator_card.dart';
-
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -13,13 +11,14 @@ class ProfilePage extends StatefulWidget {
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStateMixin {
+class _ProfilePageState extends State<ProfilePage>
+    with SingleTickerProviderStateMixin {
   List<String> topics = [
     "Technology",
     "Sports",
     "Business",
     "Entertainment",
-    "Health"
+    "Health",
   ];
   bool isManagingTopics = false;
 
@@ -54,7 +53,10 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
       builder: (context) {
         return AlertDialog(
           backgroundColor: Colors.white,
-          title: const Text("Add New Topic", style: TextStyle(color: Colors.black)),
+          title: const Text(
+            "Add New Topic",
+            style: TextStyle(color: Colors.black),
+          ),
           content: TextField(
             controller: controller,
             decoration: InputDecoration(
@@ -67,7 +69,10 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel", style: TextStyle(color: Colors.black54)),
+              child: const Text(
+                "Cancel",
+                style: TextStyle(color: Colors.black54),
+              ),
             ),
             TextButton(
               onPressed: () {
@@ -100,7 +105,9 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   IconButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/root');
+                    },
                     icon: const Icon(Icons.arrow_back, color: Colors.black),
                   ),
                   Row(
@@ -110,7 +117,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                           "Edit profile",
                           if (!isManagingTopics) "Manage topic",
                           "Manage Subscription",
-                          if (isManagingTopics) "Done"
+                          if (isManagingTopics) "Done",
                         ],
                         onSelected: (String result) {
                           switch (result) {
@@ -131,7 +138,8 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const ManageSubscriptionPage(),
+                                  builder: (context) =>
+                                      const ManageSubscriptionPage(),
                                 ),
                               );
                               break;
@@ -198,10 +206,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                 children: [
                   const Text(
                     "Your Interests",
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
                   Wrap(
@@ -212,37 +217,46 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                           .map(
                             (topic) => isManagingTopics
                                 ? RotationTransition(
-                                    turns: Tween(begin: -0.001, end: 0.002).animate(
-                                      CurvedAnimation(
-                                        parent: _animationController,
-                                        curve: const FlippedCurve(Curves.easeOutCubic),
-                                      ),
-                                    ),
+                                    turns: Tween(begin: -0.001, end: 0.002)
+                                        .animate(
+                                          CurvedAnimation(
+                                            parent: _animationController,
+                                            curve: const FlippedCurve(
+                                              Curves.easeOutCubic,
+                                            ),
+                                          ),
+                                        ),
                                     child: TopicChip(
                                       title: topic,
                                       onDeleted: () => _removeTopic(topic),
                                     ),
                                   )
-                                : TopicChip(
-                                    title: topic,
-                                    onDeleted: null,
-                                  ),
+                                : TopicChip(title: topic, onDeleted: null),
                           )
                           .toList(),
                       if (isManagingTopics)
                         ActionChip(
-                          label: const Text("Add", style: TextStyle(color: Colors.white)),
+                          label: const Text(
+                            "Add",
+                            style: TextStyle(color: Colors.white),
+                          ),
                           avatar: const Icon(Icons.add, color: Colors.white),
                           backgroundColor: Colors.black,
-                          onPressed: _showAddTopicDialog,),
+                          onPressed: _showAddTopicDialog,
+                        ),
                       if (isManagingTopics)
                         ActionChip(
-                            label: const Text("Done", style: TextStyle(color: Colors.black)),
-                            backgroundColor: Colors.white,
-                            onPressed: () {setState(() {
-                              isManagingTopics = false;
-                            });},
+                          label: const Text(
+                            "Done",
+                            style: TextStyle(color: Colors.black),
                           ),
+                          backgroundColor: Colors.white,
+                          onPressed: () {
+                            setState(() {
+                              isManagingTopics = false;
+                            });
+                          },
+                        ),
                     ],
                   ),
                 ],

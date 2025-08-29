@@ -37,7 +37,8 @@ class _InterestsScreenState extends State<InterestsScreen> {
                 if (state is InterestsLoaded) {
                   availableInterests = state.interests;
                   for (var i in availableInterests) {
-                    if (!selectedInterests.containsKey(i)) selectedInterests[i] = false;
+                    if (!selectedInterests.containsKey(i))
+                      selectedInterests[i] = false;
                   }
                 } else if (state is InterestsSavedSuccess) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -101,12 +102,13 @@ class _InterestsScreenState extends State<InterestsScreen> {
                     const SizedBox(height: 16),
                     Expanded(
                       child: GridView.builder(
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                          childAspectRatio: 2.5,
-                        ),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 12,
+                              mainAxisSpacing: 12,
+                              childAspectRatio: 2.5,
+                            ),
                         itemCount: availableInterests.length,
                         itemBuilder: (context, index) {
                           final category = availableInterests[index];
@@ -128,7 +130,9 @@ class _InterestsScreenState extends State<InterestsScreen> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                               side: BorderSide(
-                                color: isSelected ? Colors.black : Colors.grey[300]!,
+                                color: isSelected
+                                    ? Colors.black
+                                    : Colors.grey[300]!,
                                 width: 1,
                               ),
                             ),
@@ -142,14 +146,15 @@ class _InterestsScreenState extends State<InterestsScreen> {
                       child: ElevatedButton(
                         onPressed: canContinue
                             ? () {
-                          final selected = selectedInterests.entries
-                              .where((e) => e.value)
-                              .map((e) => e.key)
-                              .toList();
-                          context
-                              .read<AuthBloc>()
-                              .add(SaveInterestsEvent(selected));
-                        }
+                                final selected = selectedInterests.entries
+                                    .where((e) => e.value)
+                                    .map((e) => e.key)
+                                    .toList();
+                                context.read<AuthBloc>().add(
+                                  SaveInterestsEvent(selected),
+                                );
+                                Navigator.pushNamed(context, '/root');
+                              }
                             : null,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: canContinue
