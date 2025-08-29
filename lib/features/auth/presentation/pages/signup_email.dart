@@ -16,13 +16,22 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
   final TextEditingController fullNameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
   bool agreeToTerms = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -138,23 +147,25 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
                     textColor: Colors.white,
                     onTap: agreeToTerms
                         ? () {
-                      if (passwordController.text !=
-                          confirmPasswordController.text) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Passwords do not match'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                        return;
-                      }
+                            if (passwordController.text !=
+                                confirmPasswordController.text) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Passwords do not match'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                              return;
+                            }
 
-                      context.read<AuthBloc>().add(SignUpEvent(
-                        fullNameController.text,
-                        emailController.text,
-                        passwordController.text,
-                      ));
-                    }
+                            context.read<AuthBloc>().add(
+                              SignUpEvent(
+                                fullNameController.text,
+                                emailController.text,
+                                passwordController.text,
+                              ),
+                            );
+                          }
                         : null,
                   );
                 },
@@ -196,8 +207,10 @@ class _CustomHoverButtonState extends State<CustomHoverButton>
   @override
   void initState() {
     super.initState();
-    _controller =
-        AnimationController(vsync: this, duration: const Duration(milliseconds: 100));
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+    );
     _scale = Tween<double>(begin: 1.0, end: 1.05).animate(_controller);
   }
 
@@ -229,17 +242,19 @@ class _CustomHoverButtonState extends State<CustomHoverButton>
                   borderRadius: BorderRadius.circular(30),
                   boxShadow: _hovering
                       ? [
-                    BoxShadow(
-                        color: Colors.black26,
-                        offset: const Offset(0, 4),
-                        blurRadius: 8)
-                  ]
+                          BoxShadow(
+                            color: Colors.black26,
+                            offset: const Offset(0, 4),
+                            blurRadius: 8,
+                          ),
+                        ]
                       : [
-                    BoxShadow(
-                        color: Colors.black12,
-                        offset: const Offset(0, 2),
-                        blurRadius: 4)
-                  ],
+                          BoxShadow(
+                            color: Colors.black12,
+                            offset: const Offset(0, 2),
+                            blurRadius: 4,
+                          ),
+                        ],
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,

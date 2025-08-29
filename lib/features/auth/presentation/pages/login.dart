@@ -5,10 +5,8 @@ import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
 
-
 class Login extends StatefulWidget {
   const Login({super.key});
-
 
   @override
   State<Login> createState() => _LoginPageState();
@@ -29,10 +27,12 @@ class _LoginPageState extends State<Login> {
 
   void _login() {
     if (_formKey.currentState?.validate() ?? false) {
-      context.read<AuthBloc>().add(LoginEvent(
-            email: _emailController.text,
-            password: _passwordController.text,
-          ));
+      context.read<AuthBloc>().add(
+        LoginEvent(
+          email: _emailController.text,
+          password: _passwordController.text,
+        ),
+      );
     }
   }
 
@@ -41,13 +41,12 @@ class _LoginPageState extends State<Login> {
   }
 
   void _navigateToSignUp() {
-    Navigator.pushReplacementNamed(context, '/signup');
+    Navigator.pushNamed(context, '/signup');
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
       backgroundColor: Colors.white, // Set background to white
       appBar: AppBar(
         title: const Text(
@@ -64,19 +63,23 @@ class _LoginPageState extends State<Login> {
             // Show success message instead of navigating
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Login successful! Welcome ${state.user.fullName}'),
+                content: Text(
+                  'Login successful! Welcome ${state.user.fullName}',
+                ),
                 backgroundColor: Colors.green,
                 duration: const Duration(seconds: 3),
               ),
             );
-            
+
             // Comment out navigation until home page is ready
-            // Navigator.pushReplacementNamed(context, '/home');
+            Navigator.pushReplacementNamed(context, '/root');
           } else if (state is AuthFailure) {
             // Show error message - fixed to use state.error
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.error), // Changed from state.message to state.error
+                content: Text(
+                  state.error,
+                ), // Changed from state.message to state.error
                 backgroundColor: Colors.red,
               ),
             );
@@ -96,7 +99,10 @@ class _LoginPageState extends State<Login> {
                       labelText: 'Email',
                       labelStyle: TextStyle(color: Colors.black), // Black label
                       border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.email, color: Colors.black), // Black icon
+                      prefixIcon: Icon(
+                        Icons.email,
+                        color: Colors.black,
+                      ), // Black icon
                     ),
                     style: const TextStyle(color: Colors.black), // Black text
                     keyboardType: TextInputType.emailAddress,
@@ -115,12 +121,19 @@ class _LoginPageState extends State<Login> {
                     controller: _passwordController,
                     decoration: InputDecoration(
                       labelText: 'Password',
-                      labelStyle: const TextStyle(color: Colors.black), // Black label
+                      labelStyle: const TextStyle(
+                        color: Colors.black,
+                      ), // Black label
                       border: const OutlineInputBorder(),
-                      prefixIcon: const Icon(Icons.lock, color: Colors.black), // Black icon
+                      prefixIcon: const Icon(
+                        Icons.lock,
+                        color: Colors.black,
+                      ), // Black icon
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                          _obscurePassword
+                              ? Icons.visibility
+                              : Icons.visibility_off,
                           color: Colors.black, // Black icon
                         ),
                         onPressed: () {
@@ -143,7 +156,7 @@ class _LoginPageState extends State<Login> {
                     },
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // Login Button
                   if (state is AuthLoading)
                     const CircularProgressIndicator()
@@ -160,15 +173,15 @@ class _LoginPageState extends State<Login> {
                         style: TextStyle(color: Colors.white), // White text
                       ),
                     ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // Google Login Button
                   if (state is! AuthLoading)
                     OutlinedButton.icon(
                       onPressed: _loginWithGoogle,
                       icon: Image.asset(
-                      'assets/icons/google_logo.png', // Real Google icon
+                        'assets/icons/google_logo.png', // Real Google icon
                         width: 24,
                         height: 24,
                       ),
@@ -178,12 +191,14 @@ class _LoginPageState extends State<Login> {
                       ),
                       style: OutlinedButton.styleFrom(
                         minimumSize: const Size(double.infinity, 50),
-                        side: const BorderSide(color: Colors.black), // Black border
+                        side: const BorderSide(
+                          color: Colors.black,
+                        ), // Black border
                       ),
                     ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // Sign Up Navigation
                   if (state is! AuthLoading)
                     TextButton(
@@ -209,7 +224,6 @@ class _LoginPageState extends State<Login> {
             ),
           );
         },
-
       ),
     );
   }

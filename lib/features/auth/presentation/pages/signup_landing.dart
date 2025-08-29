@@ -40,6 +40,17 @@ class SignupLandingPage extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  IconButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        icon: Icon(Icons.arrow_back),
+                      ),
+                ],
+              ),
                   const Spacer(),
                   const Text(
                     "NewsBrief",
@@ -121,24 +132,24 @@ class SignupLandingPage extends StatelessWidget {
                       ),
                       label: state is AuthLoading
                           ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.black,
-                        ),
-                      )
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.black,
+                              ),
+                            )
                           : const Flexible(
-                        child: Text(
-                          "Sign up with Google",
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
+                              child: Text(
+                                "Sign up with Google",
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontFamily: 'Inter',
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
                       style: OutlinedButton.styleFrom(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
@@ -148,22 +159,27 @@ class SignupLandingPage extends StatelessWidget {
                       onPressed: state is AuthLoading
                           ? null
                           : () {
-                        context
-                            .read<AuthBloc>()
-                            .add(SignUpWithGoogleEvent());
-                      },
+                              context.read<AuthBloc>().add(
+                                SignUpWithGoogleEvent(),
+                              );
+                            },
                     ),
                   ),
                   const SizedBox(height: 20),
-                  const Text(
-                    "Already have an account? Login",
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black,
-                      fontFamily: 'Inter',
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pushNamed(context, '/login');
+                    },
+                    child: Text(
+                      "Already have an account? Login",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black,
+                        fontFamily: 'Inter',
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
                   ),
                   const Spacer(),
                 ],
