@@ -1,4 +1,3 @@
-// feature/auth/presentation/bloc/auth_bloc.dart
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/user.dart';
 import 'auth_event.dart';
@@ -40,7 +39,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       }
     });
 
-    // Google signup handler
+
     on<SignUpWithGoogleEvent>((event, emit) async {
       emit(AuthLoading());
       try {

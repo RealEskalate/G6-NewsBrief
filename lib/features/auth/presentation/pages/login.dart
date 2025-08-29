@@ -5,8 +5,10 @@ import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
 
+
 class Login extends StatefulWidget {
   const Login({super.key});
+
 
   @override
   State<Login> createState() => _LoginPageState();
@@ -45,6 +47,7 @@ class _LoginPageState extends State<Login> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+
       backgroundColor: Colors.white, // Set background to white
       appBar: AppBar(
         title: const Text(
@@ -206,6 +209,7 @@ class _LoginPageState extends State<Login> {
             ),
           );
         },
+
       ),
     );
   }
