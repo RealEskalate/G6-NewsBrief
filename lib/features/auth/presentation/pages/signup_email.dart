@@ -159,7 +159,7 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
                             }
 
                             context.read<AuthBloc>().add(
-                              SignUpEvent(
+                              SignUpEvent(     
                                 fullNameController.text,
                                 emailController.text,
                                 passwordController.text,

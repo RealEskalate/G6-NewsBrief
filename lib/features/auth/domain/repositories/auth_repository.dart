@@ -1,11 +1,14 @@
 import 'package:newsbrief/features/auth/domain/entities/tokens.dart';
-
 import '../entities/user.dart';
 
 abstract class AuthRepository {
-  Future<void> register({required String email, required String password, required String name});
-  Future<Tokens> login({required String email, required String password});
+  Future<void> register({
+    required String email,
+    required String password,
+    required String name,
+  });
   Future<void> logout({required String refreshToken});
+  Future<Tokens> login({required String email, required String password});
   Future<User> getMe();
   Future<void> updateMe({required String name, required String email});
 
@@ -16,9 +19,9 @@ abstract class AuthRepository {
   Future<void> resetPassword({required String token, required String password});
 
   Future<Tokens> refreshToken({required String refreshToken});
-  
+
   Future<void> signUp(User user);
-  Future<User> login(String email, String password);
+  Future<User> Login({required String email, required String password});
   Future<List<String>> getAvailableInterests();
   User? get lastUser;
   void updateLastUser(User user);
