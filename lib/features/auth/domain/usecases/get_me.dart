@@ -1,5 +1,5 @@
 import 'package:newsbrief/features/auth/domain/entities/user.dart';
-import 'package:newsbrief/features/auth/domain/repositories/repo.dart';
+import 'package:newsbrief/features/auth/domain/repositories/auth_repository.dart';
 
 class GetMe {
   final AuthRepository repo;

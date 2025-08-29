@@ -32,7 +32,7 @@ class ApiService {
               //retry the original request with fresh access token
               final access = await tokenStorage.readAccessToken();
               final reqOptions = e.requestOptions;
-              reqOptions.headers['Authorization'] = 'Bearer$access';
+              reqOptions.headers['Authorization'] = 'Bearer $access';
               try {
                 final cloneResponse = await dio.fetch(reqOptions);
                 return handler.resolve(cloneResponse);

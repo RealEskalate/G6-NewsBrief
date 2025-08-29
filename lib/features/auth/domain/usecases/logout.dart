@@ -1,4 +1,4 @@
-import 'package:newsbrief/features/auth/domain/repositories/repo.dart';
+import 'package:newsbrief/features/auth/domain/repositories/auth_repository.dart';
 
 class Logout {
   final AuthRepository repo;
