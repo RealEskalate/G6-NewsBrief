@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../bloc/auth_bloc.dart';
-import '../bloc/auth_event.dart';
-import '../bloc/auth_state.dart';
+import 'package:newsbrief/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:newsbrief/features/auth/presentation/cubit/auth_state.dart';
 import 'interests.dart';
 
 class SignupEmailPage extends StatefulWidget {
@@ -117,23 +116,30 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
                 ],
               ),
               const SizedBox(height: 16),
-              BlocConsumer<AuthBloc, AuthState>(
+              BlocConsumer<AuthCubit, AuthState>(
                 listener: (context, state) {
-                  if (state is AuthSuccess) {
-                    // Navigate to InterestsScreen with existing AuthBloc
+                  if (state is AuthAuthenticated) {
+                    // Go straight to Interests screen after verified + logged in
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
                         builder: (_) => BlocProvider.value(
-                          value: context.read<AuthBloc>(),
+                          value: context.read<AuthCubit>(),
                           child: const InterestsScreen(),
                         ),
                       ),
                     );
-                  } else if (state is AuthFailure) {
+                  } else if (state is AuthEmailActionSuccess) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(state.error),
+                        content: Text(state.message),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  } else if (state is AuthError) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(state.message),
                         backgroundColor: Colors.red,
                       ),
                     );
@@ -142,10 +148,10 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
                 builder: (context, state) {
                   return CustomHoverButton(
                     iconWidget: const Icon(Icons.email, color: Colors.white),
-                    text: 'Sign Up',
+                    text: state is AuthLoading ? 'Signing Up...' : 'Sign Up',
                     color: Colors.black,
                     textColor: Colors.white,
-                    onTap: agreeToTerms
+                    onTap: (state is! AuthLoading && agreeToTerms)
                         ? () {
                             if (passwordController.text !=
                                 confirmPasswordController.text) {
@@ -158,17 +164,29 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
                               return;
                             }
 
-                            context.read<AuthBloc>().add(
-                              SignUpEvent(     
-                                fullNameController.text,
-                                emailController.text,
-                                passwordController.text,
-                              ),
+                            context.read<AuthCubit>().register(
+                              emailController.text,
+                              passwordController.text,
+                              fullNameController.text,
                             );
                           }
                         : null,
                   );
                 },
+              ),
+              const SizedBox(height: 16),
+              OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/root');
+                },
+                label: const Text(
+                  'Continue as Guest',
+                  style: TextStyle(color: Colors.black),
+                ),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  side: const BorderSide(color: Colors.black),
+                ),
               ),
             ],
           ),
