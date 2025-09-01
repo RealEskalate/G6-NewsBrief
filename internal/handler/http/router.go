@@ -51,8 +51,9 @@ func (r *Router) SetupRoutes(router *gin.Engine) {
 	lmt.SetMessage("Too many requests, please try again later.")
 	router.Use(middleware.RateLimiter(lmt))
 
-	// router.GET("/metrics", gin.WrapH(promhttp.Handler()))
-	// router.GET("/api/v1/metrics", gin.WrapH(promhttp.Handler()))
+	// API docs
+	RegisterDocsRoutes(router)
+
 	// API v1 routes
 	v1 := router.Group("/api/v1")
 

@@ -80,12 +80,10 @@ func main() {
 	}
 	defer mongoClient.Disconnect()
 
-	// Initialize email service
-	smtpHost := os.Getenv("EMAIL_HOST")
-	smtpPort := os.Getenv("EMAIL_PORT")
-	smtpUsername := os.Getenv("EMAIL_USERNAME")
-	smtpPassword := os.Getenv("EMAIL_APP_PASSWORD")
-	smtpFrom := os.Getenv("EMAIL_FROM")
+	// Initialize email service (SendGrid)
+	sendGridAPIKey := os.Getenv("SENDGRID_API_KEY")
+	sendFrom := os.Getenv("EMAIL_FROM")
+	sendFromName := os.Getenv("EMAIL_FROM_NAME")
 
 	// Register custom validators
 	validator.RegisterCustomValidators()
@@ -105,15 +103,13 @@ func main() {
 	jwtManager := jwt.NewJWTManager(jwtSecret)
 	jwtService := jwt.NewJWTService(jwtManager)
 	appLogger := logger.NewStdLogger()
-	mailService := external_services.NewEmailService(smtpHost, smtpPort, smtpUsername, smtpPassword, smtpFrom)
+	mailService := external_services.NewEmailService(sendGridAPIKey, sendFrom, sendFromName)
 	randomGenerator := randomgenerator.NewRandomGenerator()
 	appValidator := validator.NewValidator()
 	uuidGenerator := uuidgen.NewGenerator()
 	appConfig := config.NewConfig()
-	// config
-	baseURL := appConfig.GetAppBaseURL()
 	// Dependency Injection: Usecases
-	emailUsecase := usecase.NewEmailVerificationUseCase(tokenRepo, userRepo, mailService, randomGenerator, uuidGenerator, baseURL)
+	emailUsecase := usecase.NewEmailVerificationUseCase(tokenRepo, userRepo, mailService, randomGenerator, uuidGenerator, appConfig)
 	userUsecase := usecase.NewUserUsecase(userRepo, tokenRepo, emailUsecase, hasher, jwtService, mailService, appLogger, appConfig, appValidator, uuidGenerator, randomGenerator)
 	topicUsecase := usecase.NewTopicUsecase(topicRepo)
 	sourceUsecase := usecase.NewSourceUsecase(sourceRepo)
