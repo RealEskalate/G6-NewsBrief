@@ -16,7 +16,6 @@ class VectorDBService:
             text = f"{article['title']} {article['content']}"
             self.collection.add(
                 ids=[article['_id']],
-                embedding_text=[text],
                 documents=[text],
                 metadatas=[{
                     "title": article["title"],
