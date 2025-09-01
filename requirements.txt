@@ -3,10 +3,10 @@ uvicorn==0.35.0
 crawl4ai==0.7.4
 pydantic==2.11.7
 python-dotenv==1.1.1
-asyncio==4.0.0
 requests==2.32.5
 telethon==1.40.0
 beautifulsoup4==4.13.5
 chromadb==1.0.20
 feedparser==6.0.11
 gunicorn==23.0.0
+playwright[chromium]
