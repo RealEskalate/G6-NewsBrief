@@ -80,3 +80,42 @@ SITE_CONFIGS: Dict[str, Dict] = {
         }
     }
 }
+
+# Define genres with associated keywords and category feeds
+GENRES: Dict[str, Dict] = {
+    "politics": {
+        "keywords": ["politics", "government", "election", "policy", "parliament", "diplomacy"],
+        "category_feeds": {
+            "Addis Standard": "https://addisstandard.com/category/politics/feed/",
+            "Fana Media Corporation": "https://www.fanamc.com/category/politics/feed/",
+            "Ethiopian Reporter": "https://ethiopianreporter.com/category/politics/feed/",
+            "Oromia Broadcasting Network": "https://obn.com.et/category/politics/feed/",
+            "Ethiopian Herald": "https://www.ethpress.gov.et/category/business-and-economy/feed/"  # Business-focused, but may include politics
+        }
+    },
+    "sports": {
+        "keywords": ["sports", "football", "athletics", "basketball", "olympics", "tournament"],
+        "category_feeds": {
+            "Addis Standard": "https://addisstandard.com/category/sports/feed/",
+            "Ethiopian Reporter": "https://ethiopianreporter.com/category/sports/feed/"
+        }
+    },
+    "business": {
+        "keywords": ["business", "economy", "finance", "market", "trade", "investment"],
+        "category_feeds": {
+            "Addis Standard": "https://addisstandard.com/category/business/feed/",
+            "Fana Media Corporation": "https://www.fanamc.com/category/business/feed/",
+            "Ethiopian Reporter": "https://ethiopianreporter.com/category/business/feed/",
+            "Ethiopian Herald": "https://www.ethpress.gov.et/category/business-and-economy/feed/"
+        }
+    },
+    "others": {
+        "keywords": ["culture", "lifestyle", "entertainment", "education", "health", "technology"],
+        "category_feeds": {
+            "Addis Standard": "https://addisstandard.com/category/culture/feed/",
+            "Fana Media Corporation": "https://www.fanamc.com/category/lifestyle/feed/",
+            "Ethiopian Reporter": "https://ethiopianreporter.com/category/lifestyle/feed/"
+        }
+    }
+}
+

@@ -2,6 +2,8 @@ import re
 from datetime import datetime, timedelta, timezone
 import logging
 
+from app.config import GENRES
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
@@ -70,3 +72,14 @@ def clean_content(content: str, unwanted_phrases: list, exclude_keywords: list) 
         logger.warning(f"Content contains excluded keywords: {content[:50]}...")
         return None
     return content
+
+def matches_genre(title: str, content: str, genre: str) -> bool:
+    """Check if article matches the specified genre based on keywords."""
+    if not genre or genre.lower() not in GENRES:
+        return True
+    genre_config = GENRES[genre.lower()]
+    keywords = genre_config.get("keywords", [])
+    for keyword in keywords:
+        if keyword.lower() in title.lower() or (content and keyword.lower() in content.lower()):
+            return True
+    return False

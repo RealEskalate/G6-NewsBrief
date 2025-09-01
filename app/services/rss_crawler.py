@@ -1,3 +1,4 @@
+from app.config import GENRES
 import feedparser
 from datetime import datetime, timezone, timedelta
 from bs4 import BeautifulSoup
