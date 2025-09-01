@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:newsbrief/core/storage/token_secure_storage.dart';
+import 'package:newsbrief/features/auth/presentation/cubit/auth_cubit.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -14,6 +17,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   bool _showChangeName = false;
   bool _showResetPassword = false;
+  TokenSecureStorage storage = TokenSecureStorage();
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +34,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ),
         backgroundColor: Colors.white,
         elevation: 0,
-       
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -58,9 +61,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     child: CircleAvatar(
                       radius: 18,
                       backgroundColor: Colors.black,
-                      child: const Icon(Icons.edit, color: Colors.white, size: 18),
+                      child: const Icon(
+                        Icons.edit,
+                        color: Colors.white,
+                        size: 18,
+                      ),
                     ),
-                  )
+                  ),
                 ],
               ),
             ),
@@ -87,7 +94,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 maxLength: 30,
               ),
               const SizedBox(height: 15),
-              TextButton(onPressed: () {}, child: Text('Change',style: TextStyle(color: Colors.black, fontSize: 15),))
+              TextButton(
+                onPressed: () {},
+                child: Text(
+                  'Change',
+                  style: TextStyle(color: Colors.black, fontSize: 15),
+                ),
+              ),
             ],
 
             // Reset Password button
@@ -118,7 +131,23 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 obscureText: true,
               ),
               const SizedBox(height: 15),
-              TextButton(onPressed: () {}, child: Text('Reset',style: TextStyle(color: Colors.black, fontSize: 15),))
+              TextButton(
+  onPressed: () async {
+    final token = await storage.readAccessToken(); // token is now String? instead of Future<String?>
+    if (token != null) {
+      context.read<AuthCubit>().resetPassword(password: _oldPasswordController.text, token: token);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("No valid token found")),
+      );
+    }
+  },
+  child: const Text(
+    'Change',
+    style: TextStyle(color: Colors.black, fontSize: 15),
+  ),
+),
+
             ],
           ],
         ),
@@ -142,9 +171,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, color: Colors.blue),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Colors.blue, width: 2),
@@ -154,4 +181,3 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 }
-
