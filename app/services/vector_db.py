@@ -1,4 +1,3 @@
-from sentence_transformers import SentenceTransformer
 import chromadb
 from typing import List, Dict
 import logging
@@ -10,28 +9,14 @@ class VectorDBService:
     def __init__(self, client: chromadb.Client):
         self.client = client
         self.collection = client.get_or_create_collection("news_articles")
-        self.model = SentenceTransformer("all-MiniLM-L6-v2")
-
-    def generate_embedding(self, text: str) -> List[float]:
-        """Generate embedding for the given text."""
-        try:
-            embedding = self.model.encode(text, convert_to_tensor=False).tolist()
-            return embedding
-        except Exception as e:
-            logger.error(f"Failed to generate embedding for text: {e}")
-            return []
 
     def add_article(self, article: Dict):
         """Add a single article to ChromaDB."""
         try:
             text = f"{article['title']} {article['content']}"
-            embedding = self.generate_embedding(text)
-            if not embedding:
-                logger.warning(f"Skipping article {article['title']}: Empty embedding")
-                return
             self.collection.add(
                 ids=[article['_id']],
-                embeddings=[embedding],
+                embedding_text=[text],
                 documents=[text],
                 metadatas=[{
                     "title": article["title"],
@@ -49,12 +34,8 @@ class VectorDBService:
     def search_articles(self, query: str, top_k: int) -> List[Dict]:
         """Search articles semantically using ChromaDB."""
         try:
-            query_embedding = self.generate_embedding(query)
-            if not query_embedding:
-                logger.error(f"Failed to generate query embedding for: {query}")
-                return []
             results = self.collection.query(
-                query_embeddings=[query_embedding],
+                query_text=[query],
                 n_results=top_k
             )
             articles = []

@@ -31,13 +31,7 @@ crawl4ai-doctor
 python -m playwright install --with-deps chromium
 ```
 
-### 5. Set up spaCy
-
-```bash
-python -m spacy download en_core_web_sm
-```
-
-### 6. Configure environment variables
+### 5. Configure environment variables
 
 Create a `.env` file:
 
@@ -50,7 +44,7 @@ echo "DATABASE_URL=sqlite:///./news.db" >> .env
 echo "CHROMA_DB_PATH=./chroma_data" >> .env
 ```
 
-### 7. Run the app
+### 6. Run the app
 
 ```bash
 uvicorn app.main:app --reload

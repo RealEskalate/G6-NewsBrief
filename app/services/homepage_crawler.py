@@ -2,7 +2,6 @@ import asyncio
 from crawl4ai import AsyncWebCrawler
 from app.config import SITE_CONFIGS
 import logging
-import re
 from typing import List, Dict
 from datetime import datetime, timezone
 import uuid
