@@ -5,6 +5,7 @@ import 'package:newsbrief/core/storage/token_secure_storage.dart';
 import 'package:newsbrief/features/auth/datasource/datasources/auth_local_data_sourcs.dart';
 import 'package:newsbrief/features/auth/datasource/datasources/auth_remote_data_sources.dart';
 import 'package:newsbrief/features/auth/datasource/repositories/auth_repository_impl.dart';
+import 'package:newsbrief/features/auth/domain/usecases/get_interests_usecase.dart';
 import 'package:newsbrief/features/auth/domain/usecases/login_with_google_usecase.dart';
 import 'features/auth/presentation/pages/signup_landing.dart';
 import 'package:newsbrief/features/auth/presentation/pages/login.dart';
@@ -52,6 +53,7 @@ void main() {
             verifyEmail: VerifyEmail(repo),
             requestVerificationEmail: RequestVerificationEmail(repo),
             loginWithGoogleUseCase: LoginWithGoogleUseCase(repo),
+            getInterestsUseCase: GetInterestsUseCase(repo),
           ),
         ),
       ],

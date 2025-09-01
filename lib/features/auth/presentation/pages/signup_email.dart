@@ -169,6 +169,18 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
                               passwordController.text,
                               fullNameController.text,
                             );
+
+                            if (state is AuthAuthenticated) {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => BlocProvider.value(
+                                    value: context.read<AuthCubit>(),
+                                    child: const InterestsScreen(),
+                                  ),
+                                ),
+                              );
+                            }
                           }
                         : null,
                   );

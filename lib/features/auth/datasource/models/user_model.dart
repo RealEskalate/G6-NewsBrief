@@ -1,6 +1,5 @@
 import 'package:newsbrief/features/auth/domain/entities/auth_entities.dart';
 
-
 class UserModel extends UserEntity {
   UserModel({
     required super.id,
@@ -14,10 +13,6 @@ class UserModel extends UserEntity {
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
-    // Combine first_name and last_name for fullName
-    final firstName = json['first_name'] ?? '';
-    final lastName = json['last_name'] ?? '';
-    final fullName = lastName.isNotEmpty ? '$firstName $lastName' : firstName;
 
     // Safely parse created_at
     DateTime? createdAt;
@@ -34,7 +29,7 @@ class UserModel extends UserEntity {
       username: json['username'] ?? '',
       email: json['email'] ?? '',
       role: json['role'] ?? 'user',
-      fullName: fullName,
+      fullName: json['fullname'] ?? '',
       avatarUrl: json['avatar_url'],
       isVerified: json['is_verified'] ?? false,
       createdAt: createdAt,

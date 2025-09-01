@@ -39,6 +39,7 @@ class _RootPageState extends State<RootPage> {
             BoxShadow(
               color: Colors.grey.shade100,
               blurRadius: 5,
+              spreadRadius: 2,
               offset: const Offset(0, -2),
             ),
           ],
@@ -49,11 +50,11 @@ class _RootPageState extends State<RootPage> {
             String? firstLetter;
 
             if (state is AuthAuthenticated) {
-              final name = state.user.email;
-              print(name);
+              final name = state.user.fullName;
+              print('name $name');
               if (name.isNotEmpty) {
                 firstLetter = name[0].toUpperCase();
-                print("user UnAuthcaited");
+                print("user Authcaited");
               }
             } else {
               print("user UnAuthcaited");
@@ -82,11 +83,15 @@ class _RootPageState extends State<RootPage> {
                 ),
                 NavigationDestination(
                   icon: firstLetter != null
-                      ? CircleAvatar(
-                          backgroundColor: Colors.black,
-                          child: Text(
-                            firstLetter,
-                            style: const TextStyle(color: Colors.white),
+                      ? SizedBox(
+                          width: 30,
+                          height: 30,
+                          child: CircleAvatar(
+                            backgroundColor: Colors.black,
+                            child: Text(
+                              firstLetter,
+                              style: const TextStyle(color: Colors.white),
+                            ),
                           ),
                         )
                       : const Icon(Icons.person, color: Colors.black),

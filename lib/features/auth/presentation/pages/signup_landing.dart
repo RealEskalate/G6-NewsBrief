@@ -159,10 +159,16 @@ class SignupLandingPage extends StatelessWidget {
                       onPressed: state is AuthLoading
                           ? null
                           : () {
-                              context
-                                  .read<AuthCubit>()
-                                  .loginWithGoogleUseCase();
-                              Navigator.pushNamed(context, '/root');
+                              context.read<AuthCubit>().loginWithGoogle();
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => BlocProvider.value(
+                                    value: context.read<AuthCubit>(),
+                                    child: const InterestsScreen(),
+                                  ),
+                                ),
+                              );
                             },
                     ),
                   ),

@@ -203,11 +203,11 @@ class _SettingsPageState extends State<SettingsPage> {
               children: const [
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: Text("Light"),
+                  child: Text(" Light "),
                 ),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: Text("Dark"),
+                  child: Text(" Dark "),
                 ),
               ],
             ),
