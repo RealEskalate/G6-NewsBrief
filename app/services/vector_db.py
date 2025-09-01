@@ -1,6 +1,10 @@
 from sentence_transformers import SentenceTransformer
 import chromadb
 from typing import List, Dict
+import logging
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
 
 class VectorDBService:
     def __init__(self, client: chromadb.Client):
@@ -14,7 +18,7 @@ class VectorDBService:
             embedding = self.model.encode(text, convert_to_tensor=False).tolist()
             return embedding
         except Exception as e:
-            print(f"Failed to generate embedding for text: {e}")
+            logger.error(f"Failed to generate embedding for text: {e}")
             return []
 
     def add_article(self, article: Dict):
@@ -23,7 +27,7 @@ class VectorDBService:
             text = f"{article['title']} {article['content']}"
             embedding = self.generate_embedding(text)
             if not embedding:
-                print(f"Skipping article {article['title']}: Empty embedding")
+                logger.warning(f"Skipping article {article['title']}: Empty embedding")
                 return
             self.collection.add(
                 ids=[article['_id']],
@@ -38,15 +42,16 @@ class VectorDBService:
                     "crawl_timestamp": article["crawl_timestamp"]
                 }]
             )
+            logger.info(f"Stored article in ChromaDB: {article['title']} (ID: {article['_id']})")
         except Exception as e:
-            print(f"Failed to add article {article['title']}: {e}")
+            logger.error(f"Failed to add article {article['title']}: {e}")
 
     def search_articles(self, query: str, top_k: int) -> List[Dict]:
         """Search articles semantically using ChromaDB."""
         try:
             query_embedding = self.generate_embedding(query)
             if not query_embedding:
-                print(f"Failed to generate query embedding for: {query}")
+                logger.error(f"Failed to generate query embedding for: {query}")
                 return []
             results = self.collection.query(
                 query_embeddings=[query_embedding],
@@ -65,7 +70,13 @@ class VectorDBService:
                     "crawl_timestamp": results["metadatas"][0][i]["crawl_timestamp"],
                     "distance": results["distances"][0][i]
                 })
+            logger.info(f"Retrieved {len(articles)} articles for query: {query}")
             return articles
         except Exception as e:
-            print(f"Failed to search articles: {e}")
+            logger.error(f"Failed to search articles: {e}")
             return []
+
+    def store_articles(self, articles: List[Dict]):
+        """Store multiple articles in ChromaDB."""
+        for article in articles:
+            self.add_article(article)
