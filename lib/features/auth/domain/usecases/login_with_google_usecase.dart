@@ -1,5 +1,6 @@
-// domain/usecases/login_with_google_usecase.dart
-import '../entities/user.dart';
+
+import 'package:newsbrief/features/auth/domain/entities/auth_entities.dart';
+
 import '../repositories/auth_repository.dart';
 
 class LoginWithGoogleUseCase {
@@ -7,7 +8,7 @@ class LoginWithGoogleUseCase {
 
   LoginWithGoogleUseCase(this.repository);
 
-  Future<User> call() {
-    return repository.loginWithGoogle();
+  Future<AuthResponseEntity> call() async {
+    return await repository.loginWithGoogle();
   }
 }

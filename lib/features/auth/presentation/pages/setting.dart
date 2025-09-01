@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+// import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:newsbrief/core/storage/token_secure_storage.dart';
+// import 'package:newsbrief/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:newsbrief/features/auth/presentation/widgets/list_tile_items.dart';
 import 'package:newsbrief/features/auth/presentation/widgets/section_header.dart';
 
@@ -17,6 +20,7 @@ class _SettingsPageState extends State<SettingsPage> {
   double _audioSpeed = 1.0; // Default audio speed
   bool _notificationsEnabled = false; // New state variable for notifications
 
+  final TokenSecureStorage storage = TokenSecureStorage();
   // Function to show the push notifications dialog
   void _showPushNotificationsDialog() {
     showDialog(
@@ -124,9 +128,10 @@ class _SettingsPageState extends State<SettingsPage> {
               child: const Text("Cancel"),
             ),
             TextButton(
-              onPressed: () {
+              onPressed: () async {
+                // final token = await storage.readRefreshToken();
                 // Perform the logout action here
-                print("User logged out.");
+                // context.read<AuthCubit>().logout(refreshToken: token);
                 Navigator.pop(context); // Close the dialog
                 Navigator.pop(context); // Navigate back from settings
               },

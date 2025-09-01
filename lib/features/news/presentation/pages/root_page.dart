@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:newsbrief/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:newsbrief/features/auth/presentation/cubit/auth_state.dart';
 import 'package:newsbrief/features/auth/presentation/pages/profile_page.dart';
 import 'package:newsbrief/features/news/presentation/pages/following_pages.dart';
 import 'package:newsbrief/features/news/presentation/pages/home_page.dart';
@@ -18,7 +21,7 @@ class _RootPageState extends State<RootPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color.fromARGB(255, 255, 255, 255),
+      backgroundColor: Colors.white,
       body: IndexedStack(
         index: currentPage,
         children: const [
@@ -38,28 +41,65 @@ class _RootPageState extends State<RootPage> {
               blurRadius: 5,
               offset: const Offset(0, -2),
             ),
-          ], // background color
-        ),
-        padding: const EdgeInsets.only(bottom: 12), // pushes nav bar UP
-        child: NavigationBar(
-          backgroundColor: Colors.white, // change nav bar color
-          indicatorColor: Colors.grey.shade200, // selected tab indicator
-          height: 65, // makes it taller
-          destinations: const [
-            NavigationDestination(icon: Icon(Icons.home, color: Colors.black), label: ''),
-            NavigationDestination(
-              icon: Icon(Icons.folder_copy, color: Colors.black),
-              label: '',
-            ),
-            NavigationDestination(icon: Icon(Icons.search, color: Colors.black), label: ''),
-            NavigationDestination(icon: Icon(Icons.bookmark, color: Colors.black), label: ''),
-            NavigationDestination(icon: Icon(Icons.person, color: Colors.black), label: ''),
           ],
-          selectedIndex: currentPage,
-          onDestinationSelected: (int index) {
-            setState(() {
-              currentPage = index;
-            });
+        ),
+        padding: const EdgeInsets.only(bottom: 12),
+        child: BlocBuilder<AuthCubit, AuthState>(
+          builder: (context, state) {
+            String? firstLetter;
+
+            if (state is AuthAuthenticated) {
+              final name = state.user.email;
+              print(name);
+              if (name.isNotEmpty) {
+                firstLetter = name[0].toUpperCase();
+                print("user UnAuthcaited");
+              }
+            } else {
+              print("user UnAuthcaited");
+            }
+
+            return NavigationBar(
+              backgroundColor: Colors.white,
+              indicatorColor: Colors.grey.shade200,
+              height: 65,
+              destinations: [
+                const NavigationDestination(
+                  icon: Icon(Icons.home, color: Colors.black),
+                  label: '',
+                ),
+                const NavigationDestination(
+                  icon: Icon(Icons.folder_copy, color: Colors.black),
+                  label: '',
+                ),
+                const NavigationDestination(
+                  icon: Icon(Icons.search, color: Colors.black),
+                  label: '',
+                ),
+                const NavigationDestination(
+                  icon: Icon(Icons.bookmark, color: Colors.black),
+                  label: '',
+                ),
+                NavigationDestination(
+                  icon: firstLetter != null
+                      ? CircleAvatar(
+                          backgroundColor: Colors.black,
+                          child: Text(
+                            firstLetter,
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        )
+                      : const Icon(Icons.person, color: Colors.black),
+                  label: '',
+                ),
+              ],
+              selectedIndex: currentPage,
+              onDestinationSelected: (int index) {
+                setState(() {
+                  currentPage = index;
+                });
+              },
+            );
           },
         ),
       ),

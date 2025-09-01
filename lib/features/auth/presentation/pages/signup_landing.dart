@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../bloc/auth_bloc.dart';
-import '../bloc/auth_event.dart';
-import '../bloc/auth_state.dart';
+import 'package:newsbrief/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:newsbrief/features/auth/presentation/cubit/auth_state.dart';
 import 'signup_email.dart';
 import 'interests.dart';
 
@@ -12,23 +11,24 @@ class SignupLandingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
-        child: BlocConsumer<AuthBloc, AuthState>(
+        child: BlocConsumer<AuthCubit, AuthState>(
           listener: (context, state) {
-            if (state is AuthSuccess) {
+            if (state is AuthAuthenticated) {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
                   builder: (_) => BlocProvider.value(
-                    value: context.read<AuthBloc>(),
+                    value: context.read<AuthCubit>(),
                     child: const InterestsScreen(),
                   ),
                 ),
               );
-            } else if (state is AuthFailure) {
+            } else if (state is AuthError) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(state.error),
+                  content: Text(state.message),
                   backgroundColor: Colors.red,
                 ),
               );
@@ -41,16 +41,16 @@ class SignupLandingPage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  IconButton(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      IconButton(
                         onPressed: () {
                           Navigator.pop(context);
                         },
                         icon: Icon(Icons.arrow_back),
                       ),
-                ],
-              ),
+                    ],
+                  ),
                   const Spacer(),
                   const Text(
                     "NewsBrief",
@@ -94,7 +94,7 @@ class SignupLandingPage extends StatelessWidget {
                           context,
                           MaterialPageRoute(
                             builder: (_) => BlocProvider.value(
-                              value: context.read<AuthBloc>(),
+                              value: context.read<AuthCubit>(),
                               child: const SignupEmailPage(),
                             ),
                           ),
@@ -159,10 +159,26 @@ class SignupLandingPage extends StatelessWidget {
                       onPressed: state is AuthLoading
                           ? null
                           : () {
-                              context.read<AuthBloc>().add(
-                                SignUpWithGoogleEvent(),
-                              );
+                              context
+                                  .read<AuthCubit>()
+                                  .loginWithGoogleUseCase();
+                              Navigator.pushNamed(context, '/root');
                             },
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/root');
+                    },
+                    label: const Text(
+                      'Continue as Guest',
+                      style: TextStyle(color: Colors.black),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 50),
+                      side: const BorderSide(color: Colors.black),
                     ),
                   ),
                   const SizedBox(height: 20),
