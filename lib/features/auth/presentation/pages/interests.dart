@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../bloc/auth_bloc.dart';
-import '../bloc/auth_event.dart';
-import '../bloc/auth_state.dart';
+import 'package:newsbrief/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:newsbrief/features/auth/presentation/cubit/auth_state.dart';
 
 class InterestsScreen extends StatefulWidget {
   const InterestsScreen({super.key});
@@ -18,8 +17,7 @@ class _InterestsScreenState extends State<InterestsScreen> {
   @override
   void initState() {
     super.initState();
-
-    context.read<AuthBloc>().add(LoadInterestsEvent());
+    context.read<AuthCubit>().loadInterests();
   }
 
   bool get canContinue => selectedInterests.values.where((v) => v).length >= 3;
@@ -27,12 +25,12 @@ class _InterestsScreenState extends State<InterestsScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider.value(
-      value: context.read<AuthBloc>(),
+      value: context.read<AuthCubit>(),
       child: Scaffold(
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(24.0),
-            child: BlocConsumer<AuthBloc, AuthState>(
+            child: BlocConsumer<AuthCubit, AuthState>(
               listener: (context, state) {
                 if (state is InterestsLoaded) {
                   availableInterests = state.interests;
@@ -47,10 +45,10 @@ class _InterestsScreenState extends State<InterestsScreen> {
                       backgroundColor: Colors.green,
                     ),
                   );
-                } else if (state is AuthFailure) {
+                } else if (state is AuthError) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(state.error),
+                      content: Text(state.message),
                       backgroundColor: Colors.red,
                     ),
                   );
@@ -150,8 +148,8 @@ class _InterestsScreenState extends State<InterestsScreen> {
                                     .where((e) => e.value)
                                     .map((e) => e.key)
                                     .toList();
-                                context.read<AuthBloc>().add(
-                                  SaveInterestsEvent(selected),
+                                context.read<AuthCubit>().saveInterests(
+                                  selected,
                                 );
                                 Navigator.pushNamed(context, '/root');
                               }
