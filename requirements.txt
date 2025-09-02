@@ -9,4 +9,4 @@ beautifulsoup4==4.13.5
 chromadb==1.0.20
 feedparser==6.0.11
 gunicorn==23.0.0
-playwright[chromium]
+playwright==1.55.0
