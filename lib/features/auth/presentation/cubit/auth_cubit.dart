@@ -75,7 +75,7 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthLoading());
     try {
       final user = await getMe();
-      emit(AuthAuthenticated(user.user));
+      emit(AuthAuthenticated(user));
     } catch (e) {
       emit(AuthError(_msg(e)));
     }
@@ -87,7 +87,7 @@ class AuthCubit extends Cubit<AuthState> {
       await requestVerificationEmail(email: email);
       emit(const AuthEmailActionSuccess('Verification email sent.'));
       final user = await getMe();
-      emit(AuthAuthenticated(user.user));
+      emit(AuthAuthenticated(user));
     } catch (e) {
       emit(AuthError(_msg(e)));
     }
@@ -98,7 +98,7 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       await verifyEmail(token: token); // now returns Tokens
       final user = await getMe();
-      emit(AuthAuthenticated(user.user));
+      emit(AuthAuthenticated(user));
     } catch (e) {
       emit(AuthError(_msg(e)));
     }
@@ -137,8 +137,11 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> loginWithGoogle() async {
     emit(AuthLoading());
     try {
-      final res = await loginWithGoogleUseCase();
-      emit(AuthAuthenticated(res.user));
+      final authResponse = await loginWithGoogleUseCase();
+      print(authResponse);
+      final res = await getMe();
+      print(res);
+      emit(AuthAuthenticated(res));
     } catch (e) {
       emit(AuthError(_msg(e)));
     }

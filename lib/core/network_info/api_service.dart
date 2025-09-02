@@ -7,14 +7,14 @@ class ApiService {
   final TokenStorage tokenStorage;
 
   ApiService({required String baseUrl, required this.tokenStorage})
-    : dio = Dio(
-        BaseOptions(
-          baseUrl: baseUrl,
-          connectTimeout: const Duration(seconds: 20),
-          receiveTimeout: const Duration(seconds: 20),
-          headers: {'content-Type': 'application/json'},
-        ),
-      ) {
+      : dio = Dio(
+          BaseOptions(
+            baseUrl: baseUrl,
+            connectTimeout: const Duration(seconds: 20),
+            receiveTimeout: const Duration(seconds: 20),
+            headers: {'content-Type': 'application/json'},
+          ),
+        ) {
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
@@ -25,36 +25,36 @@ class ApiService {
           handler.next(options);
         },
         onError: (e, handler) async {
-          //auto refresh on 401 if we have a refresh token
           if (e.response?.statusCode == 401) {
             final refreshed = await _tryRefreshToken();
             if (refreshed) {
-              //retry the original request with fresh access token
               final access = await tokenStorage.readAccessToken();
               final reqOptions = e.requestOptions;
               reqOptions.headers['Authorization'] = 'Bearer $access';
               try {
                 final cloneResponse = await dio.fetch(reqOptions);
                 return handler.resolve(cloneResponse);
-              } on DioException catch (err) {
-                return handler.reject(err);
+              } catch (err) {
+                return handler.reject(_toDioException(_mapError(err), e.requestOptions));
               }
             }
           }
-          handler.next(e);
+          handler.reject(_toDioException(_mapError(e), e.requestOptions));
         },
       ),
     );
   }
+  
   Future<bool> _tryRefreshToken() async {
     final tokenStorage = TokenSecureStorage();
     final refresh = await tokenStorage.readRefreshToken();
     if (refresh == null || refresh.isEmpty) return false;
 
     try {
-      final res = await Dio(
-        BaseOptions(baseUrl: dio.options.baseUrl),
-      ).post('/auth/refresh_token', data: {'refresh_token': refresh});
+      final res = await Dio(BaseOptions(baseUrl: dio.options.baseUrl)).post(
+        '/auth/refresh_token',
+        data: {'refresh_token': refresh},
+      );
       final access = res.data['access_token'] as String?;
       final newRefresh = res.data['refresh_token'] as String?;
       if (access != null) {
@@ -65,24 +65,68 @@ class ApiService {
       }
       return access != null;
     } catch (_) {
-      await tokenStorage.clear(); //refresh failed + clear tokens
+      await tokenStorage.clear();
       return false;
     }
   }
 
-  Future<Response<T>> get<T>(String path, {Map<String, dynamic>? query}) {
-    return dio.get<T>(path, queryParameters: query);
+  // ✅ Safe request wrappers
+  Future<Response<T>> get<T>(String path, {Map<String, dynamic>? query}) async {
+    try {
+      return await dio.get<T>(path, queryParameters: query);
+    } catch (e) {
+      throw _mapError(e);
+    }
   }
 
-  Future<Response<T>> post<T>(String path, {dynamic data}) {
-    return dio.post<T>(path, data: data);
+  Future<Response<T>> post<T>(String path, {dynamic data}) async {
+    try {
+      return await dio.post<T>(path, data: data);
+    } catch (e) {
+      throw _mapError(e);
+    }
   }
 
-  Future<Response<T>> put<T>(String path, {dynamic data}) {
-    return dio.put<T>(path, data: data);
+  Future<Response<T>> put<T>(String path, {dynamic data}) async {
+    try {
+      return await dio.put<T>(path, data: data);
+    } catch (e) {
+      throw _mapError(e);
+    }
   }
 
-  Future<Response<T>> delete<T>(String path, {dynamic data}) {
-    return dio.delete<T>(path, data: data);
+  Future<Response<T>> delete<T>(String path, {dynamic data}) async {
+    try {
+      return await dio.delete<T>(path, data: data);
+    } catch (e) {
+      throw _mapError(e);
+    }
+  }
+
+  // ✅ Centralized error mapper
+  Exception _mapError(dynamic error) {
+    if (error is DioException) {
+      if (error.type == DioExceptionType.connectionTimeout ||
+          error.type == DioExceptionType.receiveTimeout) {
+        return Exception("Connection timed out. Please try again.");
+      }
+      if (error.type == DioExceptionType.badResponse) {
+        final status = error.response?.statusCode;
+        final message = error.response?.data?['message'] ?? "Server error";
+        return Exception("[$status] $message");
+      }
+      return Exception("Please check your connection or Incorrect credential.");
+    }
+    return Exception("Unexpected error occurred.");
+  }
+
+   // ✅ Wraps Exception into DioException so handler.reject works
+  DioException _toDioException(Exception error, RequestOptions requestOptions) {
+    return DioException(
+      requestOptions: requestOptions,
+      error: error,
+      type: DioExceptionType.unknown,
+    );
   }
 }
+

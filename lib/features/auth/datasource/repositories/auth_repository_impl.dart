@@ -168,7 +168,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<AuthResponseEntity> getMe() async {
+  Future<UserEntity> getMe() async {
     try {
       return await remote.getMe();
       // return AuthResponseModel.fromJson(user as Map<String, dynamic>);

@@ -13,7 +13,7 @@ abstract class AuthRepository {
     required String name,
   });
   Future<void> logout({required String refreshToken});
-  Future<AuthResponseEntity> getMe();
+  Future<UserEntity> getMe();
   Future<void> updateMe({required String name, required String email});
 
   Future<void> requestVerificationEmail({required String email});

@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'package:dio/dio.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:newsbrief/core/network_info/api_service.dart';
 import 'package:newsbrief/features/auth/datasource/models/models.dart';
 import 'package:newsbrief/features/auth/datasource/models/tokens_model.dart';
+import 'package:newsbrief/features/auth/datasource/models/user_model.dart';
 
 class AuthRemoteDataSources {
   final ApiService api;
@@ -51,11 +53,11 @@ class AuthRemoteDataSources {
     }
   }
 
-  Future<AuthResponseModel> getMe() async {
+  Future<UserModel> getMe() async {
     try {
       final res = await api.get('/me');
       log("GetMe response: ${res.data}");
-      return AuthResponseModel.fromJson(res.data as Map<String, dynamic>);
+      return UserModel.fromJson(res.data as Map<String, dynamic>);
     } catch (e, s) {
       log("GetMe failed: $e", stackTrace: s);
       rethrow;
@@ -159,35 +161,52 @@ class AuthRemoteDataSources {
     }
   }
 
-  Future<AuthResponseModel> loginWithGoogle() async {
+  Future<void> loginWithGoogle() async {
     final loginUrl = Uri.parse(
       "https://news-brief-core-api-excr.onrender.com/api/v1/auth/google/login",
     );
 
-    // Open Google login in a browser
-    final result = await FlutterWebAuth2.authenticate(
-      url: loginUrl.toString(),
-      callbackUrlScheme: "myapp", // must match Android/iOS scheme
-    );
+    try {
+      // Launch Google OAuth flow
+      final result = await FlutterWebAuth2.authenticate(
+        url: loginUrl.toString(),
+        callbackUrlScheme: "newsbrief", // must match Android/iOS scheme
+      );
 
-    // Parse returned callback URL
-    final callbackUri = Uri.parse(result);
-    final accessToken = callbackUri.queryParameters['access_token'];
-    final refreshToken = callbackUri.queryParameters['refresh_token'];
-    final userJson = callbackUri.queryParameters['userId'];
+      // The result will be the final callback URL
+      final callbackUri = Uri.parse(result);
 
-    if (accessToken == null || refreshToken == null) {
-      throw Exception("Failed to retrieve tokens from Google login");
+      // Extract tokens from query parameters
+      final accessToken = callbackUri.queryParameters['access_token'];
+      final refreshToken = callbackUri.queryParameters['refresh_token'];
+      final userJson = callbackUri.queryParameters['userId'];
+
+      if (accessToken == null || refreshToken == null) {
+        print("❌ Tokens not found in callback");
+        return;
+      }
+
+      print("✅ Access Token: $accessToken");
+      print("✅ Refresh Token: $refreshToken");
+
+      if (userJson != null) {
+        try {
+          final userMap = jsonDecode(userJson);
+          print("✅ User Info: $userMap");
+        } catch (e) {
+          print("Failed to decode user JSON: $e");
+        }
+      } else {
+        print("ℹ️ No user info returned");
+      }
+    } on PlatformException catch (e) {
+      if (e.code == 'CANCELED') {
+        print("❌ User canceled Google login");
+      } else {
+        print("❌ Google login failed: $e");
+      }
+    } catch (e) {
+      print("❌ Unexpected error: $e");
     }
-
-    print('accessToken: $accessToken');
-    print('refreshToken: $refreshToken');
-    print('userJson: $userJson');
-
-    return AuthResponseModel.fromJson({
-      "access_token": accessToken,
-      "refresh_token": refreshToken,
-      "user": userJson != null ? jsonDecode(userJson) : null,
-    });
   }
 }

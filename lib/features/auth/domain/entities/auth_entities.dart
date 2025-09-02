@@ -7,7 +7,7 @@ class UserEntity {
   final String? avatarUrl;
   final bool isVerified;
   final DateTime? createdAt;
-  final List<String>? interest;
+  List<String>? interest;
 
   UserEntity({
     required this.id,
