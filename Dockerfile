@@ -16,9 +16,6 @@ RUN playwright install --with-deps chromium
 # Copy the rest of the application code
 COPY . /app
 
-# Keep Playwright browsers inside container
-ENV PLAYWRIGHT_BROWSERS_PATH=0
-
 # Expose a default port (Docker requires a number)
 EXPOSE 8000
 
