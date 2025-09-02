@@ -1,29 +1,26 @@
-# Use official Playwright image with Python
+# Use an official Python runtime with Playwright dependencies
 FROM mcr.microsoft.com/playwright/python:v1.45.0-jammy
 
+# Set working directory
 WORKDIR /app
 
-# Install Poetry
-RUN pip install poetry
+# Copy requirements.txt first (to leverage caching)
+COPY requirements.txt /app/
 
-# Copy only dependency files first
-COPY pyproject.toml poetry.lock* /app/
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Install dependencies system-wide
-RUN poetry config virtualenvs.create false \
-    && poetry install --no-dev
-
-# Install Playwright Chromium
+# Install Playwright browsers
 RUN playwright install --with-deps chromium
 
-# Copy app code
+# Copy the rest of the application code
 COPY . /app
 
-# Keep Chromium inside the image
+# Set environment variable for Playwright
 ENV PLAYWRIGHT_BROWSERS_PATH=0
 
-# Expose port (Render maps $PORT → container:8000)
-EXPOSE 8000
+# Expose the port Render will use
+EXPOSE $PORT
 
-# Run Gunicorn with Uvicorn workers
+# Start the application
 CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "app.main:app", "--bind", "0.0.0.0:$PORT"]
