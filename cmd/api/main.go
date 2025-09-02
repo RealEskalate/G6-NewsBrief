@@ -59,6 +59,7 @@ func main() {
 	// Dependency Injection: Repositories
 	userCollection := mongoClient.Client.Database(dbName).Collection("users")
 	userRepo := mongodb.NewMongoUserRepository(userCollection)
+	newsRepo := mongodb.NewNewsRepositoryMongo(mongoClient.Client.Database(dbName).Collection("news"))
 	tokenRepo := mongodb.NewTokenRepository(mongoClient.Client.Database(dbName).Collection("tokens"))
 
 	// Dependency Injection: Services
@@ -77,6 +78,14 @@ func main() {
 	appConfig := config.NewConfig()
 	// config
 	baseURL := appConfig.GetAppBaseURL()
+	// External services
+	summarizerAPI := os.Getenv("GEMINI_API_URL")
+	GeminiAPIKey := os.Getenv("GEMINI_API_KEY")
+	if summarizerAPI == "" {
+		log.Fatal("GEMINI_API_URL environment variable not set")
+	}
+	geminiClient := external_services.NewGeminiClient(GeminiAPIKey, summarizerAPI)
+
 	// Dependency Injection: Usecases
 	emailUsecase := usecase.NewEmailVerificationUseCase(tokenRepo, userRepo, mailService, randomGenerator, uuidGenerator, baseURL)
 	userUsecase := usecase.NewUserUsecase(userRepo, tokenRepo, emailUsecase, hasher, jwtService, mailService, appLogger, appConfig, appValidator, uuidGenerator, randomGenerator)
@@ -88,6 +97,7 @@ func main() {
 		userUsecase, emailUsecase,
 		userRepo, tokenRepo, hasher, jwtService, mailService,
 		appLogger, appConfig, appValidator, uuidGenerator, randomGenerator,
+		newsRepo, geminiClient,
 	)
 	appRouter.SetupRoutes(router)
 

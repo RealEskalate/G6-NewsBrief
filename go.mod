@@ -17,6 +17,7 @@ require (
 )
 
 require (
+	github.com/Conight/go-googletrans v0.2.4 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
 )
