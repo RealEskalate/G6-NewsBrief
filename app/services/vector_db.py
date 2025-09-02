@@ -34,7 +34,7 @@ class VectorDBService:
         """Search articles semantically using ChromaDB."""
         try:
             results = self.collection.query(
-                query_text=[query],
+                query_texts=[query],
                 n_results=top_k
             )
             articles = []
