@@ -21,6 +21,7 @@ type Preferences struct {
 type User struct {
 	ID           string      `bson:"_id,omitempty" json:"id"`
 	Username     string      `bson:"username" json:"username"`
+	Fullname     string      `bson:"fullname" json:"fullname"`
 	Email        string      `bson:"email" json:"email"`
 	PasswordHash string      `bson:"password_hash" json:"-"`
 	Role         UserRole    `bson:"role" json:"role"`

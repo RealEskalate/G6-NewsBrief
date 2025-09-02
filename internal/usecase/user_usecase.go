@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/RealEskalate/G6-NewsBrief/internal/domain/contract"
@@ -23,6 +24,7 @@ const (
 type UserUsecase struct {
 	userRepo        contract.IUserRepository
 	tokenRepo       contract.ITokenRepository
+	topicRepo       contract.ITopicRepository
 	emailUsecase    contract.IEmailVerificationUC
 	hasher          contract.IHasher
 	jwtService      contract.IJWTService
@@ -38,6 +40,7 @@ type UserUsecase struct {
 func NewUserUsecase(
 	userRepo contract.IUserRepository,
 	tokenRepo contract.ITokenRepository,
+	topicRepo contract.ITopicRepository,
 	emailUC contract.IEmailVerificationUC,
 	hasher contract.IHasher,
 	jwtService contract.IJWTService,
@@ -51,6 +54,7 @@ func NewUserUsecase(
 	return &UserUsecase{
 		userRepo:        userRepo,
 		tokenRepo:       tokenRepo,
+		topicRepo:       topicRepo,
 		emailUsecase:    emailUC,
 		hasher:          hasher,
 		jwtService:      jwtService,
@@ -67,7 +71,7 @@ func NewUserUsecase(
 var _ contract.IUserUseCase = (*UserUsecase)(nil)
 
 // Register handles user registration.
-func (uc *UserUsecase) Register(ctx context.Context, username, email, password, firstName, lastName string) (*entity.User, error) {
+func (uc *UserUsecase) Register(ctx context.Context, username, email, password, fullname string) (*entity.User, error) {
 	// Validate input fields using the injected validator
 	if err := uc.validator.ValidateEmail(email); err != nil {
 		return nil, fmt.Errorf("invalid email format: %w", err)
@@ -76,7 +80,7 @@ func (uc *UserUsecase) Register(ctx context.Context, username, email, password, 
 		return nil, fmt.Errorf("weak password: %w", err)
 	}
 
-	// Check if user with same username or email already exists
+	// Check if user with same email already exists
 	existingUserByEmail, err := uc.userRepo.GetUserByEmail(ctx, email)
 	if err != nil && err.Error() != errUserNotFound {
 		uc.logger.Errorf("failed to check for existing user by email: %v", err)
@@ -84,15 +88,6 @@ func (uc *UserUsecase) Register(ctx context.Context, username, email, password, 
 	}
 	if existingUserByEmail != nil {
 		return nil, fmt.Errorf("user with email %s already exists", email)
-	}
-
-	existingUserByUsername, err := uc.userRepo.GetUserByUsername(ctx, username)
-	if err != nil && err.Error() != errUserNotFound {
-		uc.logger.Errorf("failed to check for existing user by username: %v", err)
-		return nil, errors.New(errInternalServer)
-	}
-	if existingUserByUsername != nil {
-		return nil, fmt.Errorf("user with username %s already exists", username)
 	}
 
 	// Hash the password
@@ -106,6 +101,7 @@ func (uc *UserUsecase) Register(ctx context.Context, username, email, password, 
 	user := &entity.User{
 		ID:           uc.uuidGenerator.NewUUID(),
 		Username:     username,
+		Fullname:     fullname,
 		Email:        email,
 		PasswordHash: hashedPassword,
 		Role:         entity.UserRoleUser,
@@ -120,7 +116,7 @@ func (uc *UserUsecase) Register(ctx context.Context, username, email, password, 
 	}
 
 	// Send activation email if required, using config from injected ConfigProvider
-	if uc.config.GetSendActivationEmail() {
+	if uc.config.GetSendActivationEmail() && user.Role != "admin" {
 		// Generate email verification token
 		if err = uc.emailUsecase.RequestVerificationEmail(ctx, user); err != nil {
 			return nil, fmt.Errorf("failed to send verification email")
@@ -150,10 +146,11 @@ func (uc *UserUsecase) Login(ctx context.Context, email, password string) (*enti
 		return nil, "", "", errors.New(errInternalServer)
 	}
 
+	// uncommented on sept-1-2025 because user email verification is not mandatory. A decision was made to allow login without email verification
 	// Check if the user's email is active/verified
-	if !user.IsVerified {
-		return nil, "", "", errors.New("account not active. Please verify your email")
-	}
+	// if !user.IsVerified {
+	// 	return nil, "", "", errors.New("account not active. Please verify your email")
+	// }
 
 	// Verify password
 	if err := uc.hasher.ComparePasswordHash(password, user.PasswordHash); err != nil {
@@ -189,7 +186,13 @@ func (uc *UserUsecase) Login(ctx context.Context, email, password string) (*enti
 		CreatedAt: time.Now(),
 		Revoke:    false,
 	}
-	if err := uc.tokenRepo.CreateToken(ctx, tokenEntity); err != nil {
+
+	if foundToken, err := uc.tokenRepo.GetTokenByUserIDWithOpts(ctx, user.ID, string(entity.TokenTypeRefresh)); err == nil {
+		if err := uc.tokenRepo.UpdateToken(ctx, foundToken.ID, tokenEntity.TokenHash, tokenEntity.ExpiresAt); err != nil {
+			uc.logger.Errorf("failed to update refresh token for user %s: %v", user.ID, err)
+			return nil, "", "", errors.New("failed to store token")
+		}
+	} else if err := uc.tokenRepo.CreateToken(ctx, tokenEntity); err != nil {
 		uc.logger.Errorf("failed to store refresh token for user %s: %v", user.ID, err)
 		return nil, "", "", errors.New("failed to store token")
 	}
@@ -233,7 +236,7 @@ func (uc *UserUsecase) RefreshToken(ctx context.Context, refreshToken string) (s
 
 	// Retrieve the stored token using the parsed UUID.
 	uc.logger.Infof("Debug: Looking up stored token for user: %s", userID)
-	storedToken, err := uc.tokenRepo.GetTokenByUserID(ctx, userID)
+	storedToken, err := uc.tokenRepo.GetTokenByUserIDWithOpts(ctx, userID, string(entity.TokenTypeRefresh))
 	if err != nil {
 		uc.logger.Errorf("Debug: Failed to retrieve stored token: %v", err)
 		if err.Error() == "token not found" {
@@ -243,7 +246,7 @@ func (uc *UserUsecase) RefreshToken(ctx context.Context, refreshToken string) (s
 		return "", "", errors.New(errInternalServer)
 	}
 	uc.logger.Infof("Debug: Found stored token with hash length: %d", len(storedToken.TokenHash))
-
+	uc.logger.Debugf("Stored token details: %+v", storedToken)
 	// Check if the token has been revoked.
 	if storedToken.Revoke {
 		return "", "", errors.New("refresh token has been revoked, please log in again")
@@ -323,6 +326,7 @@ func (uc *UserUsecase) ForgotPassword(ctx context.Context, email string) error {
 		UserID:    user.ID,
 		TokenType: entity.TokenTypePasswordReset,
 		TokenHash: string(hashedResetToken),
+		Verifier:  verifier,
 		ExpiresAt: time.Now().Add(uc.config.GetPasswordResetTokenExpiry()),
 		CreatedAt: time.Now(),
 		Revoke:    false,
@@ -332,9 +336,14 @@ func (uc *UserUsecase) ForgotPassword(ctx context.Context, email string) error {
 		return errors.New("failed to initiate password reset")
 	}
 
-	// The reset link should use the unhashed token
+	// The reset link should use the frontend URL directly
 	emailSubject := "Password Reset Request"
-	resetLink := fmt.Sprintf("%s/reset-password?verifier=%s&token=%s", uc.config.GetAppBaseURL(), verifier, resetToken)
+	frontendURL := uc.config.GetFrontendBaseURL()
+	if frontendURL == "" {
+		uc.logger.Errorf("Frontend URL not configured for password reset email")
+		return errors.New("frontend URL not configured")
+	}
+	resetLink := fmt.Sprintf("%s/reset-password?verifier=%s&token=%s", frontendURL, verifier, resetToken)
 	emailBody := fmt.Sprintf("Hi %s,\n\nYou have requested to reset your password. Please click the following link to reset your password: %s\n\nIf you did not request this, please ignore this email.\n\nThanks,\nThe Team", user.Username, resetLink)
 
 	if err := uc.mailService.SendEmail(ctx, user.Email, emailSubject, emailBody); err != nil {
@@ -486,6 +495,18 @@ func (uc *UserUsecase) UpdateProfile(ctx context.Context, userID string, updates
 
 	uc.logger.Infof("Current user before update: %+v", user)
 
+	if len(updates) == 0 {
+		return user, nil // No updates to apply
+	}
+	// check if the fullname is set to empty string
+	if val, ok := updates["fullname"]; ok {
+		if fullname, isString := val.(string); isString {
+			if len(strings.TrimSpace(fullname)) == 0 {
+				uc.logger.Warnf("User %s is attempting to set fullname to an empty string", userID)
+				return nil, errors.New("fullname cannot be empty")
+			}
+		}
+	}
 	// Check for username uniqueness if username is being updated
 	if val, ok := updates["username"]; ok {
 		if username, isString := val.(string); isString {
@@ -509,6 +530,10 @@ func (uc *UserUsecase) UpdateProfile(ctx context.Context, userID string, updates
 			if username, ok := v.(string); ok {
 				user.Username = username
 			}
+		case "fullname":
+			if fullname, ok := v.(string); ok {
+				user.Fullname = fullname
+			}
 		}
 	}
 	user.UpdatedAt = time.Now()
@@ -531,7 +556,7 @@ func (uc *UserUsecase) UpdateProfile(ctx context.Context, userID string, updates
 }
 
 // login with OAuth2
-func (uc *UserUsecase) LoginWithOAuth(ctx context.Context, firstName, lastName, email string) (string, string, error) {
+func (uc *UserUsecase) LoginWithOAuth(ctx context.Context, fullname, email string) (string, string, error) {
 	// Check if user with the given email already exists
 	user, err := uc.userRepo.GetUserByEmail(ctx, email)
 	if err != nil && err.Error() != errUserNotFound {
@@ -539,18 +564,18 @@ func (uc *UserUsecase) LoginWithOAuth(ctx context.Context, firstName, lastName, 
 		return "", "", errors.New(errInternalServer)
 	}
 
-	// If user does not exist, create a new one
+	// If user does not exist, create a new one (auto-verified for OAuth)
 	if user == nil {
-
 		newUser := &entity.User{
 			ID:           uc.uuidGenerator.NewUUID(),
-			Username:     email, // Or generate a unique username
+			Username:     email, // Use email as username for OAuth users
 			Email:        email,
 			PasswordHash: "", // No password for OAuth users
 			Role:         entity.UserRoleUser,
 			IsVerified:   true,
 			CreatedAt:    time.Now(),
 			UpdatedAt:    time.Now(),
+			Fullname:     fullname,
 		}
 
 		// Save the new user to the database
@@ -561,7 +586,17 @@ func (uc *UserUsecase) LoginWithOAuth(ctx context.Context, firstName, lastName, 
 		user = newUser
 	}
 
-	// At this point, we have a user (either existing or newly created)
+	// Require email verification for OAuth sign-in as well
+	if !user.IsVerified {
+		// Auto-verify Google users
+		user.IsVerified = true
+		if _, err := uc.userRepo.UpdateUser(ctx, user); err != nil {
+			uc.logger.Errorf("failed to mark oauth user verified: %v", err)
+			return "", "", errors.New("failed to verify oauth user")
+		}
+	}
+
+	// At this point, we have a verified user
 	// Generate access and refresh tokens
 	accessToken, err := uc.jwtService.GenerateAccessToken(user.ID, user.Role)
 	if err != nil {
@@ -621,7 +656,6 @@ func (uc *UserUsecase) UpdatePreferences(ctx context.Context, userID string, req
 		// Error handling for user not found is already handled by GetUserByID.
 		return nil, err
 	}
-
 	// Note: Topic and subscription updates are handled by their dedicated usecases.
 
 	// 3. Save the updated user object back to the repository.
@@ -633,4 +667,36 @@ func (uc *UserUsecase) UpdatePreferences(ctx context.Context, userID string, req
 
 	// 4. Return the updated preferences object to be used in the handler response.
 	return &user.Preferences, nil
+}
+
+func (uc *UserUsecase) SubscribeTopic(ctx context.Context, userID, topicID string) error {
+	if userID == "" || topicID == "" {
+		return errors.New("user ID and topic ID are required")
+	}
+	if _, err := uc.topicRepo.GetTopicByID(ctx, topicID); err != nil {
+		return errors.New("topic not found")
+	}
+	if _, err := uc.userRepo.GetUserByID(ctx, userID); err != nil {
+		return errors.New("user not found")
+	}
+
+	if err := uc.userRepo.SubscribeTopic(ctx, userID, topicID); err != nil {
+		return errors.New("failed to subscribe user to topic")
+	}
+	return nil
+}
+
+func (uc *UserUsecase) GetUserSubscribedTopics(ctx context.Context, userID string) ([]*entity.Topic, error) {
+	if userID == "" {
+		return nil, errors.New("user ID is required")
+	}
+	result, err := uc.userRepo.GetUserSubscribedTopicsByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	userTopics, err := uc.topicRepo.GetUserSubscribedTopics(ctx, result)
+	if err != nil {
+		return nil, err
+	}
+	return userTopics, nil
 }
