@@ -26,8 +26,8 @@ func NewRouter(userUsecase contract.IUserUseCase, emailVerUC contract.IEmailVeri
 	baseURL := config.GetAppBaseURL()
 	return &Router{
 		userHandler:         NewUserHandler(userUsecase),
-		emailHandler:        NewEmailHandler(emailVerUC, userRepo),
-		authHandler:         NewAuthHandler(userUsecase, baseURL),
+		emailHandler:        NewEmailHandler(emailVerUC, userRepo, jwtService, tokenRepo, hasher, config, uuidGen),
+		authHandler:         NewAuthHandler(userUsecase, baseURL, config, jwtService),
 		sourceHandler:       NewSourceHandler(sourceUC, uuidGen),
 		topicHandler:        NewTopicHandler(topicUC, userUsecase, uuidGen),
 		subscriptionHandler: NewSubscriptionHandler(subscriptionUC),

@@ -57,38 +57,6 @@ func adminSeeder(userUsecase contract.IUserUseCase, userRepo contract.IUserRepos
 	}
 }
 
-func adminSeeder(userUsecase contract.IUserUseCase, userRepo contract.IUserRepository) {
-	// Add a -seed flag to run seeder before starting the server
-	seed := flag.Bool("seed", true, "run database seeder and exit")
-	flag.Parse()
-
-	// Optionally allow seeding via env (useful on Render/CI)
-	seedOnStart := os.Getenv("SEED_ON_START") == "true"
-
-	if *seed || seedOnStart {
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-		defer cancel()
-
-		adminEmail := os.Getenv("SEED_ADMIN_EMAIL")
-		if adminEmail == "" {
-			adminEmail = "admin@newsbrief.local"
-		}
-		adminPassword := os.Getenv("SEED_ADMIN_PASSWORD")
-		if adminPassword == "" {
-			adminPassword = "ChangeMe123!"
-		}
-
-		if err := seeder.SeedAdminUsingUC(ctx, userUsecase, userRepo, adminEmail, adminPassword); err != nil {
-			log.Fatalf("seeding failed: %v", err)
-		}
-		log.Println("seeding completed")
-		// Exit if seeding-only mode
-		if *seed {
-			return
-		}
-	}
-}
-
 func main() {
 	// Load environment variables from .env file
 	if err := godotenv.Load(); err != nil {
@@ -141,7 +109,7 @@ func main() {
 	uuidGenerator := uuidgen.NewGenerator()
 	appConfig := config.NewConfig()
 	// Dependency Injection: Usecases
-	emailUsecase := usecase.NewEmailVerificationUseCase(tokenRepo, userRepo, mailService, randomGenerator, uuidGenerator, baseURL)
+	emailUsecase := usecase.NewEmailVerificationUseCase(tokenRepo, userRepo, mailService, randomGenerator, uuidGenerator, appConfig)
 	userUsecase := usecase.NewUserUsecase(userRepo, tokenRepo, topicRepo, emailUsecase, hasher, jwtService, mailService, appLogger, appConfig, appValidator, uuidGenerator, randomGenerator)
 	topicUsecase := usecase.NewTopicUsecase(topicRepo)
 	sourceUsecase := usecase.NewSourceUsecase(sourceRepo)
