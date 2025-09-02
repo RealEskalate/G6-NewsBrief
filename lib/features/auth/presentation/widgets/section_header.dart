@@ -1,6 +1,4 @@
-
-  import 'package:flutter/material.dart';
-
+import 'package:flutter/material.dart';
 
 class SectionHeader extends StatelessWidget {
   final String title;
@@ -8,6 +6,9 @@ class SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textColor = theme.colorScheme.onBackground;
+
     return Padding(
       padding: const EdgeInsets.only(left: 16, top: 24, bottom: 8),
       child: Text(
@@ -15,7 +16,7 @@ class SectionHeader extends StatelessWidget {
         style: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.bold,
-          color: Colors.black,
+          color: textColor,
         ),
       ),
     );

@@ -20,8 +20,13 @@ class _RootPageState extends State<RootPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textColor = theme.colorScheme.onBackground;
+    final backgroundColor = theme.colorScheme.background;
+    final indicatorColor = theme.colorScheme.surfaceVariant;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: backgroundColor,
       body: IndexedStack(
         index: currentPage,
         children: const [
@@ -34,10 +39,12 @@ class _RootPageState extends State<RootPage> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: backgroundColor,
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.shade100,
+              color: theme.brightness == Brightness.light
+                  ? Colors.grey.shade100
+                  : Colors.black26,
               blurRadius: 5,
               spreadRadius: 2,
               offset: const Offset(0, -2),
@@ -51,50 +58,48 @@ class _RootPageState extends State<RootPage> {
 
             if (state is AuthAuthenticated) {
               final name = state.user.fullName;
-              print('name $name');
               if (name.isNotEmpty) {
                 firstLetter = name[0].toUpperCase();
-                print("user Authcaited");
               }
-            } else {
-              print("user UnAuthcaited");
             }
 
             return NavigationBar(
-              backgroundColor: Colors.white,
-              indicatorColor: Colors.grey.shade200,
+              backgroundColor: backgroundColor,
+              indicatorColor: indicatorColor,
               height: 65,
               destinations: [
-                const NavigationDestination(
-                  icon: Icon(Icons.home, color: Colors.black),
+                NavigationDestination(
+                  icon: Icon(Icons.home, color: textColor),
                   label: '',
                 ),
-                const NavigationDestination(
-                  icon: Icon(Icons.folder_copy, color: Colors.black),
+                NavigationDestination(
+                  icon: Icon(Icons.folder_copy, color: textColor),
                   label: '',
                 ),
-                const NavigationDestination(
-                  icon: Icon(Icons.search, color: Colors.black),
+                NavigationDestination(
+                  icon: Icon(Icons.search, color: textColor),
                   label: '',
                 ),
-                const NavigationDestination(
-                  icon: Icon(Icons.bookmark, color: Colors.black),
+                NavigationDestination(
+                  icon: Icon(Icons.bookmark, color: textColor),
                   label: '',
                 ),
                 NavigationDestination(
                   icon: firstLetter != null
                       ? SizedBox(
-                          width: 30,
-                          height: 30,
-                          child: CircleAvatar(
-                            backgroundColor: Colors.black,
-                            child: Text(
-                              firstLetter,
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                          ),
-                        )
-                      : const Icon(Icons.person, color: Colors.black),
+                    width: 30,
+                    height: 30,
+                    child: CircleAvatar(
+                      backgroundColor: textColor,
+                      child: Text(
+                        firstLetter,
+                        style: TextStyle(
+                          color: theme.colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                    ),
+                  )
+                      : Icon(Icons.person, color: textColor),
                   label: '',
                 ),
               ],

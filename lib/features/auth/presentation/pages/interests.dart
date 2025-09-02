@@ -24,9 +24,12 @@ class _InterestsScreenState extends State<InterestsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return BlocProvider.value(
       value: context.read<AuthCubit>(),
       child: Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(24.0),
@@ -35,21 +38,20 @@ class _InterestsScreenState extends State<InterestsScreen> {
                 if (state is InterestsLoaded) {
                   availableInterests = state.interests;
                   for (var i in availableInterests) {
-                    if (!selectedInterests.containsKey(i))
-                      selectedInterests[i] = false;
+                    if (!selectedInterests.containsKey(i)) selectedInterests[i] = false;
                   }
                 } else if (state is InterestsSavedSuccess) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Interests saved!'),
-                      backgroundColor: Colors.green,
+                    SnackBar(
+                      content: const Text('Interests saved!'),
+                      backgroundColor: theme.colorScheme.primary,
                     ),
                   );
                 } else if (state is AuthError) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(state.message),
-                      backgroundColor: Colors.red,
+                      backgroundColor: theme.colorScheme.error,
                     ),
                   );
                 }
@@ -65,10 +67,10 @@ class _InterestsScreenState extends State<InterestsScreen> {
                     Center(
                       child: Text(
                         'Welcome to NewsBrief',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black,
+                          color: theme.colorScheme.onBackground,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -78,10 +80,10 @@ class _InterestsScreenState extends State<InterestsScreen> {
                       padding: const EdgeInsets.only(left: 24.0),
                       child: Text(
                         'What are you interested in?',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black,
+                          color: theme.colorScheme.onBackground,
                         ),
                       ),
                     ),
@@ -90,23 +92,22 @@ class _InterestsScreenState extends State<InterestsScreen> {
                       padding: const EdgeInsets.only(left: 90.0),
                       child: Text(
                         'Choose three or more',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.normal,
-                          color: Colors.black54,
+                          color: theme.colorScheme.onBackground.withOpacity(0.6),
                         ),
                       ),
                     ),
                     const SizedBox(height: 16),
                     Expanded(
                       child: GridView.builder(
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: 12,
-                              mainAxisSpacing: 12,
-                              childAspectRatio: 2.5,
-                            ),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: 2.5,
+                        ),
                         itemCount: availableInterests.length,
                         itemBuilder: (context, index) {
                           final category = availableInterests[index];
@@ -119,18 +120,20 @@ class _InterestsScreenState extends State<InterestsScreen> {
                                 selectedInterests[category] = selected;
                               });
                             },
-                            selectedColor: Colors.black,
-                            checkmarkColor: Colors.white,
+                            selectedColor: theme.colorScheme.primary,
+                            checkmarkColor: theme.colorScheme.onPrimary,
                             labelStyle: TextStyle(
-                              color: isSelected ? Colors.white : Colors.black87,
+                              color: isSelected
+                                  ? theme.colorScheme.onPrimary
+                                  : theme.colorScheme.onBackground,
                               fontWeight: FontWeight.w500,
                             ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                               side: BorderSide(
                                 color: isSelected
-                                    ? Colors.black
-                                    : Colors.grey[300]!,
+                                    ? theme.colorScheme.primary
+                                    : theme.dividerColor,
                                 width: 1,
                               ),
                             ),
@@ -144,31 +147,29 @@ class _InterestsScreenState extends State<InterestsScreen> {
                       child: ElevatedButton(
                         onPressed: canContinue
                             ? () {
-                                final selected = selectedInterests.entries
-                                    .where((e) => e.value)
-                                    .map((e) => e.key)
-                                    .toList();
-                                context.read<AuthCubit>().saveInterests(
-                                  selected,
-                                );
-                                Navigator.pushNamed(context, '/root');
-                              }
+                          final selected = selectedInterests.entries
+                              .where((e) => e.value)
+                              .map((e) => e.key)
+                              .toList();
+                          context.read<AuthCubit>().saveInterests(selected);
+                          Navigator.pushNamed(context, '/root');
+                        }
                             : null,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: canContinue
-                              ? Colors.black
-                              : Colors.black.withOpacity(0.5),
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.primary.withOpacity(0.5),
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30),
                           ),
                         ),
-                        child: const Text(
+                        child: Text(
                           'Continue',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                            color: theme.colorScheme.onPrimary,
                           ),
                         ),
                       ),

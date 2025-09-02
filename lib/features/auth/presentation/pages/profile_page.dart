@@ -51,14 +51,15 @@ class _ProfilePageState extends State<ProfilePage>
 
   void _showAddTopicDialog() {
     TextEditingController controller = TextEditingController();
+    final theme = Theme.of(context);
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: Colors.white,
-          title: const Text(
+          backgroundColor: theme.scaffoldBackgroundColor,
+          title: Text(
             "Add New Topic",
-            style: TextStyle(color: Colors.black),
+            style: TextStyle(color: theme.colorScheme.onBackground),
           ),
           content: TextField(
             controller: controller,
@@ -72,9 +73,9 @@ class _ProfilePageState extends State<ProfilePage>
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text(
+              child: Text(
                 "Cancel",
-                style: TextStyle(color: Colors.black54),
+                style: TextStyle(color: theme.colorScheme.onBackground.withOpacity(0.6)),
               ),
             ),
             TextButton(
@@ -86,7 +87,10 @@ class _ProfilePageState extends State<ProfilePage>
                   Navigator.pop(context);
                 }
               },
-              child: const Text("Add", style: TextStyle(color: Colors.black)),
+              child: Text(
+                "Add",
+                style: TextStyle(color: theme.colorScheme.primary),
+              ),
             ),
           ],
         );
@@ -96,6 +100,8 @@ class _ProfilePageState extends State<ProfilePage>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return BlocBuilder<AuthCubit, AuthState>(
       builder: (context, state) {
         String? fullName;
@@ -105,7 +111,7 @@ class _ProfilePageState extends State<ProfilePage>
           email = state.user.email;
         }
         return Scaffold(
-          backgroundColor: Colors.white,
+          backgroundColor: theme.scaffoldBackgroundColor,
           body: SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
@@ -119,7 +125,7 @@ class _ProfilePageState extends State<ProfilePage>
                         onPressed: () {
                           Navigator.pushNamed(context, '/root');
                         },
-                        icon: const Icon(Icons.arrow_back, color: Colors.black),
+                        icon: Icon(Icons.arrow_back, color: theme.colorScheme.onBackground),
                       ),
                       Row(
                         children: [
@@ -150,21 +156,21 @@ class _ProfilePageState extends State<ProfilePage>
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) =>
-                                          const ManageSubscriptionPage(),
+                                      const ManageSubscriptionPage(),
                                     ),
                                   );
                                   break;
                               }
                             },
-                            icon: const Icon(Icons.edit),
+                            icon: Icon(Icons.edit, color: theme.colorScheme.onBackground),
                           ),
                           IconButton(
                             onPressed: () {
                               Navigator.pushNamed(context, '/setting');
                             },
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.settings,
-                              color: Colors.black,
+                              color: theme.colorScheme.onBackground,
                             ),
                           ),
                         ],
@@ -174,26 +180,29 @@ class _ProfilePageState extends State<ProfilePage>
                   const SizedBox(height: 30),
                   CircleAvatar(
                     radius: 60,
-                    backgroundColor: Colors.grey.shade300,
-                    child: const Icon(
+                    backgroundColor: theme.colorScheme.surfaceVariant,
+                    child: Icon(
                       Icons.person,
                       size: 60,
-                      color: Colors.black54,
+                      color: theme.colorScheme.onSurface.withOpacity(0.6),
                     ),
                   ),
                   const SizedBox(height: 20),
                   Text(
                     fullName ?? "John Doe",
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onBackground,
                     ),
                   ),
-
                   const SizedBox(height: 8),
                   Text(
                     email ?? "johndoe@gmail.com",
-                    style: const TextStyle(fontSize: 16, color: Colors.black54),
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: theme.colorScheme.onBackground.withOpacity(0.6),
+                    ),
                   ),
                   const SizedBox(height: 30),
                   Row(
@@ -202,7 +211,7 @@ class _ProfilePageState extends State<ProfilePage>
                       IndicatorCard(
                         title: "Subscribed",
                         count: 12,
-                        color: Colors.grey.shade100,
+                        color: theme.colorScheme.surfaceVariant,
                         onTap: () {
                           Navigator.pushNamed(context, '/following');
                         },
@@ -210,7 +219,7 @@ class _ProfilePageState extends State<ProfilePage>
                       IndicatorCard(
                         title: "Saved News",
                         count: 34,
-                        color: Colors.grey.shade400,
+                        color: theme.colorScheme.surfaceVariant,
                         onTap: () {
                           Navigator.pushNamed(context, '/saved');
                         },
@@ -221,11 +230,12 @@ class _ProfilePageState extends State<ProfilePage>
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         "Your Interests",
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onBackground,
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -236,23 +246,23 @@ class _ProfilePageState extends State<ProfilePage>
                           ...topics
                               .map(
                                 (topic) => isManagingTopics
-                                    ? RotationTransition(
-                                        turns: Tween(begin: -0.001, end: 0.002)
-                                            .animate(
-                                              CurvedAnimation(
-                                                parent: _animationController,
-                                                curve: const FlippedCurve(
-                                                  Curves.easeOutCubic,
-                                                ),
-                                              ),
-                                            ),
-                                        child: TopicChip(
-                                          title: topic,
-                                          onDeleted: () => _removeTopic(topic),
-                                        ),
-                                      )
-                                    : TopicChip(title: topic, onDeleted: null),
-                              )
+                                ? RotationTransition(
+                              turns: Tween(begin: -0.001, end: 0.002)
+                                  .animate(
+                                CurvedAnimation(
+                                  parent: _animationController,
+                                  curve: const FlippedCurve(
+                                    Curves.easeOutCubic,
+                                  ),
+                                ),
+                              ),
+                              child: TopicChip(
+                                title: topic,
+                                onDeleted: () => _removeTopic(topic),
+                              ),
+                            )
+                                : TopicChip(title: topic, onDeleted: null),
+                          )
                               .toList(),
                           if (isManagingTopics)
                             ActionChip(
@@ -264,16 +274,16 @@ class _ProfilePageState extends State<ProfilePage>
                                 Icons.add,
                                 color: Colors.white,
                               ),
-                              backgroundColor: Colors.black,
+                              backgroundColor: theme.colorScheme.primary,
                               onPressed: _showAddTopicDialog,
                             ),
                           if (isManagingTopics)
                             ActionChip(
-                              label: const Text(
+                              label: Text(
                                 "Done",
-                                style: TextStyle(color: Colors.black),
+                                style: TextStyle(color: theme.colorScheme.onBackground),
                               ),
-                              backgroundColor: Colors.white,
+                              backgroundColor: theme.colorScheme.surfaceVariant,
                               onPressed: () {
                                 setState(() {
                                   isManagingTopics = false;

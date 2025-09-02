@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-// import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:newsbrief/core/storage/token_secure_storage.dart';
-// import 'package:newsbrief/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:newsbrief/features/auth/presentation/widgets/list_tile_items.dart';
 import 'package:newsbrief/features/auth/presentation/widgets/section_header.dart';
-
+import '../../../../core/theme/theme_cubit.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -14,31 +13,45 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  // For toggles
-  List<bool> _appearanceSelection = [false, true]; // Dark by default
+  // Language toggle state
   List<bool> _languageSelection = [true, false]; // English by default
   double _audioSpeed = 1.0; // Default audio speed
   bool _notificationsEnabled = false; // New state variable for notifications
 
   final TokenSecureStorage storage = TokenSecureStorage();
-  // Function to show the push notifications dialog
+
   void _showPushNotificationsDialog() {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Text("Push Notifications", style: TextStyle(fontWeight: FontWeight.bold)),
+          backgroundColor: Theme.of(context).colorScheme.background,
+          shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text(
+            "Push Notifications",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.onBackground,
+            ),
+          ),
           content: StatefulBuilder(
             builder: (context, setState) {
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("Do you want to enable push notifications?"),
+                  Text(
+                    "Do you want to enable push notifications?",
+                    style:
+                    TextStyle(color: Theme.of(context).colorScheme.onBackground),
+                  ),
                   SwitchListTile(
-                    title: const Text("Enable Notifications"),
+                    title: Text(
+                      "Enable Notifications",
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.onBackground),
+                    ),
                     value: _notificationsEnabled,
                     onChanged: (bool value) {
                       setState(() {
@@ -54,7 +67,9 @@ class _SettingsPageState extends State<SettingsPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("Close", style: TextStyle(color: Colors.black)),
+              child: Text("Close",
+                  style:
+                  TextStyle(color: Theme.of(context).colorScheme.onBackground)),
             ),
           ],
         );
@@ -62,35 +77,36 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  // Placeholder function to handle toggling notifications
   void _togglePushNotifications(bool enable) {
-    // Implement your logic to enable or disable push notifications here
     if (enable) {
       print("Push notifications enabled.");
-      // Call a service or API to subscribe to notifications
     } else {
       print("Push notifications disabled.");
-      // Call a service or API to unsubscribe from notifications
     }
   }
 
-  // Function to show the delete account dialog
   void _showDeleteAccountDialog() {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Text("Delete Account", style: TextStyle(fontWeight: FontWeight.bold)),
-          content: const Text(
+          backgroundColor: Theme.of(context).colorScheme.background,
+          shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text("Delete Account",
+              style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onBackground)),
+          content: Text(
             "Are you sure you want to delete your account? This action cannot be undone.",
-            style: TextStyle(color: Colors.black54),
+            style: TextStyle(color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7)),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
+              child: Text("Cancel",
+                  style:
+                  TextStyle(color: Theme.of(context).colorScheme.onBackground)),
             ),
             TextButton(
               onPressed: () {
@@ -105,33 +121,33 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  // Placeholder function to handle account deletion
   void _deleteAccount() {
-    // Implement your logic to delete the user's account here
     print("User account is being deleted.");
-    // Call a service or API to delete the account
   }
 
-  // Function to show the logout confirmation dialog
   void _showLogoutDialog() {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Text("Log Out", style: TextStyle(fontWeight: FontWeight.bold)),
-          content: const Text("Are you sure you want to log out?"),
+          backgroundColor: Theme.of(context).colorScheme.background,
+          shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text("Log Out",
+              style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onBackground)),
+          content: Text("Are you sure you want to log out?",
+              style: TextStyle(color: Theme.of(context).colorScheme.onBackground)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
+              child: Text("Cancel",
+                  style:
+                  TextStyle(color: Theme.of(context).colorScheme.onBackground)),
             ),
             TextButton(
               onPressed: () async {
-                // final token = await storage.readRefreshToken();
-                // Perform the logout action here
-                // context.read<AuthCubit>().logout(refreshToken: token);
                 Navigator.pop(context); // Close the dialog
                 Navigator.pop(context); // Navigate back from settings
               },
@@ -145,23 +161,30 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    // Appearance toggle derived from current theme
+    List<bool> appearanceSelection = [!isDark, isDark];
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.colorScheme.background,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           "Settings",
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+          style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.onBackground),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: theme.colorScheme.onBackground),
           onPressed: () => Navigator.pop(context),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: theme.colorScheme.background,
         elevation: 0,
       ),
       body: ListView(
         children: [
-          // Section 1: Account
           const SectionHeader(title: "Account"),
           ListTileItem(
             title: "Edit Profile",
@@ -178,77 +201,60 @@ class _SettingsPageState extends State<SettingsPage> {
             onTap: _showPushNotificationsDialog,
           ),
 
-          // Section 2: Configure
           const SectionHeader(title: "Configure NewsBrief"),
           // Appearance Toggle
-                   // Appearance Toggle
           ListTile(
-            title: const Text(
-              "Appearance",
-              style: TextStyle(color: Colors.black, fontSize: 16),
-            ),
-            trailing: ToggleButtons(
-              borderRadius: BorderRadius.circular(12),
-              color: Colors.grey,
-              selectedColor: Colors.white,
-              fillColor: Colors.black,
-              isSelected: _appearanceSelection,
-              onPressed: (index) {
-                setState(() {
-                  for (int i = 0; i < _appearanceSelection.length; i++) {
-                    _appearanceSelection[i] = (i == index);
+            title: const Text("Appearance", style: TextStyle(fontSize: 16)),
+            trailing: SizedBox(
+              width: 160,
+              child: ToggleButtons(
+                borderRadius: BorderRadius.circular(12),
+                isSelected: appearanceSelection,
+                fillColor: theme.colorScheme.primary,
+                selectedColor: isDark ? Colors.black : Colors.white,
+                color: isDark ? Colors.white : Colors.black,
+                onPressed: (index) {
+                  if ((index == 0 && isDark) || (index == 1 && !isDark)) {
+                    context.read<ThemeCubit>().toggleTheme();
                   }
-                });
-              },
-              children: const [
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: Text(" Light "),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: Text(" Dark "),
-                ),
-              ],
+                },
+                children: const [
+                  Expanded(child: Center(child: Text("Light"))),
+                  Expanded(child: Center(child: Text("Dark"))),
+                ],
+              ),
             ),
           ),
+
           // Language Toggle
           ListTile(
-            title: const Text(
-              "Language",
-              style: TextStyle(color: Colors.black, fontSize: 16),
-            ),
-            trailing: ToggleButtons(
-              borderRadius: BorderRadius.circular(12),
-              color: Colors.grey,
-              selectedColor: Colors.white,
-              fillColor: Colors.black,
-              isSelected: _languageSelection,
-              onPressed: (index) {
-                setState(() {
-                  for (int i = 0; i < _languageSelection.length; i++) {
-                    _languageSelection[i] = (i == index);
-                  }
-                });
-              },
-              children: const [
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: Text("English"),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: Text("አማርኛ"),
-                ),
-              ],
+            title: const Text("Language", style: TextStyle(fontSize: 16)),
+            trailing: SizedBox(
+              width: 160,
+              child: ToggleButtons(
+                borderRadius: BorderRadius.circular(12),
+                isSelected: _languageSelection,
+                fillColor: theme.colorScheme.primary,
+                selectedColor: isDark ? Colors.black : Colors.white,
+                color: isDark ? Colors.white : Colors.black,
+                onPressed: (index) {
+                  setState(() {
+                    for (int i = 0; i < _languageSelection.length; i++) {
+                      _languageSelection[i] = (i == index);
+                    }
+                  });
+                },
+                children: const [
+                  Expanded(child: Center(child: Text("English"))),
+                  Expanded(child: Center(child: Text("አማርኛ"))),
+                ],
+              ),
             ),
           ),
-          // Audio Settings
+
+          // Audio Speed
           ListTile(
-            title: const Text(
-              "Audio Speed",
-              style: TextStyle(color: Colors.black, fontSize: 16),
-            ),
+            title: const Text("Audio Speed", style: TextStyle(fontSize: 16)),
             trailing: SizedBox(
               width: 150,
               child: Row(
@@ -258,8 +264,8 @@ class _SettingsPageState extends State<SettingsPage> {
                       min: 0.5,
                       max: 2.0,
                       divisions: 6,
-                      activeColor: Colors.black,
-                      thumbColor: Colors.black,
+                      activeColor: theme.colorScheme.primary,
+                      thumbColor: theme.colorScheme.primary,
                       value: _audioSpeed,
                       onChanged: (value) {
                         setState(() {
@@ -268,29 +274,20 @@ class _SettingsPageState extends State<SettingsPage> {
                       },
                     ),
                   ),
-                  Text(
-                    "${_audioSpeed.toStringAsFixed(1)}x",
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
+                  Text("${_audioSpeed.toStringAsFixed(1)}x",
+                      style: TextStyle(fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onBackground)),
                 ],
               ),
             ),
           ),
 
-          // Section: Legal
-          const SectionHeader(title: 'Legal'),
-          ListTileItem(
-            title: "Terms of Service",
-            onTap: () {},
-          ),
-          ListTileItem(
-            title: "Privacy Policy",
-            onTap: () {},
-          ),
+          const SectionHeader(title: "Legal"),
+          ListTileItem(title: "Terms of Service", onTap: () {}),
+          ListTileItem(title: "Privacy Policy", onTap: () {}),
 
-          // Logout
           const SizedBox(height: 16),
-          const Divider(thickness: 1), // separates logout from the rest
+          const Divider(thickness: 1),
           const SizedBox(height: 16),
 
           ListTile(
@@ -298,12 +295,9 @@ class _SettingsPageState extends State<SettingsPage> {
             title: const Text(
               "Log Out",
               style: TextStyle(
-                color: Colors.red,
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
+                  color: Colors.red, fontSize: 18, fontWeight: FontWeight.w600),
             ),
-            onTap: _showLogoutDialog, // Call the new logout dialog function
+            onTap: _showLogoutDialog,
           ),
         ],
       ),

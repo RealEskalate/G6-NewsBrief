@@ -1,5 +1,3 @@
-// lib/features/auth/presentation/pages/manage_subscription_page.dart
-
 import 'package:flutter/material.dart';
 
 class ManageSubscriptionPage extends StatefulWidget {
@@ -22,8 +20,8 @@ class _ManageSubscriptionPageState extends State<ManageSubscriptionPage> {
   ];
 
   late List<String> filteredSources;
-  final Set<String> subscribedSources = {"CNN", "Fana"}; // Dummy data for initial state
-  TextEditingController searchController = TextEditingController();
+  final Set<String> subscribedSources = {"CNN", "Fana"}; // Dummy initial state
+  final TextEditingController searchController = TextEditingController();
 
   @override
   void initState() {
@@ -35,7 +33,7 @@ class _ManageSubscriptionPageState extends State<ManageSubscriptionPage> {
     setState(() {
       filteredSources = allSources
           .where((source) =>
-              source.toLowerCase().contains(query.toLowerCase()))
+          source.toLowerCase().contains(query.toLowerCase()))
           .toList();
     });
   }
@@ -52,19 +50,21 @@ class _ManageSubscriptionPageState extends State<ManageSubscriptionPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: theme.colorScheme.onBackground),
         ),
-        title: const Text(
+        title: Text(
           "Manage Subscriptions",
           style: TextStyle(
-            color: Colors.black,
+            color: theme.colorScheme.onBackground,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -78,20 +78,22 @@ class _ManageSubscriptionPageState extends State<ManageSubscriptionPage> {
               onChanged: _onSearchChanged,
               decoration: InputDecoration(
                 hintText: "Search for sources...",
-                prefixIcon: const Icon(Icons.search, color: Colors.black54),
+                hintStyle: TextStyle(color: theme.colorScheme.onBackground.withOpacity(0.6)),
+                prefixIcon: Icon(Icons.search, color: theme.colorScheme.onBackground.withOpacity(0.6)),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: Colors.black26),
+                  borderSide: BorderSide(color: theme.colorScheme.onBackground.withOpacity(0.3)),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: Colors.black26),
+                  borderSide: BorderSide(color: theme.colorScheme.onBackground.withOpacity(0.3)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: Colors.black),
+                  borderSide: BorderSide(color: theme.colorScheme.primary),
                 ),
               ),
+              style: TextStyle(color: theme.colorScheme.onBackground),
             ),
           ),
           Expanded(
@@ -101,13 +103,17 @@ class _ManageSubscriptionPageState extends State<ManageSubscriptionPage> {
                 final source = filteredSources[index];
                 final isSubscribed = subscribedSources.contains(source);
                 return ListTile(
-                  title: Text(source, style: const TextStyle(color: Colors.black)),
+                  title: Text(source, style: TextStyle(color: theme.colorScheme.onBackground)),
                   trailing: ElevatedButton(
                     onPressed: () => _toggleSubscription(source),
                     style: ElevatedButton.styleFrom(
-                      foregroundColor: isSubscribed ? Colors.white : Colors.black,
-                      backgroundColor: isSubscribed ? Colors.black : Colors.white,
-                      side: const BorderSide(color: Colors.black, width: 1),
+                      foregroundColor: isSubscribed
+                          ? theme.colorScheme.onPrimary
+                          : theme.colorScheme.onBackground,
+                      backgroundColor: isSubscribed
+                          ? theme.colorScheme.primary
+                          : theme.scaffoldBackgroundColor,
+                      side: BorderSide(color: theme.colorScheme.onBackground, width: 1),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),

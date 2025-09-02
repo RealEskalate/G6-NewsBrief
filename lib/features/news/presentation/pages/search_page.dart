@@ -5,10 +5,20 @@ class SearchPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
-      appBar: AppBar(title: const Text("Home")),
-      body: const Center(
-        child: Text("Welcome to search 🎉"),
+      appBar: AppBar(
+        title: Text(
+          "Home",
+          style: textTheme.titleLarge,
+        ),
+      ),
+      body: Center(
+        child: Text(
+          "Welcome to search 🎉",
+          style: textTheme.bodyLarge,
+        ),
       ),
     );
   }
