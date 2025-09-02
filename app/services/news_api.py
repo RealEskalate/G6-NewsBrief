@@ -32,7 +32,7 @@ async def fetch_news_api(req: NewsAPIRequest) -> List[Dict]:
             "title": art["title"],
             "author": art.get("author"),
             "date": art.get("publishedAt"),
-            "body": art["description"] + " " + art.get("content", ""),
+            "body": art["description"] if art["description"] else "" + art.get("content", ""),
             "source_url": art["url"],
             "source_type": "newsapi"
         } for art in articles
