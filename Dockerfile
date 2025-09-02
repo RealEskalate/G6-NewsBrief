@@ -19,8 +19,8 @@ COPY . /app
 # Set environment variable for Playwright
 ENV PLAYWRIGHT_BROWSERS_PATH=0
 
-# Expose a default port (Docker requires a number here)
+# Expose a default port (Docker requires a number here, Render overrides)
 EXPOSE 8000
 
 # Start the application with Render's injected $PORT
-CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "app.main:app", "--bind", "0.0.0.0:${PORT}"]
+CMD gunicorn -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:$PORT
