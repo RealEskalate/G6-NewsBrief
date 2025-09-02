@@ -1,7 +1,7 @@
-
+import 'dart:convert';
 import 'dart:developer';
 import 'package:dio/dio.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:newsbrief/core/network_info/api_service.dart';
 import 'package:newsbrief/features/auth/datasource/models/models.dart';
 import 'package:newsbrief/features/auth/datasource/models/tokens_model.dart';
@@ -159,22 +159,35 @@ class AuthRemoteDataSources {
     }
   }
 
-  
+  Future<AuthResponseModel> loginWithGoogle() async {
+    final loginUrl = Uri.parse(
+      "https://news-brief-core-api-excr.onrender.com/api/v1/auth/google/login",
+    );
 
-final GoogleSignIn googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
+    // Open Google login in a browser
+    final result = await FlutterWebAuth2.authenticate(
+      url: loginUrl.toString(),
+      callbackUrlScheme: "myapp", // must match Android/iOS scheme
+    );
 
-Future<void> signInWithGoogle() async {
-  try {
-    final account = await googleSignIn.signIn();
-    final auth = await account?.authentication;
-    final accessToken = auth?.accessToken;
-    final idToken = auth?.idToken;
+    // Parse returned callback URL
+    final callbackUri = Uri.parse(result);
+    final accessToken = callbackUri.queryParameters['access_token'];
+    final refreshToken = callbackUri.queryParameters['refresh_token'];
+    final userJson = callbackUri.queryParameters['userId'];
 
-    print('AccessToken: $accessToken');
-    print('ID Token: $idToken');
-  } catch (e) {
-    print('Google Sign-In failed: $e');
+    if (accessToken == null || refreshToken == null) {
+      throw Exception("Failed to retrieve tokens from Google login");
+    }
+
+    print('accessToken: $accessToken');
+    print('refreshToken: $refreshToken');
+    print('userJson: $userJson');
+
+    return AuthResponseModel.fromJson({
+      "access_token": accessToken,
+      "refresh_token": refreshToken,
+      "user": userJson != null ? jsonDecode(userJson) : null,
+    });
   }
-}
-
 }

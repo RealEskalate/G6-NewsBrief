@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:newsbrief/features/auth/domain/usecases/forgot_password.dart';
+import 'package:newsbrief/features/auth/domain/usecases/get_interests_usecase.dart';
 import 'package:newsbrief/features/auth/domain/usecases/get_me.dart';
 import 'package:newsbrief/features/auth/domain/usecases/login_user.dart';
 import 'package:newsbrief/features/auth/domain/usecases/login_with_google_usecase.dart';
@@ -22,6 +23,7 @@ class AuthCubit extends Cubit<AuthState> {
   final VerifyEmail verifyEmail;
   final RequestVerificationEmail requestVerificationEmail;
   final LoginWithGoogleUseCase loginWithGoogleUseCase;
+  final GetInterestsUseCase getInterestsUseCase;
 
   AuthCubit({
     required this.loginUser,
@@ -33,6 +35,7 @@ class AuthCubit extends Cubit<AuthState> {
     required this.verifyEmail,
     required this.requestVerificationEmail,
     required this.loginWithGoogleUseCase,
+    required this.getInterestsUseCase,
   }) : super(AuthInitial());
 
   Future<void> login({required String email, required String password}) async {
@@ -133,11 +136,32 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<void> loginWithGoogle() async {
     emit(AuthLoading());
-    try{
+    try {
       final res = await loginWithGoogleUseCase();
       emit(AuthAuthenticated(res.user));
-    }catch (e) {
+    } catch (e) {
       emit(AuthError(_msg(e)));
+    }
+  }
+
+  Future<void> loadInterests() async {
+    emit(AuthLoading());
+    try {
+      final interests = await getInterestsUseCase();
+      emit(InterestsLoaded(interests));
+    } catch (e) {
+      emit(AuthError(e.toString()));
+    }
+  }
+
+  Future<void> saveInterests(List<String> selectedInterests) async {
+    emit(AuthLoading());
+    try {
+      final user = await getMe();
+      user.interest = selectedInterests;
+      emit(InterestsSavedSuccess(selectedInterests));
+    } catch (e) {
+      emit(AuthError(e.toString()));
     }
   }
 

@@ -150,7 +150,7 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<AuthResponseModel> loginWithGoogle() async {
     try {
-      final response = await remote.signInWithGoogle();
+      final response = await remote.loginWithGoogle();
       return AuthResponseModel.fromJson(response as Map<String, dynamic>);
     } catch (e) {
       throw ServerException(e.toString());
@@ -171,6 +171,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<AuthResponseEntity> getMe() async {
     try {
       return await remote.getMe();
+      // return AuthResponseModel.fromJson(user as Map<String, dynamic>);
     } catch (e, stack) {
       log("Error in getMe: $e", stackTrace: stack);
       rethrow;
@@ -253,7 +254,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<AuthResponseEntity> login({
+  Future<AuthResponseModel> login({
     required String email,
     required String password,
   }) async {
@@ -274,7 +275,7 @@ class AuthRepositoryImpl implements AuthRepository {
         access: res.accessToken,
         refresh: res.refreshToken,
       );
-      return AuthResponseEntity(
+      return AuthResponseModel(
         user: user,
         accessToken: res.accessToken,
         refreshToken: res.refreshToken,
