@@ -3,7 +3,9 @@ package http
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
+
 	"github.com/RealEskalate/G6-NewsBrief/internal/domain/contract"
 	"github.com/RealEskalate/G6-NewsBrief/internal/handler/http/dto"
 	"github.com/gin-gonic/gin"
@@ -41,13 +43,14 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 	if err := BindAndValidate(c, &req); err != nil {
 		return
 	}
-	_, err := h.userUsecase.Register(c.Request.Context(), req.Username, req.Email, req.Password, req.Fullname)
+
+	user, err := h.userUsecase.Register(c.Request.Context(), req.Username, req.Email, req.Password, req.Fullname)
 	if err != nil {
 		ErrorHandler(c, http.StatusConflict, err.Error())
 		return
 	}
 
-	MessageHandler(c, http.StatusCreated, "User created successfully. Please check your email to verify your account.")
+	SuccessHandler(c, http.StatusCreated, user)
 }
 
 // Login handles user authentication

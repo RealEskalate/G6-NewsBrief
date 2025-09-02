@@ -2,6 +2,7 @@ package http
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/RealEskalate/G6-NewsBrief/internal/domain/contract"
 	"github.com/RealEskalate/G6-NewsBrief/internal/domain/entity"
@@ -23,8 +24,13 @@ func NewSourceHandler(sourceUC contract.ISourceUsecase, uuidGen contract.IUUIDGe
 
 // CreateSource handles the POST /v1
 func (h *SourceHandler) CreateSource(c *gin.Context) {
-	role, exists := c.Get("role")
-	if !exists || role != "admin" {
+	userRole, exists := c.Get("userRole")
+	if !exists {
+		c.JSON(http.StatusForbidden, dto.ErrorResponse{Error: "Forbidden: Admins only"})
+		return
+	}
+	userRoleStr, ok := userRole.(string)
+	if !ok || strings.TrimSpace(userRoleStr) != "admin" {
 		c.JSON(http.StatusForbidden, dto.ErrorResponse{Error: "Forbidden: Admins only"})
 		return
 	}
