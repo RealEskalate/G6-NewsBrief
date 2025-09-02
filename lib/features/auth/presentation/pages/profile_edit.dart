@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:newsbrief/core/storage/token_secure_storage.dart';
@@ -19,7 +18,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   bool _showChangeName = false;
   bool _showResetPassword = false;
-  TokenSecureStorage storage = TokenSecureStorage();
+  final TokenSecureStorage storage = TokenSecureStorage();
+
   @override
   void initState() {
     super.initState();
@@ -28,6 +28,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return BlocBuilder<AuthCubit, AuthState>(
       builder: (context, state) {
         String? fullName;
@@ -35,27 +37,24 @@ class _EditProfilePageState extends State<EditProfilePage> {
         if (state is AuthAuthenticated) {
           fullName = state.user.fullName;
           _nameController.text = state.user.fullName;
-          if (fullName.isNotEmpty) {
-            firstLetter = fullName[0].toUpperCase();
-          } else {
-            firstLetter = "J"; // fallback
-          }
+          firstLetter = fullName.isNotEmpty ? fullName[0].toUpperCase() : "J";
         }
+
         return Scaffold(
-          backgroundColor: Colors.white,
+          backgroundColor: theme.scaffoldBackgroundColor,
           appBar: AppBar(
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.black),
+              icon: Icon(Icons.arrow_back, color: theme.colorScheme.onBackground),
               onPressed: () => Navigator.pop(context),
             ),
-            title: const Text(
+            title: Text(
               "Edit Profile",
               style: TextStyle(
-                color: Colors.black,
+                color: theme.colorScheme.onBackground,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            backgroundColor: Colors.white,
+            backgroundColor: theme.scaffoldBackgroundColor,
             elevation: 0,
           ),
           body: SingleChildScrollView(
@@ -68,13 +67,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     children: [
                       CircleAvatar(
                         radius: 50,
-                        backgroundColor: Colors.grey.shade100,
+                        backgroundColor: theme.colorScheme.surfaceVariant,
                         child: Text(
                           firstLetter ?? "J",
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 40,
                             fontWeight: FontWeight.bold,
-                            color: Colors.black,
+                            color: theme.colorScheme.onSurface,
                           ),
                         ),
                       ),
@@ -83,10 +82,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         right: 0,
                         child: CircleAvatar(
                           radius: 18,
-                          backgroundColor: Colors.black,
-                          child: const Icon(
+                          backgroundColor: theme.colorScheme.primary,
+                          child: Icon(
                             Icons.edit,
-                            color: Colors.white,
+                            color: theme.colorScheme.onPrimary,
                             size: 18,
                           ),
                         ),
@@ -98,18 +97,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
                 // Change Name button
                 ListTile(
-                  leading: const Icon(
-                    Icons.person_outline,
-                    color: Colors.black,
-                  ),
-                  title: const Text("Change Name"),
+                  leading: Icon(Icons.person_outline, color: theme.colorScheme.onBackground),
+                  title: Text("Change Name", style: TextStyle(color: theme.colorScheme.onBackground)),
                   trailing: Icon(
                     _showChangeName ? Icons.expand_less : Icons.expand_more,
-                    color: Colors.grey,
+                    color: theme.colorScheme.onBackground.withOpacity(0.6),
                   ),
-                  onTap: () {
-                    setState(() => _showChangeName = !_showChangeName);
-                  },
+                  onTap: () => setState(() => _showChangeName = !_showChangeName),
                 ),
                 if (_showChangeName) ...[
                   const SizedBox(height: 10),
@@ -117,29 +111,26 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     controller: _nameController,
                     label: "Name",
                     icon: Icons.person,
-                    maxLength: 30,
                   ),
                   const SizedBox(height: 15),
                   TextButton(
                     onPressed: () {},
                     child: Text(
                       'Change',
-                      style: TextStyle(color: Colors.black, fontSize: 15),
+                      style: TextStyle(color: theme.colorScheme.primary, fontSize: 15),
                     ),
                   ),
                 ],
 
                 // Reset Password button
                 ListTile(
-                  leading: const Icon(Icons.key, color: Colors.black),
-                  title: const Text("Reset Password"),
+                  leading: Icon(Icons.key, color: theme.colorScheme.onBackground),
+                  title: Text("Reset Password", style: TextStyle(color: theme.colorScheme.onBackground)),
                   trailing: Icon(
                     _showResetPassword ? Icons.expand_less : Icons.expand_more,
-                    color: Colors.grey,
+                    color: theme.colorScheme.onBackground.withOpacity(0.6),
                   ),
-                  onTap: () {
-                    setState(() => _showResetPassword = !_showResetPassword);
-                  },
+                  onTap: () => setState(() => _showResetPassword = !_showResetPassword),
                 ),
                 if (_showResetPassword) ...[
                   const SizedBox(height: 10),
@@ -159,8 +150,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   const SizedBox(height: 15),
                   TextButton(
                     onPressed: () async {
-                      final token = await storage
-                          .readAccessToken(); // token is now String? instead of Future<String?>
+                      final token = await storage.readAccessToken();
                       if (token != null) {
                         context.read<AuthCubit>().resetPassword(
                           password: _oldPasswordController.text,
@@ -172,9 +162,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         );
                       }
                     },
-                    child: const Text(
+                    child: Text(
                       'Change',
-                      style: TextStyle(color: Colors.black, fontSize: 15),
+                      style: TextStyle(color: theme.colorScheme.primary, fontSize: 15),
                     ),
                   ),
                 ],
@@ -191,24 +181,21 @@ class _EditProfilePageState extends State<EditProfilePage> {
     required String label,
     required IconData icon,
     bool obscureText = false,
-    TextInputType keyboardType = TextInputType.text,
-    int? maxLength,
   }) {
+    final theme = Theme.of(context);
     return TextField(
       controller: controller,
       obscureText: obscureText,
-      keyboardType: keyboardType,
-      maxLength: maxLength,
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon, color: Colors.blue),
+        prefixIcon: Icon(icon, color: theme.colorScheme.primary),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.blue, width: 2),
+          borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
         ),
-        counterText: "",
       ),
+      style: TextStyle(color: theme.colorScheme.onBackground),
     );
   }
 }

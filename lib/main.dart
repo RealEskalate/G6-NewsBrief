@@ -7,6 +7,8 @@ import 'package:newsbrief/features/auth/datasource/datasources/auth_remote_data_
 import 'package:newsbrief/features/auth/datasource/repositories/auth_repository_impl.dart';
 import 'package:newsbrief/features/auth/domain/usecases/get_interests_usecase.dart';
 import 'package:newsbrief/features/auth/domain/usecases/login_with_google_usecase.dart';
+import 'core/storage/theme_storage.dart';
+import 'core/theme/theme_cubit.dart';
 import 'features/auth/presentation/pages/signup_landing.dart';
 import 'package:newsbrief/features/auth/presentation/pages/login.dart';
 import 'package:newsbrief/features/auth/presentation/pages/profile_edit.dart';
@@ -32,7 +34,9 @@ import 'features/auth/presentation/cubit/auth_cubit.dart';
 
 void main() {
   const baseUrl = 'https://news-brief-core-api-excr.onrender.com/api/v1';
+  WidgetsFlutterBinding.ensureInitialized();
 
+  final themeStorage = ThemeStorage();
   final tokenStorage = TokenSecureStorage();
   final api = ApiService(baseUrl: baseUrl, tokenStorage: tokenStorage);
   final remote = AuthRemoteDataSources(api);
@@ -56,57 +60,62 @@ void main() {
             getInterestsUseCase: GetInterestsUseCase(repo),
           ),
         ),
+        BlocProvider(
+          create: (_) => ThemeCubit(themeStorage),
+        ),
       ],
-      child: MyApp(),
+      child:  MyApp(),
     ),
   );
 }
 
 class MyApp extends StatelessWidget {
-  final CheckFirstRun checkFirstRun = CheckFirstRun(LocalStorage());
-
-  MyApp({super.key});
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'NewsBrief',
-      debugShowCheckedModeBanner: false,
-      routes: {
-        '/login': (context) => const Login(),
-        '/signup': (context) => const SignupLandingPage(),
-        '/edit': (context) => const EditProfilePage(),
-        '/setting': (context) => const SettingsPage(),
-        '/root': (context) => const RootPage(),
-        '/home': (context) => const HomePage(),
-        '/following': (context) => const FollowingPage(),
-        '/search': (context) => const SearchPage(),
-        '/saved': (context) => const SavedPage(),
-        '/profile': (context) => const ProfilePage(),
+    return BlocBuilder<ThemeCubit, ThemeData>(
+      builder: (context, theme) {
+        return MaterialApp(
+          title: 'NewsBrief',
+          debugShowCheckedModeBanner: false,
+          theme: theme,
+          routes: {
+            '/login': (context) => const Login(),
+            '/signup': (context) => const SignupLandingPage(),
+            '/edit': (context) => const EditProfilePage(),
+            '/setting': (context) => const SettingsPage(),
+            '/root': (context) => const RootPage(),
+            '/home': (context) => const HomePage(),
+            '/following': (context) => const FollowingPage(),
+            '/search': (context) => const SearchPage(),
+            '/saved': (context) => const SavedPage(),
+            '/profile': (context) => const ProfilePage(),
+          },
+          home: FutureBuilder<bool>(
+            future: CheckFirstRun(LocalStorage()).shouldShowOnboarding(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              }
+              if (snapshot.hasError) {
+                return Scaffold(
+                  body: Center(child: Text('Error: ${snapshot.error}')),
+                );
+              }
+              return snapshot.data == true
+                  ? OnboardingScreenWrapper(checkFirstRun: CheckFirstRun(LocalStorage()))
+                  : const Login();
+            },
+          ),
+        );
       },
-      home: FutureBuilder<bool>(
-        future: checkFirstRun.shouldShowOnboarding(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
-          }
-          if (snapshot.hasError) {
-            return Scaffold(
-              body: Center(child: Text('Error: ${snapshot.error}')),
-            );
-          }
-          if (snapshot.data == true) {
-            return OnboardingScreenWrapper(checkFirstRun: checkFirstRun);
-          } else {
-            return const Login(); // 👈 or SignupLandingPage, depending on your flow
-          }
-        },
-      ),
     );
   }
 }
+
 
 class OnboardingScreenWrapper extends StatelessWidget {
   final CheckFirstRun checkFirstRun;

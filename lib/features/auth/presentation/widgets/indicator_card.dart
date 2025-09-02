@@ -16,6 +16,14 @@ class IndicatorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textColor = theme.brightness == Brightness.dark
+        ? Colors.white
+        : Colors.black87;
+    final secondaryTextColor = theme.brightness == Brightness.dark
+        ? Colors.white70
+        : Colors.black54;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -31,17 +39,20 @@ class IndicatorCard extends StatelessWidget {
           children: [
             Text(
               "$count",
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                color: textColor,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 14, color: Colors.black54),
+              style: TextStyle(
+                fontSize: 14,
+                color: secondaryTextColor,
+              ),
             ),
           ],
         ),
