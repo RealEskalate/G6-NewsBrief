@@ -90,6 +90,15 @@ func (uc *UserUsecase) Register(ctx context.Context, username, email, password, 
 		return nil, fmt.Errorf("user with email %s already exists", email)
 	}
 
+	existingUserByUsername, err := uc.userRepo.GetUserByUsername(ctx, username)
+	if err != nil && err.Error() != errUserNotFound {
+		uc.logger.Errorf("failed to check for existing user by username: %v", err)
+		return nil, errors.New(errInternalServer)
+	}
+	if existingUserByUsername != nil {
+		return nil, fmt.Errorf("user with username %s already exists", username)
+	}
+
 	// Hash the password
 	hashedPassword, err := uc.hasher.HashPassword(password)
 	if err != nil {
@@ -119,7 +128,7 @@ func (uc *UserUsecase) Register(ctx context.Context, username, email, password, 
 	if uc.config.GetSendActivationEmail() && user.Role != "admin" {
 		// Generate email verification token
 		if err = uc.emailUsecase.RequestVerificationEmail(ctx, user); err != nil {
-			return nil, fmt.Errorf("failed to send verification email")
+			return nil, fmt.Errorf("failed to send verification email: %w", err)
 		}
 	}
 

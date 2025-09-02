@@ -80,10 +80,12 @@ func main() {
 	}
 	defer mongoClient.Disconnect()
 
-	// Initialize email service (SendGrid)
-	sendGridAPIKey := os.Getenv("SENDGRID_API_KEY")
-	sendFrom := os.Getenv("EMAIL_FROM")
-	sendFromName := os.Getenv("EMAIL_FROM_NAME")
+	// Initialize email service
+	emailHost := os.Getenv("EMAIL_HOST")
+	emailPort := os.Getenv("EMAIL_PORT")
+	emailUsername := os.Getenv("EMAIL_USERNAME")
+	emailAppPassword := os.Getenv("EMAIL_APP_PASSWORD")
+	emailFrom := os.Getenv("EMAIL_FROM")
 
 	// Register custom validators
 	validator.RegisterCustomValidators()
@@ -103,7 +105,7 @@ func main() {
 	jwtManager := jwt.NewJWTManager(jwtSecret)
 	jwtService := jwt.NewJWTService(jwtManager)
 	appLogger := logger.NewStdLogger()
-	mailService := external_services.NewEmailService(sendGridAPIKey, sendFrom, sendFromName)
+	mailService := external_services.NewEmailService(emailHost, emailPort, emailUsername, emailAppPassword, emailFrom)
 	randomGenerator := randomgenerator.NewRandomGenerator()
 	appValidator := validator.NewValidator()
 	uuidGenerator := uuidgen.NewGenerator()

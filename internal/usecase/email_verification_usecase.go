@@ -22,6 +22,7 @@ type EmailVerificationUseCase struct {
 func NewEmailVerificationUseCase(tr contract.ITokenRepository, ur contract.IUserRepository, es contract.IEmailService, rg contract.IRandomGenerator, uuidgen contract.IUUIDGenerator, config contract.IConfigProvider) *EmailVerificationUseCase {
 	return &EmailVerificationUseCase{
 		tokenRepository: tr,
+
 		userRepository:  ur,
 		emailService:    es,
 		RandomGenerator: rg,
@@ -64,7 +65,9 @@ func (eu *EmailVerificationUseCase) RequestVerificationEmail(ctx context.Context
 	if frontendURL == "" {
 		return fmt.Errorf("frontend URL not configured for email verification")
 	}
+
 	verificationLink := fmt.Sprintf("%s/api/v1/auth/verify-email?verifier=%s&token=%s", frontendURL, verifier, plainToken)
+
 	emailSubject := "Verify your email address"
 	emailBody := fmt.Sprintf("Hello %s\n, please click the following link to verify your email address: %s", user.Username, verificationLink)
 	if err = eu.emailService.SendEmail(ctx, user.Email, emailSubject, emailBody); err != nil {
