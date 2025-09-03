@@ -256,8 +256,13 @@ class _ProfilePageState extends State<ProfilePage>
                           if (isManagingTopics)
                             ActionChip(
                               label: Text(
-                                "add".tr(),
-                                style: const TextStyle(color: Colors.white),
+
+                                "Add".tr(),
+                                style: TextStyle(color: theme.colorScheme.onPrimary),
+                              ),
+                              avatar: Icon(
+                                Icons.add,
+                                color: theme.colorScheme.onPrimary,
                               ),
                               avatar: const Icon(Icons.add, color: Colors.white),
                               backgroundColor: theme.colorScheme.primary,

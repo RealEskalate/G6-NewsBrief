@@ -185,7 +185,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ListTile(
             title: Text("Appearance".tr(), style: TextStyle(fontSize: 16)),
             trailing: SizedBox(
-              width: 160,
+              width: 100,
               child: ToggleButtons(
                 borderRadius: BorderRadius.circular(12),
                 isSelected: appearanceSelection,
@@ -209,7 +209,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ListTile(
             title: Text("Language".tr(), style: TextStyle(fontSize: 16)),
             trailing: SizedBox(
-              width: 160,
+              width: 100,
               child: ToggleButtons(
                 borderRadius: BorderRadius.circular(12),
                 isSelected: languageSelection,
