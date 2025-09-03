@@ -266,13 +266,13 @@ class _ProfilePageState extends State<ProfilePage>
                               .toList(),
                           if (isManagingTopics)
                             ActionChip(
-                              label: const Text(
+                              label: Text(
                                 "Add",
-                                style: TextStyle(color: Colors.white),
+                                style: TextStyle(color: theme.colorScheme.onPrimary),
                               ),
-                              avatar: const Icon(
+                              avatar: Icon(
                                 Icons.add,
-                                color: Colors.white,
+                                color: theme.colorScheme.onPrimary,
                               ),
                               backgroundColor: theme.colorScheme.primary,
                               onPressed: _showAddTopicDialog,
