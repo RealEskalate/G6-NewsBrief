@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"time"
 	"github.com/RealEskalate/G6-NewsBrief/internal/domain/entity"
 )
 
