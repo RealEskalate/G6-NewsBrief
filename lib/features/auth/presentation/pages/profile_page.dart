@@ -264,7 +264,6 @@ class _ProfilePageState extends State<ProfilePage>
                                 Icons.add,
                                 color: theme.colorScheme.onPrimary,
                               ),
-                              avatar: const Icon(Icons.add, color: Colors.white),
                               backgroundColor: theme.colorScheme.primary,
                               onPressed: _showAddTopicDialog,
                             ),
