@@ -163,7 +163,7 @@ class AuthRemoteDataSources {
 
   Future<void> loginWithGoogle() async {
     final loginUrl = Uri.parse(
-      "https://news-brief-core-api-excr.onrender.com/api/v1/auth/google/login",
+      "https://news-brief-core-api-excr.onrender.com/api/v1/auth/google/login?platform=mobile",
     );
 
     try {
