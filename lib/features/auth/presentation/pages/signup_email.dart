@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:newsbrief/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:newsbrief/features/auth/presentation/cubit/auth_state.dart';
 import 'interests.dart';
@@ -40,7 +41,7 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'NewsBrief',
+                'app_name'.tr(),
                 textAlign: TextAlign.center,
                 style: theme.textTheme.displaySmall?.copyWith(
                   fontWeight: FontWeight.bold,
@@ -50,7 +51,7 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
               ),
               const SizedBox(height: 24),
               Text(
-                'Sign Up with Email',
+                'signup_with_email'.tr(),
                 textAlign: TextAlign.center,
                 style: theme.textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w600,
@@ -62,7 +63,7 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
               TextField(
                 controller: fullNameController,
                 decoration: InputDecoration(
-                  hintText: 'Full Name',
+                  hintText: 'full_name'.tr(),
                   border: const OutlineInputBorder(),
                   hintStyle: theme.textTheme.bodyMedium,
                 ),
@@ -71,7 +72,7 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
               TextField(
                 controller: emailController,
                 decoration: InputDecoration(
-                  hintText: 'Email',
+                  hintText: 'email'.tr(),
                   border: const OutlineInputBorder(),
                   hintStyle: theme.textTheme.bodyMedium,
                 ),
@@ -81,7 +82,7 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
                 controller: passwordController,
                 obscureText: true,
                 decoration: InputDecoration(
-                  hintText: 'Password',
+                  hintText: 'password'.tr(),
                   border: const OutlineInputBorder(),
                   hintStyle: theme.textTheme.bodyMedium,
                 ),
@@ -91,7 +92,7 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
                 controller: confirmPasswordController,
                 obscureText: true,
                 decoration: InputDecoration(
-                  hintText: 'Confirm Password',
+                  hintText: 'confirm_password'.tr(),
                   border: const OutlineInputBorder(),
                   hintStyle: theme.textTheme.bodyMedium,
                 ),
@@ -109,7 +110,7 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
                   ),
                   Expanded(
                     child: Text(
-                      'I agree to the Terms & Conditions',
+                      'agree_terms'.tr(),
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontFamily: 'Inter',
                         color: theme.colorScheme.onBackground,
@@ -151,7 +152,9 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
                   return CustomHoverButton(
                     iconWidget:
                     Icon(Icons.email, color: theme.colorScheme.onPrimary),
-                    text: state is AuthLoading ? 'Signing Up...' : 'Sign Up',
+                    text: state is AuthLoading
+                        ? 'signing_up'.tr()
+                        : 'sign_up'.tr(),
                     color: theme.colorScheme.primary,
                     textColor: theme.colorScheme.onPrimary,
                     onTap: (state is! AuthLoading && agreeToTerms)
@@ -159,8 +162,9 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
                       if (passwordController.text !=
                           confirmPasswordController.text) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Passwords do not match'),
+                          SnackBar(
+                            content:
+                            Text('passwords_not_match'.tr()),
                             backgroundColor: Colors.red,
                           ),
                         );
@@ -195,7 +199,7 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
                   Navigator.pushNamed(context, '/root');
                 },
                 label: Text(
-                  'Continue as Guest',
+                  'continue_as_guest'.tr(),
                   style: TextStyle(color: theme.colorScheme.onBackground),
                 ),
                 style: OutlinedButton.styleFrom(

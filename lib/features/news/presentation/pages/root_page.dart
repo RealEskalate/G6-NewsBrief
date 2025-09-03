@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:newsbrief/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:newsbrief/features/auth/presentation/cubit/auth_state.dart';
 import 'package:newsbrief/features/auth/presentation/pages/profile_page.dart';
@@ -70,19 +71,19 @@ class _RootPageState extends State<RootPage> {
               destinations: [
                 NavigationDestination(
                   icon: Icon(Icons.home, color: textColor),
-                  label: '',
+                  label: 'home'.tr(),
                 ),
                 NavigationDestination(
                   icon: Icon(Icons.folder_copy, color: textColor),
-                  label: '',
+                  label: 'following'.tr(),
                 ),
                 NavigationDestination(
                   icon: Icon(Icons.search, color: textColor),
-                  label: '',
+                  label: 'search'.tr(),
                 ),
                 NavigationDestination(
                   icon: Icon(Icons.bookmark, color: textColor),
-                  label: '',
+                  label: 'saved'.tr(),
                 ),
                 NavigationDestination(
                   icon: firstLetter != null
@@ -100,7 +101,7 @@ class _RootPageState extends State<RootPage> {
                     ),
                   )
                       : Icon(Icons.person, color: textColor),
-                  label: '',
+                  label: 'profile'.tr(),
                 ),
               ],
               selectedIndex: currentPage,

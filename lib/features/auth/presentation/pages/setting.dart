@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:newsbrief/core/storage/token_secure_storage.dart';
 import 'package:newsbrief/features/auth/presentation/widgets/list_tile_items.dart';
 import 'package:newsbrief/features/auth/presentation/widgets/section_header.dart';
@@ -13,11 +14,8 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  // Language toggle state
-  List<bool> _languageSelection = [true, false]; // English by default
   double _audioSpeed = 1.0; // Default audio speed
-  bool _notificationsEnabled = false; // New state variable for notifications
-
+  bool _notificationsEnabled = false; // Notifications state
   final TokenSecureStorage storage = TokenSecureStorage();
 
   void _showPushNotificationsDialog() {
@@ -26,10 +24,9 @@ class _SettingsPageState extends State<SettingsPage> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: Theme.of(context).colorScheme.background,
-          shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Text(
-            "Push Notifications",
+            "Push Notifications".tr(),
             style: TextStyle(
               fontWeight: FontWeight.bold,
               color: Theme.of(context).colorScheme.onBackground,
@@ -42,15 +39,13 @@ class _SettingsPageState extends State<SettingsPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Do you want to enable push notifications?",
-                    style:
-                    TextStyle(color: Theme.of(context).colorScheme.onBackground),
+                    "Do you want to enable push notifications?".tr(),
+                    style: TextStyle(color: Theme.of(context).colorScheme.onBackground),
                   ),
                   SwitchListTile(
                     title: Text(
-                      "Enable Notifications",
-                      style: TextStyle(
-                          color: Theme.of(context).colorScheme.onBackground),
+                      "Enable Notifications".tr(),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onBackground),
                     ),
                     value: _notificationsEnabled,
                     onChanged: (bool value) {
@@ -67,9 +62,7 @@ class _SettingsPageState extends State<SettingsPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text("Close",
-                  style:
-                  TextStyle(color: Theme.of(context).colorScheme.onBackground)),
+              child: Text("Close".tr(), style: TextStyle(color: Theme.of(context).colorScheme.onBackground)),
             ),
           ],
         );
@@ -79,9 +72,9 @@ class _SettingsPageState extends State<SettingsPage> {
 
   void _togglePushNotifications(bool enable) {
     if (enable) {
-      print("Push notifications enabled.");
+      print("Push notifications enabled.".tr());
     } else {
-      print("Push notifications disabled.");
+      print("Push notifications disabled.".tr());
     }
   }
 
@@ -91,29 +84,26 @@ class _SettingsPageState extends State<SettingsPage> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: Theme.of(context).colorScheme.background,
-          shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Text("Delete Account",
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text("Delete Account".tr(),
               style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Theme.of(context).colorScheme.onBackground)),
           content: Text(
-            "Are you sure you want to delete your account? This action cannot be undone.",
+            "Are you sure you want to delete your account? This action cannot be undone.".tr(),
             style: TextStyle(color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7)),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text("Cancel",
-                  style:
-                  TextStyle(color: Theme.of(context).colorScheme.onBackground)),
+              child: Text("Cancel".tr(), style: TextStyle(color: Theme.of(context).colorScheme.onBackground)),
             ),
             TextButton(
               onPressed: () {
                 _deleteAccount();
                 Navigator.pop(context);
               },
-              child: const Text("Delete", style: TextStyle(color: Colors.red)),
+              child: Text("Delete".tr(), style: TextStyle(color: Colors.red)),
             ),
           ],
         );
@@ -122,7 +112,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _deleteAccount() {
-    print("User account is being deleted.");
+    print("User account is being deleted.".tr());
   }
 
   void _showLogoutDialog() {
@@ -131,27 +121,24 @@ class _SettingsPageState extends State<SettingsPage> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: Theme.of(context).colorScheme.background,
-          shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Text("Log Out",
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text("Log Out".tr(),
               style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Theme.of(context).colorScheme.onBackground)),
-          content: Text("Are you sure you want to log out?",
+          content: Text("Are you sure you want to log out?".tr(),
               style: TextStyle(color: Theme.of(context).colorScheme.onBackground)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text("Cancel",
-                  style:
-                  TextStyle(color: Theme.of(context).colorScheme.onBackground)),
+              child: Text("Cancel".tr(), style: TextStyle(color: Theme.of(context).colorScheme.onBackground)),
             ),
             TextButton(
               onPressed: () async {
                 Navigator.pop(context); // Close the dialog
                 Navigator.pop(context); // Navigate back from settings
               },
-              child: const Text("Log Out", style: TextStyle(color: Colors.red)),
+              child: Text("Log Out".tr(), style: TextStyle(color: Colors.red)),
             ),
           ],
         );
@@ -167,15 +154,17 @@ class _SettingsPageState extends State<SettingsPage> {
     // Appearance toggle derived from current theme
     List<bool> appearanceSelection = [!isDark, isDark];
 
+    // Language toggle derived from current locale
+    final currentLocale = context.locale;
+    List<bool> languageSelection = [
+      currentLocale.languageCode == 'en',
+      currentLocale.languageCode == 'am'
+    ];
+
     return Scaffold(
       backgroundColor: theme.colorScheme.background,
       appBar: AppBar(
-        title: Text(
-          "Settings",
-          style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.onBackground),
-        ),
+        title: Text("Settings".tr(), style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.onBackground)),
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: theme.colorScheme.onBackground),
           onPressed: () => Navigator.pop(context),
@@ -185,26 +174,16 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
       body: ListView(
         children: [
-          const SectionHeader(title: "Account"),
-          ListTileItem(
-            title: "Edit Profile",
-            onTap: () {
-              Navigator.pushNamed(context, '/edit');
-            },
-          ),
-          ListTileItem(
-            title: "Delete Account",
-            onTap: _showDeleteAccountDialog,
-          ),
-          ListTileItem(
-            title: "Push notifications",
-            onTap: _showPushNotificationsDialog,
-          ),
+          SectionHeader(title: "Account".tr()),
+          ListTileItem(title: "Edit Profile".tr(), onTap: () => Navigator.pushNamed(context, '/edit')),
+          ListTileItem(title: "Delete Account".tr(), onTap: _showDeleteAccountDialog),
+          ListTileItem(title: "Push notifications".tr(), onTap: _showPushNotificationsDialog),
 
-          const SectionHeader(title: "Configure NewsBrief"),
+          SectionHeader(title: "Configure NewsBrief".tr()),
+
           // Appearance Toggle
           ListTile(
-            title: const Text("Appearance", style: TextStyle(fontSize: 16)),
+            title: Text("Appearance".tr(), style: TextStyle(fontSize: 16)),
             trailing: SizedBox(
               width: 100,
               child: ToggleButtons(
@@ -218,9 +197,9 @@ class _SettingsPageState extends State<SettingsPage> {
                     context.read<ThemeCubit>().toggleTheme();
                   }
                 },
-                children: const [
-                  Expanded(child: Center(child: Text("Light"))),
-                  Expanded(child: Center(child: Text("Dark"))),
+                children: [
+                  Center(child: Text("Light".tr())),
+                  Center(child: Text("Dark".tr())),
                 ],
               ),
             ),
@@ -228,25 +207,22 @@ class _SettingsPageState extends State<SettingsPage> {
 
           // Language Toggle
           ListTile(
-            title: const Text("Language", style: TextStyle(fontSize: 16)),
+            title: Text("Language".tr(), style: TextStyle(fontSize: 16)),
             trailing: SizedBox(
               width: 100,
               child: ToggleButtons(
                 borderRadius: BorderRadius.circular(12),
-                isSelected: _languageSelection,
+                isSelected: languageSelection,
                 fillColor: theme.colorScheme.primary,
                 selectedColor: isDark ? Colors.black : Colors.white,
                 color: isDark ? Colors.white : Colors.black,
                 onPressed: (index) {
-                  setState(() {
-                    for (int i = 0; i < _languageSelection.length; i++) {
-                      _languageSelection[i] = (i == index);
-                    }
-                  });
+                  Locale newLocale = (index == 0) ? const Locale('en') : const Locale('am');
+                  context.setLocale(newLocale);
                 },
-                children: const [
-                  Expanded(child: Center(child: Text("English"))),
-                  Expanded(child: Center(child: Text("አማርኛ"))),
+                children: [
+                  Center(child: Text("English")),
+                  Center(child: Text("አማርኛ")),
                 ],
               ),
             ),
@@ -254,7 +230,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
           // Audio Speed
           ListTile(
-            title: const Text("Audio Speed", style: TextStyle(fontSize: 16)),
+            title: Text("Audio Speed".tr(), style: TextStyle(fontSize: 16)),
             trailing: SizedBox(
               width: 150,
               child: Row(
@@ -275,16 +251,15 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                   ),
                   Text("${_audioSpeed.toStringAsFixed(1)}x",
-                      style: TextStyle(fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.onBackground)),
+                      style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.onBackground)),
                 ],
               ),
             ),
           ),
 
-          const SectionHeader(title: "Legal"),
-          ListTileItem(title: "Terms of Service", onTap: () {}),
-          ListTileItem(title: "Privacy Policy", onTap: () {}),
+          SectionHeader(title: "Legal".tr()),
+          ListTileItem(title: "Terms of Service".tr(), onTap: () {}),
+          ListTileItem(title: "Privacy Policy".tr(), onTap: () {}),
 
           const SizedBox(height: 16),
           const Divider(thickness: 1),
@@ -292,11 +267,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text(
-              "Log Out",
-              style: TextStyle(
-                  color: Colors.red, fontSize: 18, fontWeight: FontWeight.w600),
-            ),
+            title: Text("Log Out".tr(), style: TextStyle(color: Colors.red, fontSize: 18, fontWeight: FontWeight.w600)),
             onTap: _showLogoutDialog,
           ),
         ],

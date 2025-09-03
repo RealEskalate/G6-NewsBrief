@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class SavedPage extends StatelessWidget {
   const SavedPage({super.key});
@@ -10,13 +11,13 @@ class SavedPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "Home",
+          'saved'.tr(),
           style: textTheme.titleLarge,
         ),
       ),
       body: Center(
         child: Text(
-          "Welcome to saved 🎉",
+          'welcome_saved'.tr(),
           style: textTheme.bodyLarge,
         ),
       ),

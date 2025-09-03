@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:easy_localization/easy_localization.dart'; // <-- added
 import 'package:newsbrief/core/network_info/api_service.dart';
 import 'package:newsbrief/core/storage/token_secure_storage.dart';
 import 'package:newsbrief/features/auth/datasource/datasources/auth_local_data_sourcs.dart';
@@ -32,9 +33,11 @@ import 'features/auth/domain/usecases/verify_email.dart';
 import 'features/auth/domain/usecases/request_verification_email.dart';
 import 'features/auth/presentation/cubit/auth_cubit.dart';
 
-void main() {
-  const baseUrl = 'https://news-brief-core-api-excr.onrender.com/api/v1';
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await EasyLocalization.ensureInitialized(); // <-- initialize EasyLocalization
+
+  const baseUrl = 'https://news-brief-core-api-excr.onrender.com/api/v1';
 
   final themeStorage = ThemeStorage();
   final tokenStorage = TokenSecureStorage();
@@ -44,27 +47,33 @@ void main() {
   final repo = AuthRepositoryImpl(remote: remote, local: local);
 
   runApp(
-    MultiBlocProvider(
-      providers: [
-        BlocProvider(
-          create: (_) => AuthCubit(
-            loginUser: LoginUser(repo),
-            registerUser: RegisterUser(repo),
-            getMe: GetMe(repo),
-            logout: Logout(repo),
-            forgotPassword: ForgotPassword(repo),
-            resetPassword: ResetPassword(repo),
-            verifyEmail: VerifyEmail(repo),
-            requestVerificationEmail: RequestVerificationEmail(repo),
-            loginWithGoogleUseCase: LoginWithGoogleUseCase(repo),
-            getInterestsUseCase: GetInterestsUseCase(repo),
+    EasyLocalization(
+      supportedLocales: const [Locale('en'), Locale('am')],
+      path: 'assets/translations',
+      fallbackLocale: const Locale('en'),
+      saveLocale: true,
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (_) => AuthCubit(
+              loginUser: LoginUser(repo),
+              registerUser: RegisterUser(repo),
+              getMe: GetMe(repo),
+              logout: Logout(repo),
+              forgotPassword: ForgotPassword(repo),
+              resetPassword: ResetPassword(repo),
+              verifyEmail: VerifyEmail(repo),
+              requestVerificationEmail: RequestVerificationEmail(repo),
+              loginWithGoogleUseCase: LoginWithGoogleUseCase(repo),
+              getInterestsUseCase: GetInterestsUseCase(repo),
+            ),
           ),
-        ),
-        BlocProvider(
-          create: (_) => ThemeCubit(themeStorage),
-        ),
-      ],
-      child:  MyApp(),
+          BlocProvider(
+            create: (_) => ThemeCubit(themeStorage),
+          ),
+        ],
+        child: const MyApp(),
+      ),
     ),
   );
 }
@@ -80,6 +89,9 @@ class MyApp extends StatelessWidget {
           title: 'NewsBrief',
           debugShowCheckedModeBanner: false,
           theme: theme,
+          localizationsDelegates: context.localizationDelegates,
+          supportedLocales: context.supportedLocales,
+          locale: context.locale,
           routes: {
             '/login': (context) => const Login(),
             '/signup': (context) => const SignupLandingPage(),
@@ -116,7 +128,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-
 class OnboardingScreenWrapper extends StatelessWidget {
   final CheckFirstRun checkFirstRun;
 
@@ -127,7 +138,6 @@ class OnboardingScreenWrapper extends StatelessWidget {
     return OnboardingScreen(
       onFinish: () async {
         await checkFirstRun.completeOnboarding();
-        // Use a single navigation method to avoid redundancy
         Navigator.of(context).pushReplacementNamed('/login');
       },
     );

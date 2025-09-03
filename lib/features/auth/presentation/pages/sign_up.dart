@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class SignUpPage extends StatelessWidget {
   const SignUpPage({super.key});
@@ -10,7 +11,7 @@ class SignUpPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text("Sign Up"),
+        title: Text("sign_up.title".tr()),
         backgroundColor: theme.appBarTheme.backgroundColor,
         foregroundColor: theme.appBarTheme.foregroundColor,
         elevation: 0,
@@ -23,7 +24,7 @@ class SignUpPage extends StatelessWidget {
             children: [
               TextField(
                 decoration: InputDecoration(
-                  labelText: "Email",
+                  labelText: "sign_up.email".tr(),
                   labelStyle: TextStyle(color: theme.colorScheme.onBackground),
                   border: const OutlineInputBorder(),
                 ),
@@ -32,7 +33,7 @@ class SignUpPage extends StatelessWidget {
               const SizedBox(height: 16),
               TextField(
                 decoration: InputDecoration(
-                  labelText: "Password",
+                  labelText: "sign_up.password".tr(),
                   labelStyle: TextStyle(color: theme.colorScheme.onBackground),
                   border: const OutlineInputBorder(),
                 ),
@@ -41,7 +42,7 @@ class SignUpPage extends StatelessWidget {
               const SizedBox(height: 16),
               TextField(
                 decoration: InputDecoration(
-                  labelText: "Confirm Password",
+                  labelText: "sign_up.confirm_password".tr(),
                   labelStyle: TextStyle(color: theme.colorScheme.onBackground),
                   border: const OutlineInputBorder(),
                 ),
@@ -59,7 +60,7 @@ class SignUpPage extends StatelessWidget {
                     foregroundColor: theme.colorScheme.onPrimary,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  child: const Text("Sign Up"),
+                  child: Text("sign_up.button".tr()),
                 ),
               ),
               const SizedBox(height: 12),
@@ -68,7 +69,7 @@ class SignUpPage extends StatelessWidget {
                   Navigator.pushReplacementNamed(context, '/login');
                 },
                 child: Text(
-                  "Already have an account? Login",
+                  "sign_up.already_have_account".tr(),
                   style: TextStyle(color: theme.colorScheme.primary),
                 ),
               ),
@@ -77,7 +78,7 @@ class SignUpPage extends StatelessWidget {
                   Navigator.pushReplacementNamed(context, '/root');
                 },
                 child: Text(
-                  "Continue as guest",
+                  "sign_up.continue_as_guest".tr(),
                   style: TextStyle(color: theme.colorScheme.primary),
                 ),
               ),
