@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:newsbrief/features/auth/domain/usecases/forgot_password.dart';
 import 'package:newsbrief/features/auth/domain/usecases/get_interests_usecase.dart';

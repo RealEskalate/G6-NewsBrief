@@ -48,7 +48,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized(); // <-- initialize EasyLocalization
 
-  const baseUrl = 'https://news-brief-core-api-excr.onrender.com/api/v1';
+  const baseUrl = 'https://news-brief-core-api.onrender.com/api/v1';
 
 
   final themeStorage = ThemeStorage();
