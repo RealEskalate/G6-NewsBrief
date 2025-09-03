@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ChatbotPopup extends StatefulWidget {
   final VoidCallback? onClose;
@@ -81,7 +82,7 @@ class _ChatbotPopupState extends State<ChatbotPopup>
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      "NewsBrief Assistant",
+                      'assistant'.tr(),
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
@@ -100,7 +101,7 @@ class _ChatbotPopupState extends State<ChatbotPopup>
               Expanded(
                 child: Center(
                   child: Text(
-                    "Chat messages will appear here.",
+                    'chat_placeholder'.tr(),
                     style: TextStyle(color: textColor),
                   ),
                 ),
@@ -120,8 +121,9 @@ class _ChatbotPopupState extends State<ChatbotPopup>
                     Expanded(
                       child: TextField(
                         decoration: InputDecoration(
-                          hintText: "Ask me to brief",
-                          hintStyle: TextStyle(color: textColor.withOpacity(0.6)),
+                          hintText: 'ask_brief'.tr(),
+                          hintStyle:
+                          TextStyle(color: textColor.withOpacity(0.6)),
                           contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 12),
                           border: OutlineInputBorder(

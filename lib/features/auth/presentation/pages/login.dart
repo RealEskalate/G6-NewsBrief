@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubit/auth_cubit.dart';
@@ -46,8 +47,8 @@ class _LoginPageState extends State<Login> {
     if (email.isEmpty || !email.contains('@')) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text(
-            'Please enter a valid email before resetting password.',
+          content: Text(
+            'Please enter a valid email before resetting password.'.tr(),
           ),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
@@ -64,7 +65,7 @@ class _LoginPageState extends State<Login> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text('Login', style: TextStyle(color: theme.colorScheme.onBackground)),
+        title: Text('Login'.tr(), style: TextStyle(color: theme.colorScheme.onBackground)),
         centerTitle: true,
         backgroundColor: theme.scaffoldBackgroundColor,
         iconTheme: IconThemeData(color: theme.colorScheme.onBackground),
@@ -74,7 +75,7 @@ class _LoginPageState extends State<Login> {
           if (state is AuthAuthenticated) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: const Text('Welcome User'),
+                content:Text('Welcome User'.tr()),
                 backgroundColor: theme.colorScheme.primary,
                 duration: const Duration(seconds: 3),
               ),
@@ -103,7 +104,7 @@ class _LoginPageState extends State<Login> {
                   TextFormField(
                     controller: _emailController,
                     decoration: InputDecoration(
-                      labelText: 'Email',
+                      labelText: 'Email'.tr(),
                       labelStyle: TextStyle(color: theme.colorScheme.onBackground),
                       border: const OutlineInputBorder(),
                       prefixIcon: Icon(Icons.email, color: theme.colorScheme.onBackground),
@@ -111,8 +112,8 @@ class _LoginPageState extends State<Login> {
                     style: TextStyle(color: theme.colorScheme.onBackground),
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
-                      if (value == null || value.isEmpty) return 'Please enter your email';
-                      if (!value.contains('@')) return 'Please enter a valid email';
+                      if (value == null || value.isEmpty) return 'Please enter your email'.tr();
+                      if (!value.contains('@')) return 'Please enter a valid email'.tr();
                       return null;
                     },
                   ),
@@ -122,7 +123,7 @@ class _LoginPageState extends State<Login> {
                   TextFormField(
                     controller: _passwordController,
                     decoration: InputDecoration(
-                      labelText: 'Password',
+                      labelText: 'Password'.tr(),
                       labelStyle: TextStyle(color: theme.colorScheme.onBackground),
                       border: const OutlineInputBorder(),
                       prefixIcon: Icon(Icons.lock, color: theme.colorScheme.onBackground),
@@ -141,8 +142,8 @@ class _LoginPageState extends State<Login> {
                     style: TextStyle(color: theme.colorScheme.onBackground),
                     obscureText: _obscurePassword,
                     validator: (value) {
-                      if (value == null || value.isEmpty) return 'Please enter your password';
-                      if (value.length < 6) return 'Password must be at least 6 characters';
+                      if (value == null || value.isEmpty) return 'Please enter your password'.tr();
+                      if (value.length < 6) return 'Password must be at least 6 characters'.tr();
                       return null;
                     },
                   ),
@@ -153,7 +154,7 @@ class _LoginPageState extends State<Login> {
                     child: TextButton(
                       onPressed: _forgotPassword,
                       child: Text(
-                        'Forgot Password?',
+                        'Forgot Password?'.tr(),
                         style: TextStyle(color: theme.colorScheme.primary),
                       ),
                     ),
@@ -173,7 +174,7 @@ class _LoginPageState extends State<Login> {
                         foregroundColor: theme.colorScheme.onPrimary,
                       ),
                       child: Text(
-                        'Login',
+                        'Login'.tr(),
                         style: TextStyle(color: theme.colorScheme.onPrimary),
                       ),
                     ),
@@ -190,7 +191,7 @@ class _LoginPageState extends State<Login> {
                         height: 24,
                       ),
                       label: Text(
-                        'Sign in with Google',
+                        'Sign in with Google'.tr(),
                         style: TextStyle(color: theme.colorScheme.onBackground),
                       ),
                       style: OutlinedButton.styleFrom(
@@ -206,7 +207,7 @@ class _LoginPageState extends State<Login> {
                       Navigator.pushNamed(context, '/root');
                     },
                     label: Text(
-                      'Continue as Guest',
+                      'Continue as Guest'.tr(),
                       style: TextStyle(color: theme.colorScheme.onBackground),
                     ),
                     style: OutlinedButton.styleFrom(
@@ -222,11 +223,11 @@ class _LoginPageState extends State<Login> {
                       child: RichText(
                         text: TextSpan(
                           style: TextStyle(color: theme.colorScheme.onBackground),
-                          children: const [
-                            TextSpan(text: "Don't have an account? "),
+                          children: [
+                            TextSpan(text: "Don't have an account? ".tr()),
                             TextSpan(
-                              text: "Sign up",
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                              text: "Sign up".tr(),
+                              style: const TextStyle(fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),

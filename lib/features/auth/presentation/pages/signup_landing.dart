@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:newsbrief/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:newsbrief/features/auth/presentation/cubit/auth_state.dart';
 import 'signup_email.dart';
@@ -56,7 +57,7 @@ class SignupLandingPage extends StatelessWidget {
                   ),
                   const Spacer(),
                   Text(
-                    "NewsBrief",
+                    "app_name".tr(),
                     style: theme.textTheme.headlineLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Inter',
@@ -65,7 +66,7 @@ class SignupLandingPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    "From headings to understanding",
+                    "signup_tagline".tr(),
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                       fontFamily: 'Inter',
@@ -74,7 +75,7 @@ class SignupLandingPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    "Discover topics that deepen your understanding",
+                    "signup_description".tr(),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontFamily: 'Inter',
                     ),
@@ -99,7 +100,7 @@ class SignupLandingPage extends StatelessWidget {
                       icon: Icon(Icons.email, color: theme.colorScheme.onSurface),
                       label: Flexible(
                         child: Text(
-                          "Sign up with Email",
+                          "signup_with_email".tr(),
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.labelLarge?.copyWith(
                             fontWeight: FontWeight.w600,
@@ -135,7 +136,7 @@ class SignupLandingPage extends StatelessWidget {
                       )
                           : Flexible(
                         child: Text(
-                          "Sign up with Google",
+                          "signup_with_google".tr(),
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.labelLarge?.copyWith(
                             fontWeight: FontWeight.w600,
@@ -171,7 +172,7 @@ class SignupLandingPage extends StatelessWidget {
                       Navigator.pushNamed(context, '/root');
                     },
                     label: Text(
-                      'Continue as Guest',
+                      'continue_as_guest'.tr(),
                       style: theme.textTheme.labelLarge?.copyWith(
                         fontFamily: 'Inter',
                       ),
@@ -187,7 +188,7 @@ class SignupLandingPage extends StatelessWidget {
                       Navigator.pushNamed(context, '/login');
                     },
                     child: Text(
-                      "Already have an account? Login",
+                      "already_have_account".tr(),
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w500,
                         fontFamily: 'Inter',

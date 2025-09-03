@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:newsbrief/core/storage/token_secure_storage.dart';
@@ -48,7 +49,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               onPressed: () => Navigator.pop(context),
             ),
             title: Text(
-              "Edit Profile",
+              "Edit Profile".tr(),
               style: TextStyle(
                 color: theme.colorScheme.onBackground,
                 fontWeight: FontWeight.bold,
@@ -98,7 +99,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 // Change Name button
                 ListTile(
                   leading: Icon(Icons.person_outline, color: theme.colorScheme.onBackground),
-                  title: Text("Change Name", style: TextStyle(color: theme.colorScheme.onBackground)),
+                  title: Text("Change Name".tr(), style: TextStyle(color: theme.colorScheme.onBackground)),
                   trailing: Icon(
                     _showChangeName ? Icons.expand_less : Icons.expand_more,
                     color: theme.colorScheme.onBackground.withOpacity(0.6),
@@ -109,14 +110,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   const SizedBox(height: 10),
                   _buildTextField(
                     controller: _nameController,
-                    label: "Name",
+                    label: "Name".tr(),
                     icon: Icons.person,
                   ),
                   const SizedBox(height: 15),
                   TextButton(
                     onPressed: () {},
                     child: Text(
-                      'Change',
+                      'Change'.tr(),
                       style: TextStyle(color: theme.colorScheme.primary, fontSize: 15),
                     ),
                   ),
@@ -125,7 +126,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 // Reset Password button
                 ListTile(
                   leading: Icon(Icons.key, color: theme.colorScheme.onBackground),
-                  title: Text("Reset Password", style: TextStyle(color: theme.colorScheme.onBackground)),
+                  title: Text("Reset Password".tr(), style: TextStyle(color: theme.colorScheme.onBackground)),
                   trailing: Icon(
                     _showResetPassword ? Icons.expand_less : Icons.expand_more,
                     color: theme.colorScheme.onBackground.withOpacity(0.6),
@@ -136,14 +137,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   const SizedBox(height: 10),
                   _buildTextField(
                     controller: _oldPasswordController,
-                    label: "Old Password",
+                    label: "Old Password".tr(),
                     icon: Icons.key,
                     obscureText: true,
                   ),
                   const SizedBox(height: 15),
                   _buildTextField(
                     controller: _newPasswordController,
-                    label: "New Password",
+                    label: "New Password".tr(),
                     icon: Icons.key_rounded,
                     obscureText: true,
                   ),
@@ -157,13 +158,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           token: token,
                         );
                       } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("No valid token found")),
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("No valid token found".tr())),
                         );
                       }
                     },
                     child: Text(
-                      'Change',
+                      'Change'.tr(),
                       style: TextStyle(color: theme.colorScheme.primary, fontSize: 15),
                     ),
                   ),

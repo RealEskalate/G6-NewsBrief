@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:newsbrief/features/auth/presentation/cubit/auth_cubit.dart';
@@ -43,7 +44,7 @@ class _InterestsScreenState extends State<InterestsScreen> {
                 } else if (state is InterestsSavedSuccess) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: const Text('Interests saved!'),
+                      content: Text('Interests saved!'.tr()),
                       backgroundColor: theme.colorScheme.primary,
                     ),
                   );
@@ -66,7 +67,7 @@ class _InterestsScreenState extends State<InterestsScreen> {
                   children: [
                     Center(
                       child: Text(
-                        'Welcome to NewsBrief',
+                        'Welcome to NewsBrief'.tr(),
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -79,7 +80,7 @@ class _InterestsScreenState extends State<InterestsScreen> {
                     Padding(
                       padding: const EdgeInsets.only(left: 24.0),
                       child: Text(
-                        'What are you interested in?',
+                        'What are you interested in?'.tr(),
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
@@ -91,7 +92,7 @@ class _InterestsScreenState extends State<InterestsScreen> {
                     Padding(
                       padding: const EdgeInsets.only(left: 90.0),
                       child: Text(
-                        'Choose three or more',
+                        'Choose three or more'.tr(),
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.normal,
@@ -165,7 +166,7 @@ class _InterestsScreenState extends State<InterestsScreen> {
                           ),
                         ),
                         child: Text(
-                          'Continue',
+                          'Continue'.tr(),
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,

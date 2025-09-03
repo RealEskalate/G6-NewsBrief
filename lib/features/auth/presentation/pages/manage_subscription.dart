@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 class ManageSubscriptionPage extends StatefulWidget {
@@ -9,18 +10,18 @@ class ManageSubscriptionPage extends StatefulWidget {
 
 class _ManageSubscriptionPageState extends State<ManageSubscriptionPage> {
   final List<String> allSources = [
-    "CNN",
-    "Addis Standard",
-    "Fana",
-    "BBC Amharic",
-    "Reuters",
-    "Al Jazeera",
-    "The Guardian",
-    "Associated Press",
+    "CNN".tr(),
+    "Addis Standard".tr(),
+    "Fana".tr(),
+    "BBC Amharic".tr(),
+    "Reuters".tr(),
+    "Al Jazeera".tr(),
+    "The Guardian".tr(),
+    "Associated Press".tr(),
   ];
 
   late List<String> filteredSources;
-  final Set<String> subscribedSources = {"CNN", "Fana"}; // Dummy initial state
+  final Set<String> subscribedSources = {"CNN".tr(), "Fana".tr()}; // Dummy initial state
   final TextEditingController searchController = TextEditingController();
 
   @override
@@ -62,7 +63,7 @@ class _ManageSubscriptionPageState extends State<ManageSubscriptionPage> {
           icon: Icon(Icons.arrow_back, color: theme.colorScheme.onBackground),
         ),
         title: Text(
-          "Manage Subscriptions",
+          "Manage Subscriptions".tr(),
           style: TextStyle(
             color: theme.colorScheme.onBackground,
             fontWeight: FontWeight.bold,
@@ -77,7 +78,7 @@ class _ManageSubscriptionPageState extends State<ManageSubscriptionPage> {
               controller: searchController,
               onChanged: _onSearchChanged,
               decoration: InputDecoration(
-                hintText: "Search for sources...",
+                hintText: "Search for sources...".tr(),
                 hintStyle: TextStyle(color: theme.colorScheme.onBackground.withOpacity(0.6)),
                 prefixIcon: Icon(Icons.search, color: theme.colorScheme.onBackground.withOpacity(0.6)),
                 border: OutlineInputBorder(
@@ -118,7 +119,7 @@ class _ManageSubscriptionPageState extends State<ManageSubscriptionPage> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                     ),
-                    child: Text(isSubscribed ? "Subscribed" : "Subscribe"),
+                    child: Text(isSubscribed ? "Subscribed" : "Subscribe".tr()),
                   ),
                 );
               },

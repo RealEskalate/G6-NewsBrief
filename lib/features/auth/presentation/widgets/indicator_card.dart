@@ -50,7 +50,7 @@ class IndicatorCard extends StatelessWidget {
               title,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 10,
                 color: secondaryTextColor,
               ),
             ),

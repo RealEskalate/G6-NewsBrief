@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:newsbrief/core/widgets/custom_dropdown_button.dart';
@@ -16,13 +17,8 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage>
     with SingleTickerProviderStateMixin {
-  List<String> topics = [
-    "Technology",
-    "Sports",
-    "Business",
-    "Entertainment",
-    "Health",
-  ];
+  // Use raw keys and translate dynamically
+  List<String> topicKeys = ["Technology", "Sports", "Business", "Entertainment", "Health"];
   bool isManagingTopics = false;
 
   late final AnimationController _animationController;
@@ -43,9 +39,9 @@ class _ProfilePageState extends State<ProfilePage>
     super.dispose();
   }
 
-  void _removeTopic(String topic) {
+  void _removeTopic(String topicKey) {
     setState(() {
-      topics.remove(topic);
+      topicKeys.remove(topicKey);
     });
   }
 
@@ -58,13 +54,13 @@ class _ProfilePageState extends State<ProfilePage>
         return AlertDialog(
           backgroundColor: theme.scaffoldBackgroundColor,
           title: Text(
-            "Add New Topic",
+            "add_new_topic".tr(),
             style: TextStyle(color: theme.colorScheme.onBackground),
           ),
           content: TextField(
             controller: controller,
             decoration: InputDecoration(
-              hintText: "Enter topic name",
+              hintText: "enter_topic_name".tr(),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8.0),
               ),
@@ -74,21 +70,23 @@ class _ProfilePageState extends State<ProfilePage>
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: Text(
-                "Cancel",
-                style: TextStyle(color: theme.colorScheme.onBackground.withOpacity(0.6)),
+                "cancel".tr(),
+                style: TextStyle(
+                  color: theme.colorScheme.onBackground.withOpacity(0.6),
+                ),
               ),
             ),
             TextButton(
               onPressed: () {
                 if (controller.text.isNotEmpty) {
                   setState(() {
-                    topics.add(controller.text);
+                    topicKeys.add(controller.text);
                   });
                   Navigator.pop(context);
                 }
               },
               child: Text(
-                "Add",
+                "add".tr(),
                 style: TextStyle(color: theme.colorScheme.primary),
               ),
             ),
@@ -102,6 +100,9 @@ class _ProfilePageState extends State<ProfilePage>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    // Translate topics dynamically
+    final topics = topicKeys.map((key) => key.tr()).toList();
+
     return BlocBuilder<AuthCubit, AuthState>(
       builder: (context, state) {
         String? fullName;
@@ -110,6 +111,7 @@ class _ProfilePageState extends State<ProfilePage>
           fullName = state.user.fullName;
           email = state.user.email;
         }
+
         return Scaffold(
           backgroundColor: theme.scaffoldBackgroundColor,
           body: SafeArea(
@@ -118,66 +120,53 @@ class _ProfilePageState extends State<ProfilePage>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  // Top Row
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       IconButton(
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/root');
-                        },
+                        onPressed: () => Navigator.pushNamed(context, '/root'),
                         icon: Icon(Icons.arrow_back, color: theme.colorScheme.onBackground),
                       ),
                       Row(
                         children: [
                           CustomDropdownButton(
                             menuItems: [
-                              "Edit profile",
-                              if (!isManagingTopics) "Manage topic",
-                              "Manage Subscription",
-                              if (isManagingTopics) "Done",
+                              "edit_profile".tr(),
+                              if (!isManagingTopics) "manage_topic".tr(),
+                              "manage_subscription".tr(),
+                              if (isManagingTopics) "done".tr(),
                             ],
                             onSelected: (String result) {
-                              switch (result) {
-                                case "Edit profile":
-                                  Navigator.pushNamed(context, '/edit');
-                                  break;
-                                case "Manage topic":
-                                  setState(() {
-                                    isManagingTopics = true;
-                                  });
-                                  break;
-                                case "Done":
-                                  setState(() {
-                                    isManagingTopics = false;
-                                  });
-                                  break;
-                                case "Manage Subscription":
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                      const ManageSubscriptionPage(),
-                                    ),
-                                  );
-                                  break;
+                              if (result == "edit_profile".tr()) {
+                                Navigator.pushNamed(context, '/edit');
+                              } else if (result == "manage_topic".tr()) {
+                                setState(() => isManagingTopics = true);
+                              } else if (result == "done".tr()) {
+                                setState(() => isManagingTopics = false);
+                              } else if (result == "manage_subscription".tr()) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const ManageSubscriptionPage(),
+                                  ),
+                                );
                               }
                             },
                             icon: Icon(Icons.edit, color: theme.colorScheme.onBackground),
                           ),
                           IconButton(
-                            onPressed: () {
-                              Navigator.pushNamed(context, '/setting');
-                            },
-                            icon: Icon(
-                              Icons.settings,
-                              color: theme.colorScheme.onBackground,
-                            ),
+                            onPressed: () => Navigator.pushNamed(context, '/setting'),
+                            icon: Icon(Icons.settings, color: theme.colorScheme.onBackground),
                           ),
                         ],
                       ),
                     ],
                   ),
+
                   const SizedBox(height: 30),
+
+                  // Avatar
                   CircleAvatar(
                     radius: 60,
                     backgroundColor: theme.colorScheme.surfaceVariant,
@@ -188,8 +177,10 @@ class _ProfilePageState extends State<ProfilePage>
                     ),
                   ),
                   const SizedBox(height: 20),
+
+                  // Full Name
                   Text(
-                    fullName ?? "John Doe",
+                    fullName ?? "john_doe",
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -197,41 +188,43 @@ class _ProfilePageState extends State<ProfilePage>
                     ),
                   ),
                   const SizedBox(height: 8),
+
+                  // Email
                   Text(
-                    email ?? "johndoe@gmail.com",
+                    email ?? "johndoe_email",
                     style: TextStyle(
                       fontSize: 16,
                       color: theme.colorScheme.onBackground.withOpacity(0.6),
                     ),
                   ),
                   const SizedBox(height: 30),
+
+                  // Indicator Cards
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       IndicatorCard(
-                        title: "Subscribed",
+                        title: "subscribed".tr(),
                         count: 12,
                         color: theme.colorScheme.surfaceVariant,
-                        onTap: () {
-                          Navigator.pushNamed(context, '/following');
-                        },
+                        onTap: () => Navigator.pushNamed(context, '/following'),
                       ),
                       IndicatorCard(
-                        title: "Saved News",
+                        title: "saved_news".tr(),
                         count: 34,
                         color: theme.colorScheme.surfaceVariant,
-                        onTap: () {
-                          Navigator.pushNamed(context, '/saved');
-                        },
+                        onTap: () => Navigator.pushNamed(context, '/saved'),
                       ),
                     ],
                   ),
                   const SizedBox(height: 30),
+
+                  // Topics
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Your Interests",
+                        "your_interests".tr(),
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -243,52 +236,41 @@ class _ProfilePageState extends State<ProfilePage>
                         spacing: 12,
                         runSpacing: 12,
                         children: [
-                          ...topics
-                              .map(
-                                (topic) => isManagingTopics
+                          ...List.generate(topics.length, (index) {
+                            final topic = topics[index];
+                            final key = topicKeys[index];
+                            return isManagingTopics
                                 ? RotationTransition(
                               turns: Tween(begin: -0.001, end: 0.002)
-                                  .animate(
-                                CurvedAnimation(
-                                  parent: _animationController,
-                                  curve: const FlippedCurve(
-                                    Curves.easeOutCubic,
-                                  ),
-                                ),
-                              ),
+                                  .animate(CurvedAnimation(
+                                parent: _animationController,
+                                curve: const FlippedCurve(Curves.easeOutCubic),
+                              )),
                               child: TopicChip(
                                 title: topic,
-                                onDeleted: () => _removeTopic(topic),
+                                onDeleted: () => _removeTopic(key),
                               ),
                             )
-                                : TopicChip(title: topic, onDeleted: null),
-                          )
-                              .toList(),
+                                : TopicChip(title: topic, onDeleted: null);
+                          }),
                           if (isManagingTopics)
                             ActionChip(
-                              label: const Text(
-                                "Add",
-                                style: TextStyle(color: Colors.white),
+                              label: Text(
+                                "add".tr(),
+                                style: const TextStyle(color: Colors.white),
                               ),
-                              avatar: const Icon(
-                                Icons.add,
-                                color: Colors.white,
-                              ),
+                              avatar: const Icon(Icons.add, color: Colors.white),
                               backgroundColor: theme.colorScheme.primary,
                               onPressed: _showAddTopicDialog,
                             ),
                           if (isManagingTopics)
                             ActionChip(
                               label: Text(
-                                "Done",
+                                "done".tr(),
                                 style: TextStyle(color: theme.colorScheme.onBackground),
                               ),
                               backgroundColor: theme.colorScheme.surfaceVariant,
-                              onPressed: () {
-                                setState(() {
-                                  isManagingTopics = false;
-                                });
-                              },
+                              onPressed: () => setState(() => isManagingTopics = false),
                             ),
                         ],
                       ),

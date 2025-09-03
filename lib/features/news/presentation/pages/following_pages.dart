@@ -1,23 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class FollowingPage extends StatelessWidget {
   const FollowingPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        elevation: 0,
         title: Text(
-          "Home",
-          style: textTheme.titleLarge,
+          'following_title'.tr(),
+          style: TextStyle(
+            color: theme.colorScheme.onBackground,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
         ),
+        iconTheme: IconThemeData(color: theme.colorScheme.onBackground),
       ),
       body: Center(
         child: Text(
-          "Welcome to Following 🎉",
-          style: textTheme.bodyLarge,
+          'following_welcome'.tr(),
+          style: TextStyle(
+            color: theme.colorScheme.onBackground,
+            fontSize: 16,
+          ),
         ),
       ),
     );
