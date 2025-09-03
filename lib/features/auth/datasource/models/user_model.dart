@@ -10,6 +10,9 @@ class UserModel extends UserEntity {
     super.avatarUrl,
     required super.isVerified,
     required super.createdAt,
+    super.interest,
+    super.subscribedSources,
+    required super.notification,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -33,21 +36,13 @@ class UserModel extends UserEntity {
       avatarUrl: json['avatar_url'],
       isVerified: json['is_verified'] ?? false,
       createdAt: createdAt,
+      interest: (json['topics'] as List<dynamic>?)
+          ?.map((e) => e.toString())
+          .toList(),
+      subscribedSources: (json['subscribed_sources'] as List<dynamic>?)
+          ?.map((e) => e.toString())
+          .toList(),
+      notification: json['notification'] ?? false,
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    final names = fullName.split(' ');
-    return {
-      'id': id,
-      'username': username,
-      'email': email,
-      'first_name': names.first,
-      'last_name': names.length > 1 ? names.sublist(1).join(' ') : null,
-      'role': role,
-      'avatar_url': avatarUrl,
-      'is_verified': isVerified,
-      'created_at': createdAt?.toIso8601String(),
-    };
   }
 }

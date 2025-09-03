@@ -7,6 +7,7 @@ import 'package:newsbrief/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:newsbrief/features/auth/presentation/cubit/auth_state.dart';
 import 'package:newsbrief/features/auth/presentation/pages/manage_subscription.dart';
 import 'package:newsbrief/features/auth/presentation/widgets/indicator_card.dart';
+import 'package:newsbrief/features/auth/presentation/cubit/user_cubit.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -17,10 +18,8 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage>
     with SingleTickerProviderStateMixin {
-  // Use raw keys and translate dynamically
-  List<String> topicKeys = ["Technology", "Sports", "Business", "Entertainment", "Health"];
-  bool isManagingTopics = false;
 
+  bool isManagingTopics = false;
   late final AnimationController _animationController;
 
   @override
@@ -31,6 +30,9 @@ class _ProfilePageState extends State<ProfilePage>
       reverseDuration: const Duration(milliseconds: 100),
       vsync: this,
     )..repeat(reverse: true);
+
+    // Load topics from UserCubit
+    context.read<UserCubit>().loadSubscribedTopics();
   }
 
   @override
@@ -38,6 +40,7 @@ class _ProfilePageState extends State<ProfilePage>
     _animationController.dispose();
     super.dispose();
   }
+
 
   void _removeTopic(String topicKey) {
     setState(() {
@@ -96,6 +99,7 @@ class _ProfilePageState extends State<ProfilePage>
     );
   }
 
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -120,13 +124,15 @@ class _ProfilePageState extends State<ProfilePage>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // Top Row
+
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       IconButton(
                         onPressed: () => Navigator.pushNamed(context, '/root'),
+
                         icon: Icon(Icons.arrow_back, color: theme.colorScheme.onBackground),
+
                       ),
                       Row(
                         children: [
@@ -166,7 +172,7 @@ class _ProfilePageState extends State<ProfilePage>
 
                   const SizedBox(height: 30),
 
-                  // Avatar
+
                   CircleAvatar(
                     radius: 60,
                     backgroundColor: theme.colorScheme.surfaceVariant,
@@ -176,9 +182,10 @@ class _ProfilePageState extends State<ProfilePage>
                       color: theme.colorScheme.onSurface.withOpacity(0.6),
                     ),
                   ),
+
                   const SizedBox(height: 20),
 
-                  // Full Name
+
                   Text(
                     fullName ?? "john_doe",
                     style: TextStyle(
@@ -197,88 +204,154 @@ class _ProfilePageState extends State<ProfilePage>
                       color: theme.colorScheme.onBackground.withOpacity(0.6),
                     ),
                   ),
+
                   const SizedBox(height: 30),
 
-                  // Indicator Cards
+
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       IndicatorCard(
                         title: "subscribed".tr(),
                         count: 12,
+
                         color: theme.colorScheme.surfaceVariant,
+
                         onTap: () => Navigator.pushNamed(context, '/following'),
                       ),
                       IndicatorCard(
                         title: "saved_news".tr(),
                         count: 34,
+
                         color: theme.colorScheme.surfaceVariant,
+
                         onTap: () => Navigator.pushNamed(context, '/saved'),
                       ),
                     ],
                   ),
+
                   const SizedBox(height: 30),
 
-                  // Topics
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "your_interests".tr(),
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.onBackground,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
-                        children: [
-                          ...List.generate(topics.length, (index) {
-                            final topic = topics[index];
-                            final key = topicKeys[index];
-                            return isManagingTopics
-                                ? RotationTransition(
-                              turns: Tween(begin: -0.001, end: 0.002)
-                                  .animate(CurvedAnimation(
-                                parent: _animationController,
-                                curve: const FlippedCurve(Curves.easeOutCubic),
-                              )),
-                              child: TopicChip(
-                                title: topic,
-                                onDeleted: () => _removeTopic(key),
-                              ),
-                            )
-                                : TopicChip(title: topic, onDeleted: null);
-                          }),
-                          if (isManagingTopics)
-                            ActionChip(
-                              label: Text(
+// Your Interests (UserCubit)
+BlocBuilder<UserCubit, UserState>(
+  builder: (context, state) {
+    List<String> userTopics = [];
+    bool isLoading = false;
 
-                                "Add".tr(),
-                                style: TextStyle(color: theme.colorScheme.onPrimary),
-                              ),
-                              avatar: Icon(
-                                Icons.add,
-                                color: theme.colorScheme.onPrimary,
-                              ),
-                              backgroundColor: theme.colorScheme.primary,
-                              onPressed: _showAddTopicDialog,
+    if (state is UserLoading) {
+      isLoading = true;
+    } else if (state is SubscribedTopicsLoaded) {
+      userTopics = state.topics;
+    } else if (state is UserError) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(state.message),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      });
+    }
+
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "your_interests".tr(),
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.onBackground,
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (isLoading)
+          const Center(child: CircularProgressIndicator())
+        else
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              ...userTopics.map(
+                (topic) => isManagingTopics
+                    ? RotationTransition(
+                        turns: Tween(begin: -0.001, end: 0.002).animate(
+                          CurvedAnimation(
+                            parent: _animationController,
+                            curve: const FlippedCurve(Curves.easeOutCubic),
+                          ),
+                        ),
+                        child: TopicChip(
+                          title: topic,
+                          onDeleted: () => context.read<UserCubit>().removeTopic(topic),
+                        ),
+                      )
+                    : TopicChip(title: topic, onDeleted: null),
+              ),
+              if (isManagingTopics)
+                ActionChip(
+                  label: Text(
+                    "Add".tr(),
+                    style: TextStyle(color: theme.colorScheme.onPrimary),
+                  ),
+                  avatar: Icon(Icons.add, color: theme.colorScheme.onPrimary),
+                  backgroundColor: theme.colorScheme.primary,
+                  onPressed: () {
+                    TextEditingController controller = TextEditingController();
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: Text("Add New Topic".tr()),
+                        content: TextField(
+                          controller: controller,
+                          decoration: InputDecoration(
+                            hintText: "Enter topic name".tr(),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                          if (isManagingTopics)
-                            ActionChip(
-                              label: Text(
-                                "done".tr(),
-                                style: TextStyle(color: theme.colorScheme.onBackground),
-                              ),
-                              backgroundColor: theme.colorScheme.surfaceVariant,
-                              onPressed: () => setState(() => isManagingTopics = false),
-                            ),
+                          ),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: Text("Cancel".tr()),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              if (controller.text.isNotEmpty) {
+                                context.read<UserCubit>().addTopic(controller.text);
+                                Navigator.pop(context);
+                              }
+                            },
+                            child: Text("Add".tr()),
+                          ),
                         ],
                       ),
-                    ],
+                    );
+                  },
+                ),
+              if (isManagingTopics)
+                ActionChip(
+                  label: Text(
+                    "done".tr(),
+                    style: TextStyle(color: theme.colorScheme.onBackground),
+                  ),
+                  backgroundColor: theme.colorScheme.surfaceVariant,
+                  onPressed: () => setState(() => isManagingTopics = false),
+                ),
+            ],
+          ),
+      ],
+    );
+  },
+),
+
+                            ),
+                        ],
+                      );
+                    },
                   ),
                 ],
               ),

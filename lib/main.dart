@@ -6,10 +6,20 @@ import 'package:newsbrief/core/storage/token_secure_storage.dart';
 import 'package:newsbrief/features/auth/datasource/datasources/auth_local_data_sourcs.dart';
 import 'package:newsbrief/features/auth/datasource/datasources/auth_remote_data_sources.dart';
 import 'package:newsbrief/features/auth/datasource/repositories/auth_repository_impl.dart';
+import 'package:newsbrief/features/auth/domain/usecases/get_all_sources.dart';
+import 'package:newsbrief/features/auth/domain/usecases/get_all_topic.dart';
 import 'package:newsbrief/features/auth/domain/usecases/get_interests_usecase.dart';
+import 'package:newsbrief/features/auth/domain/usecases/get_subscribed_sources.dart';
+import 'package:newsbrief/features/auth/domain/usecases/get_subscribed_topics.dart';
 import 'package:newsbrief/features/auth/domain/usecases/login_with_google_usecase.dart';
+
+import 'package:newsbrief/features/auth/domain/usecases/subscribe_to_sources.dart';
+import 'package:newsbrief/features/auth/domain/usecases/unsubscribe_from_source.dart';
+import 'package:newsbrief/features/auth/presentation/cubit/user_cubit.dart';
+
 import 'core/storage/theme_storage.dart';
 import 'core/theme/theme_cubit.dart';
+
 import 'features/auth/presentation/pages/signup_landing.dart';
 import 'package:newsbrief/features/auth/presentation/pages/login.dart';
 import 'package:newsbrief/features/auth/presentation/pages/profile_edit.dart';
@@ -33,11 +43,13 @@ import 'features/auth/domain/usecases/verify_email.dart';
 import 'features/auth/domain/usecases/request_verification_email.dart';
 import 'features/auth/presentation/cubit/auth_cubit.dart';
 
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized(); // <-- initialize EasyLocalization
 
   const baseUrl = 'https://news-brief-core-api-excr.onrender.com/api/v1';
+
 
   final themeStorage = ThemeStorage();
   final tokenStorage = TokenSecureStorage();
@@ -71,9 +83,23 @@ void main() async {
           BlocProvider(
             create: (_) => ThemeCubit(themeStorage),
           ),
-        ],
-        child: const MyApp(),
+
+        BlocProvider(
+          create: (_) => UserCubit(
+            getAllSources: GetAllSources(repo),
+            getAllTopic: GetAllTopic(repo),
+            getSubscribedSources: GetSubscribedSources(repo),
+            getSubscribedTopics: GetSubscribedTopics(repo),
+            unsubscribeFromSource: UnsubscribeFromSource(repo),
+            subscribeToSources: SubscribeToSources(repo),
+          ),
+        ),
+      ],
+      child: MyApp(),
+
+       
       ),
+
     ),
   );
 }

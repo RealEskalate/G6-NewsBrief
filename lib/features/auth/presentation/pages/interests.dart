@@ -1,8 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:newsbrief/features/auth/presentation/cubit/auth_cubit.dart';
-import 'package:newsbrief/features/auth/presentation/cubit/auth_state.dart';
+import 'package:newsbrief/features/auth/presentation/cubit/user_cubit.dart';
 
 class InterestsScreen extends StatefulWidget {
   const InterestsScreen({super.key});
@@ -18,7 +17,7 @@ class _InterestsScreenState extends State<InterestsScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<AuthCubit>().loadInterests();
+    context.read<UserCubit>().loadAllTopics();
   }
 
   bool get canContinue => selectedInterests.values.where((v) => v).length >= 3;
@@ -28,27 +27,29 @@ class _InterestsScreenState extends State<InterestsScreen> {
     final theme = Theme.of(context);
 
     return BlocProvider.value(
-      value: context.read<AuthCubit>(),
+      value: context.read<UserCubit>(),
       child: Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(24.0),
-            child: BlocConsumer<AuthCubit, AuthState>(
+            child: BlocConsumer<UserCubit, UserState>(
               listener: (context, state) {
-                if (state is InterestsLoaded) {
-                  availableInterests = state.interests;
+                if (state is AllTopicsLoaded) {
+                  availableInterests = state.topics; // <-- from UserCubit
                   for (var i in availableInterests) {
-                    if (!selectedInterests.containsKey(i)) selectedInterests[i] = false;
+
+                    selectedInterests.putIfAbsent(i, () => false);
+
                   }
-                } else if (state is InterestsSavedSuccess) {
+                } else if (state is UserActionSuccess) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Interests saved!'.tr()),
                       backgroundColor: theme.colorScheme.primary,
                     ),
                   );
-                } else if (state is AuthError) {
+                } else if (state is UserError) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(state.message),
@@ -57,8 +58,9 @@ class _InterestsScreenState extends State<InterestsScreen> {
                   );
                 }
               },
+
               builder: (context, state) {
-                if (state is AuthLoading && availableInterests.isEmpty) {
+                if (state is UserLoading  && availableInterests.isEmpty) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
@@ -112,7 +114,7 @@ class _InterestsScreenState extends State<InterestsScreen> {
                         itemCount: availableInterests.length,
                         itemBuilder: (context, index) {
                           final category = availableInterests[index];
-                          final isSelected = selectedInterests[category]!;
+                          final isSelected = selectedInterests[category] ?? false;
                           return FilterChip(
                             label: Text(category),
                             selected: isSelected,
@@ -148,13 +150,17 @@ class _InterestsScreenState extends State<InterestsScreen> {
                       child: ElevatedButton(
                         onPressed: canContinue
                             ? () {
-                          final selected = selectedInterests.entries
-                              .where((e) => e.value)
-                              .map((e) => e.key)
-                              .toList();
-                          context.read<AuthCubit>().saveInterests(selected);
-                          Navigator.pushNamed(context, '/root');
-                        }
+
+                                final selected = selectedInterests.entries
+                                    .where((e) => e.value)
+                                    .map((e) => e.key)
+                                    .toList();
+                                context.read<UserCubit>().saveInterests(
+                                  selected,
+                                );
+                                Navigator.pushNamed(context, '/root');
+                              }
+
                             : null,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: canContinue
