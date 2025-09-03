@@ -44,7 +44,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 		return
 	}
 
-	user, err := h.userUsecase.Register(c.Request.Context(), req.Username, req.Email, req.Password, req.Fullname)
+	user, err := h.userUsecase.Register(c.Request.Context(), req.Email, req.Password, req.Fullname)
 	if err != nil {
 		ErrorHandler(c, http.StatusConflict, err.Error())
 		return
@@ -233,10 +233,6 @@ func (h *UserHandler) Logout(c *gin.Context) {
 
 func updateUserRequestToMap(req dto.UpdateUserRequest) map[string]interface{} {
 	updates := make(map[string]interface{})
-
-	if req.Username != nil {
-		updates["username"] = *req.Username
-	}
 
 	if req.Fullname != nil {
 		updates["fullname"] = *req.Fullname

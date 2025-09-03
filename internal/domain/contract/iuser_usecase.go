@@ -9,7 +9,7 @@ import (
 
 // UserUseCase defines the interface for user-related operations.
 type IUserUseCase interface {
-	Register(ctx context.Context, username, email, password, fullname string) (*entity.User, error)
+	Register(ctx context.Context, email, password, fullname string) (*entity.User, error)
 	Login(ctx context.Context, email, password string) (*entity.User, string, string, error)
 	Authenticate(ctx context.Context, accessToken string) (*entity.User, error)
 	RefreshToken(ctx context.Context, refreshToken string) (string, string, error)

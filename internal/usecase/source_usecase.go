@@ -42,7 +42,6 @@ func (uc *sourceUsecase) CreateSource(ctx context.Context, source *entity.Source
 	if urlExists {
 		return errors.New("source with URL already exists")
 	}
-
 	return uc.sourceRepo.CreateSource(ctx, source)
 }
 

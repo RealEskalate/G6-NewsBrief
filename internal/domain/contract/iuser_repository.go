@@ -10,7 +10,7 @@ type IUserRepository interface {
 	CreateUser(ctx context.Context, user *entity.User) error
 	GetUserByID(ctx context.Context, id string) (*entity.User, error)
 	// GetUserByUsername retrieves a user by username.
-	GetUserByUsername(ctx context.Context, username string) (*entity.User, error)
+	// GetUserByUsername(ctx context.Context, username string) (*entity.User, error)
 	// GetUserByEmail retrieves a user by email.
 	GetUserByEmail(ctx context.Context, email string) (*entity.User, error)
 	// UpdateUser updates an existing user and returns the updated user.

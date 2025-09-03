@@ -93,6 +93,7 @@ func main() {
 	// Dependency Injection: Repositories
 	userCollection := mongoClient.Client.Database(dbName).Collection("users")
 	userRepo := mongodb.NewUserRepository(userCollection)
+	newsRepo := mongodb.NewNewsRepositoryMongo(mongoClient.Client.Database(dbName).Collection("news"))
 	tokenRepo := mongodb.NewTokenRepository(mongoClient.Client.Database(dbName).Collection("tokens"))
 	topicRepo := mongodb.NewTopicRepository(mongoClient.Client.Database(dbName).Collection("topics"))
 	sourceRepo := mongodb.NewSourceRepository(mongoClient.Client.Database(dbName).Collection("sources"))
@@ -110,6 +111,14 @@ func main() {
 	appValidator := validator.NewValidator()
 	uuidGenerator := uuidgen.NewGenerator()
 	appConfig := config.NewConfig()
+	// External services
+	summarizerAPI := os.Getenv("GEMINI_API_URL")
+	GeminiAPIKey := os.Getenv("GEMINI_API_KEY")
+	if summarizerAPI == "" {
+		log.Fatal("GEMINI_API_URL environment variable not set")
+	}
+	geminiClient := external_services.NewGeminiClient(GeminiAPIKey, summarizerAPI)
+
 	// Dependency Injection: Usecases
 	emailUsecase := usecase.NewEmailVerificationUseCase(tokenRepo, userRepo, mailService, randomGenerator, uuidGenerator, appConfig)
 	userUsecase := usecase.NewUserUsecase(userRepo, tokenRepo, topicRepo, emailUsecase, hasher, jwtService, mailService, appLogger, appConfig, appValidator, uuidGenerator, randomGenerator)
@@ -127,6 +136,7 @@ func main() {
 		userUsecase, emailUsecase,
 		userRepo, tokenRepo, hasher, jwtService, mailService,
 		appLogger, appConfig, appValidator, uuidGenerator, randomGenerator, sourceUsecase, topicUsecase, subscriptionUsecase,
+		sourceRepo, newsRepo, geminiClient,
 	)
 
 	// Initialize Gin router

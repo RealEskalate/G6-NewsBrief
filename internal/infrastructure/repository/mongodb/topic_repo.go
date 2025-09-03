@@ -2,6 +2,7 @@ package mongodb
 
 import (
 	"context"
+	"errors"
 
 	"github.com/RealEskalate/G6-NewsBrief/internal/domain/entity"
 	"go.mongodb.org/mongo-driver/bson"
@@ -44,6 +45,19 @@ func (r *topicRepository) CheckSlugExists(ctx context.Context, slug string) (boo
 		return false, err
 	}
 	return count > 0, nil
+}
+
+// GetBySlug retrieves a single topic by its unique slug.
+func (r *topicRepository) GetTopicBySlug(ctx context.Context, slug string) (*entity.Topic, error) {
+	var topic entity.Topic
+	err := r.collection.FindOne(ctx, bson.M{"slug": slug}).Decode(&topic)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, errors.New("source not found")
+		}
+		return nil, err
+	}
+	return &topic, nil
 }
 
 // GetAll retrieves all topics from the 'topics' collection.

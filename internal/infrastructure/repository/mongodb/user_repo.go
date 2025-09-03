@@ -48,26 +48,26 @@ func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*ent
 	return &user, nil
 }
 
-func (r *UserRepository) GetUserByUsername(ctx context.Context, username string) (*entity.User, error) {
-	var user entity.User
-	err := r.collection.FindOne(ctx, bson.M{"username": username}).Decode(&user)
-	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return nil, errors.New("user not found")
-		}
-		return nil, err
-	}
-	return &user, nil
-}
+// func (r *UserRepository) GetUserByUsername(ctx context.Context, username string) (*entity.User, error) {
+// 	var user entity.User
+// 	err := r.collection.FindOne(ctx, bson.M{"username": username}).Decode(&user)
+// 	if err != nil {
+// 		if err == mongo.ErrNoDocuments {
+// 			return nil, errors.New("user not found")
+// 		}
+// 		return nil, err
+// 	}
+// 	return &user, nil
+// }
 
-func (r *UserRepository) GetByUserName(ctx context.Context, username string) (*entity.User, error) {
-	var user entity.User
-	err := r.collection.FindOne(ctx, bson.M{"username": username}).Decode(&user)
-	if err != nil {
-		return nil, errors.New("user not found")
-	}
-	return &user, nil
-}
+// func (r *UserRepository) GetByUserName(ctx context.Context, username string) (*entity.User, error) {
+// 	var user entity.User
+// 	err := r.collection.FindOne(ctx, bson.M{"username": username}).Decode(&user)
+// 	if err != nil {
+// 		return nil, errors.New("user not found")
+// 	}
+// 	return &user, nil
+// }
 
 // UpdateUser updates an existing user and returns the updated user
 func (r *UserRepository) UpdateUser(ctx context.Context, user *entity.User) (*entity.User, error) {
