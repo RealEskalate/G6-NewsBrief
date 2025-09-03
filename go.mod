@@ -3,6 +3,7 @@ module github.com/RealEskalate/G6-NewsBrief
 go 1.24.4
 
 require (
+	github.com/Conight/go-googletrans v0.2.4
 	github.com/didip/tollbooth/v7 v7.0.2
 	github.com/didip/tollbooth_gin v0.0.0-20250404214326-bb1a1fc0384e
 	github.com/gin-contrib/cors v1.7.6

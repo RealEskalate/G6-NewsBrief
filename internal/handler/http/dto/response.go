@@ -2,7 +2,6 @@ package dto
 
 import (
 	"github.com/RealEskalate/G6-NewsBrief/internal/domain/entity"
-	"time"
 )
 
 // UserResponse is the DTO for a user.
@@ -155,4 +154,47 @@ func MapTopicsToDTOs(topics []entity.Topic) []TopicDTO {
 		}
 	}
 	return topicDTOs
+}
+
+// NewsListItemDTO mirrors entity.News for API responses.
+type NewsListItemDTO struct {
+	ID          string   `json:"id"`
+	Title       string   `json:"title"`
+	Body        string   `json:"body"`
+	SummaryEN   string   `json:"summary_en,omitempty"`
+	SummaryAM   string   `json:"summary_am,omitempty"`
+	Language    string   `json:"language"`
+	SourceID    string   `json:"source_id"`
+	Topics      []string `json:"topics,omitempty"`
+	PublishedAt string   `json:"published_at"`
+	CreatedAt   string   `json:"created_at"`
+	UpdatedAt   string   `json:"updated_at"`
+}
+
+type NewsListResponseDTO struct {
+	News       []NewsListItemDTO `json:"news"`
+	Total      int64             `json:"total"`
+	TotalPages int               `json:"total_pages"`
+	Page       int               `json:"page"`
+	Limit      int               `json:"limit"`
+}
+
+func MapNewsToDTOs(list []*entity.News) []NewsListItemDTO {
+	out := make([]NewsListItemDTO, 0, len(list))
+	for _, n := range list {
+		out = append(out, NewsListItemDTO{
+			ID:          n.ID,
+			Title:       n.Title,
+			Body:        n.Body,
+			SummaryEN:   n.SummaryEN,
+			SummaryAM:   n.SummaryAM,
+			Language:    n.Language,
+			SourceID:    n.SourceID,
+			Topics:      n.Topics,
+			PublishedAt: n.PublishedAt.Format(time.RFC3339),
+			CreatedAt:   n.CreatedAt.Format(time.RFC3339),
+			UpdatedAt:   n.UpdatedAt.Format(time.RFC3339),
+		})
+	}
+	return out
 }

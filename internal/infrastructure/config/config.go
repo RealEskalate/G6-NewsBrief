@@ -94,5 +94,9 @@ func getEnvAsBool(name string, fallback bool) bool {
 }
 
 func (c *Config) GetAIServiceAPIKey() string {
-	return getEnv("AI_SERVICE_API_KEY", "")
+	return getEnv("GEMINI_API_KEY", "")
+}
+
+func (c *Config) GetAIServiceAPIURL() string {
+	return getEnv("GEMINI_API_URL","")
 }
