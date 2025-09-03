@@ -107,8 +107,9 @@ func (r *Router) SetupRoutes(router *gin.Engine) {
 		userProfile.GET("/subscriptions", r.subscriptionHandler.GetSubscriptions)
 		userProfile.POST("/subscriptions", r.subscriptionHandler.AddSubscription)
 		userProfile.DELETE("/subscriptions/:source_slug", r.subscriptionHandler.RemoveSubscription)
+		userProfile.GET("/topics", r.topicHandler.GetUserSubscribedTopics)
 		userProfile.POST("/topics", r.topicHandler.SubscribeTopic)
-		userProfile.GET("/subscribed-topics", r.topicHandler.GetUserSubscribedTopics)
+		userProfile.DELETE("/topics/:topic_slug", r.topicHandler.UnsubscribeTopic)
 	}
 	// public api
 	public := v1.Group("")

@@ -18,7 +18,6 @@ type Source struct {
 	URL              string       `bson:"url" json:"url"`
 	LogoURL          string       `bson:"logo_url" json:"logo_url"`
 	Languages        LanguageType `bson:"languages" json:"languages"`
-	Topics           []string     `bson:"topics" json:"topics"`
 	ReliabilityScore float64      `bson:"reliability_score" json:"reliability_score"`
 }
 

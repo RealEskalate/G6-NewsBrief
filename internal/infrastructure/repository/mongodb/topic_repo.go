@@ -2,6 +2,7 @@ package mongodb
 
 import (
 	"context"
+
 	"github.com/RealEskalate/G6-NewsBrief/internal/domain/entity"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"

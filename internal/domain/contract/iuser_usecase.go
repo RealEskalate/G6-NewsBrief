@@ -24,4 +24,5 @@ type IUserUseCase interface {
 	UpdatePreferences(ctx context.Context, userID string, req dto.UpdatePreferencesRequest) (*entity.Preferences, error)
 	SubscribeTopic(ctx context.Context, userID, topicID string) error
 	GetUserSubscribedTopics(ctx context.Context, userID string) ([]*entity.Topic, error)
+	UnsubscribeTopic(ctx context.Context, userID, topicSlug string) error
 }

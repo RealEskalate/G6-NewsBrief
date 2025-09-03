@@ -115,12 +115,12 @@ func (r *UserRepository) DeleteUser(ctx context.Context, id string) error {
 	return nil
 }
 
-// AddSubscription adds a source key to the user's embedded list of subscriptions.
+// AddSubscription adds a source slug to the user's embedded list of subscriptions.
 // It uses $addToSet to automatically prevent duplicates.
-func (r *UserRepository) AddSubscription(ctx context.Context, id string, sourceKey string) error {
+func (r *UserRepository) AddSourceSubscription(ctx context.Context, id string, sourceSlug string) error {
 	filter := bson.M{"_id": id}
 	update := bson.M{
-		"$addToSet": bson.M{"preferences.subscribed_sources": sourceKey},
+		"$addToSet": bson.M{"preferences.subscribed_sources": sourceSlug},
 	}
 
 	result, err := r.collection.UpdateOne(ctx, filter, update)
@@ -134,11 +134,11 @@ func (r *UserRepository) AddSubscription(ctx context.Context, id string, sourceK
 	return nil
 }
 
-// RemoveSubscription removes a source key from the user's embedded list of subscriptions.
-func (r *UserRepository) RemoveSubscription(ctx context.Context, id string, sourceKey string) error {
+// RemoveSubscription removes a source slug from the user's embedded list of subscriptions.
+func (r *UserRepository) RemoveSourceSubscription(ctx context.Context, id string, sourceSlug string) error {
 	filter := bson.M{"_id": id}
 	update := bson.M{
-		"$pull": bson.M{"preferences.subscribed_sources": sourceKey},
+		"$pull": bson.M{"preferences.subscribed_sources": sourceSlug},
 	}
 
 	result, err := r.collection.UpdateOne(ctx, filter, update)
@@ -152,9 +152,9 @@ func (r *UserRepository) RemoveSubscription(ctx context.Context, id string, sour
 	return nil
 }
 
-// GetSubscriptions retrieves only the list of subscribed source keys for a user.
+// GetSubscriptions retrieves only the list of subscribed source slugs for a user.
 // This uses a projection for efficiency, so the entire user document is not fetched.
-func (r *UserRepository) GetSubscriptions(ctx context.Context, id string) ([]string, error) {
+func (r *UserRepository) GetSourceSubscriptions(ctx context.Context, id string) ([]string, error) {
 	// Local struct for decoding only the field we need.
 	var result struct {
 		Preferences struct {
@@ -177,11 +177,11 @@ func (r *UserRepository) GetSubscriptions(ctx context.Context, id string) ([]str
 	return result.Preferences.SubscribedSources, nil
 }
 
-func (r *UserRepository) SubscribeTopic(ctx context.Context, userID, topicID string) error {
+func (r *UserRepository) SubscribeTopic(ctx context.Context, userID, topicSlug string) error {
 	filter := bson.M{"_id": userID}
 	update := bson.D{{
 		Key:   "$addToSet",
-		Value: bson.M{"preferences.topics": topicID},
+		Value: bson.M{"preferences.topics": topicSlug},
 	}}
 	count, err := r.collection.UpdateOne(ctx, filter, update)
 	if err != nil {
@@ -213,4 +213,21 @@ func (r *UserRepository) GetUserSubscribedTopicsByID(ctx context.Context, userID
 	}
 
 	return result.Preferences.Topics, nil
+}
+
+func (uc *UserRepository) UnsubscribeTopic(ctx context.Context, userID, topicSlug string) error {
+	filter := bson.M{"_id": userID}
+	update := bson.D{{
+		Key:   "$pull",
+		Value: bson.M{"preferences.topics": topicSlug},
+	}}
+	count, err := uc.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+
+	if count.MatchedCount == 0 {
+		return errors.New("user not found")
+	}
+	return nil
 }

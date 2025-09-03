@@ -114,7 +114,6 @@ func MapSourcesToDTOs(sources []entity.Source) []SourceDTO {
 			URL:              source.URL,
 			LogoURL:          source.LogoURL,
 			Languages:        string(source.Languages),
-			Topics:           source.Topics,
 			ReliabilityScore: source.ReliabilityScore,
 		}
 	}

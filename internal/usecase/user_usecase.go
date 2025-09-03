@@ -678,18 +678,18 @@ func (uc *UserUsecase) UpdatePreferences(ctx context.Context, userID string, req
 	return &user.Preferences, nil
 }
 
-func (uc *UserUsecase) SubscribeTopic(ctx context.Context, userID, topicID string) error {
-	if userID == "" || topicID == "" {
+func (uc *UserUsecase) SubscribeTopic(ctx context.Context, userID, topicSlug string) error {
+	if userID == "" || topicSlug == "" {
 		return errors.New("user ID and topic ID are required")
 	}
-	if _, err := uc.topicRepo.GetTopicByID(ctx, topicID); err != nil {
+	if _, err := uc.topicRepo.GetTopicBySlug(ctx, topicSlug); err != nil {
 		return errors.New("topic not found")
 	}
 	if _, err := uc.userRepo.GetUserByID(ctx, userID); err != nil {
 		return errors.New("user not found")
 	}
 
-	if err := uc.userRepo.SubscribeTopic(ctx, userID, topicID); err != nil {
+	if err := uc.userRepo.SubscribeTopic(ctx, userID, topicSlug); err != nil {
 		return errors.New("failed to subscribe user to topic")
 	}
 	return nil
@@ -708,4 +708,21 @@ func (uc *UserUsecase) GetUserSubscribedTopics(ctx context.Context, userID strin
 		return nil, err
 	}
 	return userTopics, nil
+}
+
+func (uc *UserUsecase) UnsubscribeTopic(ctx context.Context, userID, topicSlug string) error {
+	if userID == "" || topicSlug == "" {
+		return errors.New("user ID and topic slug are required")
+	}
+	if _, err := uc.topicRepo.GetTopicBySlug(ctx, topicSlug); err != nil {
+		return errors.New("topic not found")
+	}
+	if _, err := uc.userRepo.GetUserByID(ctx, userID); err != nil {
+		return errors.New("user not found")
+	}
+
+	if err := uc.userRepo.UnsubscribeTopic(ctx, userID, topicSlug); err != nil {
+		return errors.New("failed to unsubscribe user from topic")
+	}
+	return nil
 }

@@ -49,7 +49,6 @@ func (h *SourceHandler) CreateSource(c *gin.Context) {
 		URL:              sourceDTO.URL,
 		LogoURL:          sourceDTO.LogoURL,
 		Languages:        entity.SetLanguageType(sourceDTO.Languages),
-		Topics:           sourceDTO.Topics,
 		ReliabilityScore: sourceDTO.ReliabilityScore,
 	}
 

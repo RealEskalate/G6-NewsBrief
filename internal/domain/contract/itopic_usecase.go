@@ -2,6 +2,7 @@ package contract
 
 import (
 	"context"
+
 	"github.com/RealEskalate/G6-NewsBrief/internal/domain/entity"
 )
 
