@@ -7,19 +7,20 @@ class ApiService {
   final TokenStorage tokenStorage;
 
   ApiService({required String baseUrl, required this.tokenStorage})
-      : dio = Dio(
-          BaseOptions(
-            baseUrl: baseUrl,
-            connectTimeout: const Duration(seconds: 20),
-            receiveTimeout: const Duration(seconds: 20),
-            headers: {'content-Type': 'application/json'},
-          ),
-        ) {
+    : dio = Dio(
+        BaseOptions(
+          baseUrl: baseUrl,
+          connectTimeout: const Duration(seconds: 20),
+          receiveTimeout: const Duration(seconds: 20),
+          headers: {'content-Type': 'application/json'},
+        ),
+      ) {
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
           final access = await tokenStorage.readAccessToken();
           if (access != null && access.isNotEmpty) {
+            // print(access);
             options.headers['Authorization'] = 'Bearer $access';
           }
           handler.next(options);
@@ -35,7 +36,9 @@ class ApiService {
                 final cloneResponse = await dio.fetch(reqOptions);
                 return handler.resolve(cloneResponse);
               } catch (err) {
-                return handler.reject(_toDioException(_mapError(err), e.requestOptions));
+                return handler.reject(
+                  _toDioException(_mapError(err), e.requestOptions),
+                );
               }
             }
           }
@@ -44,17 +47,16 @@ class ApiService {
       ),
     );
   }
-  
+
   Future<bool> _tryRefreshToken() async {
     final tokenStorage = TokenSecureStorage();
     final refresh = await tokenStorage.readRefreshToken();
     if (refresh == null || refresh.isEmpty) return false;
 
     try {
-      final res = await Dio(BaseOptions(baseUrl: dio.options.baseUrl)).post(
-        '/auth/refresh_token',
-        data: {'refresh_token': refresh},
-      );
+      final res = await Dio(
+        BaseOptions(baseUrl: dio.options.baseUrl),
+      ).post('/auth/refresh_token', data: {'refresh_token': refresh});
       final access = res.data['access_token'] as String?;
       final newRefresh = res.data['refresh_token'] as String?;
       if (access != null) {
@@ -120,7 +122,7 @@ class ApiService {
     return Exception("Unexpected error occurred.");
   }
 
-   // ✅ Wraps Exception into DioException so handler.reject works
+  // ✅ Wraps Exception into DioException so handler.reject works
   DioException _toDioException(Exception error, RequestOptions requestOptions) {
     return DioException(
       requestOptions: requestOptions,
@@ -129,4 +131,3 @@ class ApiService {
     );
   }
 }
-

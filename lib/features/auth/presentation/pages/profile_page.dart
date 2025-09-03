@@ -6,6 +6,7 @@ import 'package:newsbrief/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:newsbrief/features/auth/presentation/cubit/auth_state.dart';
 import 'package:newsbrief/features/auth/presentation/pages/manage_subscription.dart';
 import 'package:newsbrief/features/auth/presentation/widgets/indicator_card.dart';
+import 'package:newsbrief/features/auth/presentation/cubit/user_cubit.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -16,15 +17,7 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage>
     with SingleTickerProviderStateMixin {
-  List<String> topics = [
-    "Technology",
-    "Sports",
-    "Business",
-    "Entertainment",
-    "Health",
-  ];
   bool isManagingTopics = false;
-
   late final AnimationController _animationController;
 
   @override
@@ -35,63 +28,15 @@ class _ProfilePageState extends State<ProfilePage>
       reverseDuration: const Duration(milliseconds: 100),
       vsync: this,
     )..repeat(reverse: true);
+
+    // Load topics from UserCubit
+    context.read<UserCubit>().loadSubscribedTopics();
   }
 
   @override
   void dispose() {
     _animationController.dispose();
     super.dispose();
-  }
-
-  void _removeTopic(String topic) {
-    setState(() {
-      topics.remove(topic);
-    });
-  }
-
-  void _showAddTopicDialog() {
-    TextEditingController controller = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          title: const Text(
-            "Add New Topic",
-            style: TextStyle(color: Colors.black),
-          ),
-          content: TextField(
-            controller: controller,
-            decoration: InputDecoration(
-              hintText: "Enter topic name",
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.0),
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                "Cancel",
-                style: TextStyle(color: Colors.black54),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                if (controller.text.isNotEmpty) {
-                  setState(() {
-                    topics.add(controller.text);
-                  });
-                  Navigator.pop(context);
-                }
-              },
-              child: const Text("Add", style: TextStyle(color: Colors.black)),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   @override
@@ -104,6 +49,7 @@ class _ProfilePageState extends State<ProfilePage>
           fullName = state.user.fullName;
           email = state.user.email;
         }
+
         return Scaffold(
           backgroundColor: Colors.white,
           body: SafeArea(
@@ -112,13 +58,12 @@ class _ProfilePageState extends State<ProfilePage>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  // Top Bar
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       IconButton(
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/root');
-                        },
+                        onPressed: () => Navigator.pushNamed(context, '/root'),
                         icon: const Icon(Icons.arrow_back, color: Colors.black),
                       ),
                       Row(
@@ -171,7 +116,10 @@ class _ProfilePageState extends State<ProfilePage>
                       ),
                     ],
                   ),
+
                   const SizedBox(height: 30),
+
+                  // Profile Picture
                   CircleAvatar(
                     radius: 60,
                     backgroundColor: Colors.grey.shade300,
@@ -181,7 +129,10 @@ class _ProfilePageState extends State<ProfilePage>
                       color: Colors.black54,
                     ),
                   ),
+
                   const SizedBox(height: 20),
+
+                  // Name
                   Text(
                     fullName ?? "John Doe",
                     style: const TextStyle(
@@ -191,11 +142,16 @@ class _ProfilePageState extends State<ProfilePage>
                   ),
 
                   const SizedBox(height: 8),
+
+                  // Email
                   Text(
                     email ?? "johndoe@gmail.com",
                     style: const TextStyle(fontSize: 16, color: Colors.black54),
                   ),
+
                   const SizedBox(height: 30),
+
+                  // Indicators
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
@@ -203,86 +159,158 @@ class _ProfilePageState extends State<ProfilePage>
                         title: "Subscribed",
                         count: 12,
                         color: Colors.grey.shade100,
-                        onTap: () {
-                          Navigator.pushNamed(context, '/following');
-                        },
+                        onTap: () => Navigator.pushNamed(context, '/following'),
                       ),
                       IndicatorCard(
                         title: "Saved News",
                         count: 34,
                         color: Colors.grey.shade400,
-                        onTap: () {
-                          Navigator.pushNamed(context, '/saved');
-                        },
+                        onTap: () => Navigator.pushNamed(context, '/saved'),
                       ),
                     ],
                   ),
+
                   const SizedBox(height: 30),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        "Your Interests",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
+
+                  // Your Interests (UserCubit)
+                  BlocBuilder<UserCubit, UserState>(
+                    builder: (context, state) {
+                      List<String> userTopics = [];
+                      bool isLoading = false;
+
+                      if (state is UserLoading) {
+                        isLoading = true;
+                      } else if (state is SubscribedTopicsLoaded) {
+                        print("Loaded");
+                        userTopics = state.topics;
+                      } else if (state is UserError) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(state.message),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        });
+                      }
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          ...topics
-                              .map(
-                                (topic) => isManagingTopics
-                                    ? RotationTransition(
-                                        turns: Tween(begin: -0.001, end: 0.002)
-                                            .animate(
-                                              CurvedAnimation(
-                                                parent: _animationController,
-                                                curve: const FlippedCurve(
-                                                  Curves.easeOutCubic,
+                          const Text(
+                            "Your Interests",
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          if (isLoading)
+                            const Center(child: CircularProgressIndicator())
+                          else
+                            Wrap(
+                              spacing: 12,
+                              runSpacing: 12,
+                              children: [
+                                ...userTopics.map(
+                                  (topic) => isManagingTopics
+                                      ? RotationTransition(
+                                          turns:
+                                              Tween(
+                                                begin: -0.001,
+                                                end: 0.002,
+                                              ).animate(
+                                                CurvedAnimation(
+                                                  parent: _animationController,
+                                                  curve: const FlippedCurve(
+                                                    Curves.easeOutCubic,
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                        child: TopicChip(
+                                          child: TopicChip(
+                                            title: topic,
+                                            onDeleted: () => context
+                                                .read<UserCubit>()
+                                                .removeTopic(topic),
+                                          ),
+                                        )
+                                      : TopicChip(
                                           title: topic,
-                                          onDeleted: () => _removeTopic(topic),
+                                          onDeleted: null,
                                         ),
-                                      )
-                                    : TopicChip(title: topic, onDeleted: null),
-                              )
-                              .toList(),
-                          if (isManagingTopics)
-                            ActionChip(
-                              label: const Text(
-                                "Add",
-                                style: TextStyle(color: Colors.white),
-                              ),
-                              avatar: const Icon(
-                                Icons.add,
-                                color: Colors.white,
-                              ),
-                              backgroundColor: Colors.black,
-                              onPressed: _showAddTopicDialog,
-                            ),
-                          if (isManagingTopics)
-                            ActionChip(
-                              label: const Text(
-                                "Done",
-                                style: TextStyle(color: Colors.black),
-                              ),
-                              backgroundColor: Colors.white,
-                              onPressed: () {
-                                setState(() {
-                                  isManagingTopics = false;
-                                });
-                              },
+                                ),
+                                if (isManagingTopics)
+                                  ActionChip(
+                                    label: const Text(
+                                      "Add",
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                    avatar: const Icon(
+                                      Icons.add,
+                                      color: Colors.white,
+                                    ),
+                                    backgroundColor: Colors.black,
+                                    onPressed: () {
+                                      TextEditingController controller =
+                                          TextEditingController();
+                                      showDialog(
+                                        context: context,
+                                        builder: (context) => AlertDialog(
+                                          title: const Text("Add New Topic"),
+                                          content: TextField(
+                                            controller: controller,
+                                            decoration: InputDecoration(
+                                              hintText: "Enter topic name",
+                                              border: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                            ),
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.pop(context),
+                                              child: const Text("Cancel"),
+                                            ),
+                                            TextButton(
+                                              onPressed: () {
+                                                if (controller
+                                                    .text
+                                                    .isNotEmpty) {
+                                                  context
+                                                      .read<UserCubit>()
+                                                      .addTopic(
+                                                        controller.text,
+                                                      );
+                                                  Navigator.pop(context);
+                                                }
+                                              },
+                                              child: const Text("Add"),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                if (isManagingTopics)
+                                  ActionChip(
+                                    label: const Text(
+                                      "Done",
+                                      style: TextStyle(color: Colors.black),
+                                    ),
+                                    backgroundColor: Colors.white,
+                                    onPressed: () {
+                                      setState(() {
+                                        isManagingTopics = false;
+                                      });
+                                    },
+                                  ),
+                              ],
                             ),
                         ],
-                      ),
-                    ],
+                      );
+                    },
                   ),
                 ],
               ),

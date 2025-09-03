@@ -8,6 +8,8 @@ class UserEntity {
   final bool isVerified;
   final DateTime? createdAt;
   List<String>? interest;
+  List<String>? subscribedSources;
+  bool notification;
 
   UserEntity({
     required this.id,
@@ -19,6 +21,8 @@ class UserEntity {
     required this.isVerified,
     this.createdAt,
     this.interest,
+    this.subscribedSources,
+    required this.notification,
   });
 }
 

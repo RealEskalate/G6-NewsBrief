@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:newsbrief/features/auth/domain/usecases/forgot_password.dart';
 import 'package:newsbrief/features/auth/domain/usecases/get_interests_usecase.dart';
@@ -58,13 +59,12 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> register(String email, String password, String name) async {
     emit(AuthLoading());
     try {
-      await registerUser(email: email, password: password, name: name);
+      final response = await registerUser(email: email, password: password, name: name);
 
       emit(
         const AuthEmailActionSuccess('Registered. Please verify your email.'),
       );
 
-      final response = await loginUser(email: email, password: password);
       emit(AuthAuthenticated(response.user));
     } catch (e) {
       emit(AuthError(_msg(e)));

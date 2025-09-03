@@ -1,6 +1,6 @@
-// lib/features/auth/presentation/pages/manage_subscription_page.dart
-
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:newsbrief/features/auth/presentation/cubit/user_cubit.dart';
 
 class ManageSubscriptionPage extends StatefulWidget {
   const ManageSubscriptionPage({super.key});
@@ -10,25 +10,19 @@ class ManageSubscriptionPage extends StatefulWidget {
 }
 
 class _ManageSubscriptionPageState extends State<ManageSubscriptionPage> {
-  final List<String> allSources = [
-    "CNN",
-    "Addis Standard",
-    "Fana",
-    "BBC Amharic",
-    "Reuters",
-    "Al Jazeera",
-    "The Guardian",
-    "Associated Press",
-  ];
+  List<String> allSources = [];
+  Set<String> subscribedSources = {};
+  List<String> filteredSources = [];
 
-  late List<String> filteredSources;
-  final Set<String> subscribedSources = {"CNN", "Fana"}; // Dummy data for initial state
-  TextEditingController searchController = TextEditingController();
+  final TextEditingController searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    filteredSources = allSources;
+
+    // Fetch all sources and subscribed sources from UserCubit
+    context.read<UserCubit>().loadAllSources();
+    context.read<UserCubit>().loadSubscribedSources();
   }
 
   void _onSearchChanged(String query) {
@@ -41,13 +35,12 @@ class _ManageSubscriptionPageState extends State<ManageSubscriptionPage> {
   }
 
   void _toggleSubscription(String source) {
-    setState(() {
-      if (subscribedSources.contains(source)) {
-        subscribedSources.remove(source);
-      } else {
-        subscribedSources.add(source);
-      }
-    });
+    final userCubit = context.read<UserCubit>();
+    if (subscribedSources.contains(source)) {
+      userCubit.removeSources(source);
+    } else {
+      userCubit.addSources(source);
+    }
   }
 
   @override
@@ -69,56 +62,93 @@ class _ManageSubscriptionPageState extends State<ManageSubscriptionPage> {
           ),
         ),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: TextField(
-              controller: searchController,
-              onChanged: _onSearchChanged,
-              decoration: InputDecoration(
-                hintText: "Search for sources...",
-                prefixIcon: const Icon(Icons.search, color: Colors.black54),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: Colors.black26),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: Colors.black26),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: Colors.black),
+      body: BlocConsumer<UserCubit, UserState>(
+        listener: (context, state) {
+          if (state is AllSourcesLoaded) {
+            setState(() {
+              allSources = state.sources;
+              filteredSources = allSources; // show all initially
+            });
+          } else if (state is SubscribedSourcesLoaded) {
+            setState(() {
+              subscribedSources = state.sources.toSet();
+            });
+          } else if (state is UserActionSuccess) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message), backgroundColor: Colors.green),
+            );
+            // Refresh subscriptions after action
+            context.read<UserCubit>().loadSubscribedSources();
+          } else if (state is UserError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+            );
+          }
+        },
+        builder: (context, state) {
+          if (state is UserLoading && allSources.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          return Column(
+            children: [
+              // 🔍 Search bar
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: TextField(
+                  controller: searchController,
+                  onChanged: _onSearchChanged,
+                  decoration: InputDecoration(
+                    hintText: "Search for sources...",
+                    prefixIcon: const Icon(Icons.search, color: Colors.black54),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: Colors.black26),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: Colors.black26),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: Colors.black),
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: filteredSources.length,
-              itemBuilder: (context, index) {
-                final source = filteredSources[index];
-                final isSubscribed = subscribedSources.contains(source);
-                return ListTile(
-                  title: Text(source, style: const TextStyle(color: Colors.black)),
-                  trailing: ElevatedButton(
-                    onPressed: () => _toggleSubscription(source),
-                    style: ElevatedButton.styleFrom(
-                      foregroundColor: isSubscribed ? Colors.white : Colors.black,
-                      backgroundColor: isSubscribed ? Colors.black : Colors.white,
-                      side: const BorderSide(color: Colors.black, width: 1),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+
+              // 📋 List of sources
+              Expanded(
+                child: ListView.builder(
+                  itemCount: filteredSources.length,
+                  itemBuilder: (context, index) {
+                    final source = filteredSources[index];
+                    final isSubscribed = subscribedSources.contains(source);
+
+                    return ListTile(
+                      title: Text(
+                        source,
+                        style: const TextStyle(color: Colors.black),
                       ),
-                    ),
-                    child: Text(isSubscribed ? "Subscribed" : "Subscribe"),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
+                      trailing: ElevatedButton(
+                        onPressed: () => _toggleSubscription(source),
+                        style: ElevatedButton.styleFrom(
+                          foregroundColor: isSubscribed ? Colors.white : Colors.black,
+                          backgroundColor: isSubscribed ? Colors.black : Colors.white,
+                          side: const BorderSide(color: Colors.black, width: 1),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        child: Text(isSubscribed ? "Subscribed" : "Subscribe"),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

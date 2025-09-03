@@ -7,7 +7,7 @@ abstract class AuthRepository {
     required String email,
     required String password,
   });
-  Future<void> register({
+  Future<AuthResponseEntity> register({
     required String email,
     required String password,
     required String name,
@@ -31,4 +31,12 @@ abstract class AuthRepository {
   void updateLastUser(User user);
   Future<User> signUpWithGoogle();
   Future<AuthResponseEntity> loginWithGoogle();
+
+  Future<List<String>> getSubscribedSources();
+  Future<void> subscribeToSource({required String sourceSlug});
+  Future<void> unsubscribeFromSource({required String sourceSlug});
+
+  Future<List<String>> getSubscribedTopics();
+  Future<List<String>> getAllTopics();
+  Future<List<String>> getAllSources();
 }

@@ -270,6 +270,7 @@ class AuthRepositoryImpl implements AuthRepository {
         avatarUrl: res.user.avatarUrl,
         isVerified: res.user.isVerified,
         createdAt: res.user.createdAt,
+        notification: false,
       );
       await local.cacheTokens(
         access: res.accessToken,
@@ -287,16 +288,71 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<void> register({
+  Future<AuthResponseModel> register({
     required String email,
     required String password,
     required String name,
   }) async {
     try {
-      await remote.register(email, password, name);
+      final res = await remote.register(email, password, name);
+      
+      final user = UserEntity(
+        id: res.user.id,
+        username: res.user.username,
+        email: res.user.email,
+        role: res.user.role,
+        fullName: res.user.fullName,
+        avatarUrl: res.user.avatarUrl,
+        isVerified: res.user.isVerified,
+        createdAt: res.user.createdAt,
+        notification: false,
+      );
+      await local.cacheTokens(
+        access: res.accessToken,
+        refresh: res.refreshToken,
+      );
+      return AuthResponseModel(
+        user: user,
+        accessToken: res.accessToken,
+        refreshToken: res.refreshToken,
+      );
     } catch (e) {
       print('Repository Register Error: $e');
       rethrow;
     }
+  }
+
+  @override
+  Future<List<String>> getSubscribedSources() async {
+    final subs = await remote.getSubscriptions();
+    return subs.map((e) => e["source_slug"] as String).toList();
+  }
+
+  @override
+  Future<void> subscribeToSource({required String sourceSlug}) async {
+    await remote.subscribeToSources(source: sourceSlug);
+  }
+
+  @override
+  Future<void> unsubscribeFromSource({required String sourceSlug}) async {
+    await remote.unSubscribeToSources(source: sourceSlug);
+  }
+
+  @override
+  Future<List<String>> getSubscribedTopics() async {
+    final response = await remote.getSubscribedTopics();
+    return (response).map((t) => t["slug"].toString()).toList();
+  }
+
+  @override
+  Future<List<String>> getAllTopics() async {
+    final response = await remote.getAllTopics();
+    return (response).map((t) => t["slug"].toString()).toList();
+  }
+
+  @override
+  Future<List<String>> getAllSources() async {
+    final response = await remote.getAllSources();
+    return (response).map((s) => s["slug"].toString()).toList();
   }
 }
