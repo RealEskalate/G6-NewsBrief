@@ -1,12 +1,8 @@
-// presentation/pages/login_page.dart
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
-
-// presentation/pages/login_page.dart
-
-// ... your imports remain the same
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -50,36 +46,37 @@ class _LoginPageState extends State<Login> {
     final email = _emailController.text.trim();
     if (email.isEmpty || !email.contains('@')) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Please enter a valid email before resetting password.',
+            'Please enter a valid email before resetting password.'.tr(),
           ),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
       return;
     }
-
     context.read<AuthCubit>().forgotPasswordUsecase(email);
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Login', style: TextStyle(color: Colors.black)),
+        title: Text('Login'.tr(), style: TextStyle(color: theme.colorScheme.onBackground)),
         centerTitle: true,
-        backgroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: Colors.black),
+        backgroundColor: theme.scaffoldBackgroundColor,
+        iconTheme: IconThemeData(color: theme.colorScheme.onBackground),
       ),
       body: BlocConsumer<AuthCubit, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Welcome User'),
-                backgroundColor: Colors.green,
+                content:Text('Welcome User'.tr()),
+                backgroundColor: theme.colorScheme.primary,
                 duration: const Duration(seconds: 3),
               ),
             );
@@ -90,7 +87,7 @@ class _LoginPageState extends State<Login> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
-                backgroundColor: Colors.red,
+                backgroundColor: theme.colorScheme.error,
               ),
             );
           }
@@ -106,21 +103,17 @@ class _LoginPageState extends State<Login> {
                   // Email input
                   TextFormField(
                     controller: _emailController,
-                    decoration: const InputDecoration(
-                      labelText: 'Email',
-                      labelStyle: TextStyle(color: Colors.black),
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.email, color: Colors.black),
+                    decoration: InputDecoration(
+                      labelText: 'Email'.tr(),
+                      labelStyle: TextStyle(color: theme.colorScheme.onBackground),
+                      border: const OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.email, color: theme.colorScheme.onBackground),
                     ),
-                    style: const TextStyle(color: Colors.black),
+                    style: TextStyle(color: theme.colorScheme.onBackground),
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
-                      }
-                      if (!value.contains('@')) {
-                        return 'Please enter a valid email';
-                      }
+                      if (value == null || value.isEmpty) return 'Please enter your email'.tr();
+                      if (!value.contains('@')) return 'Please enter a valid email'.tr();
                       return null;
                     },
                   ),
@@ -130,16 +123,14 @@ class _LoginPageState extends State<Login> {
                   TextFormField(
                     controller: _passwordController,
                     decoration: InputDecoration(
-                      labelText: 'Password',
-                      labelStyle: const TextStyle(color: Colors.black),
+                      labelText: 'Password'.tr(),
+                      labelStyle: TextStyle(color: theme.colorScheme.onBackground),
                       border: const OutlineInputBorder(),
-                      prefixIcon: const Icon(Icons.lock, color: Colors.black),
+                      prefixIcon: Icon(Icons.lock, color: theme.colorScheme.onBackground),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility
-                              : Icons.visibility_off,
-                          color: Colors.black,
+                          _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                          color: theme.colorScheme.onBackground,
                         ),
                         onPressed: () {
                           setState(() {
@@ -148,15 +139,11 @@ class _LoginPageState extends State<Login> {
                         },
                       ),
                     ),
-                    style: const TextStyle(color: Colors.black),
+                    style: TextStyle(color: theme.colorScheme.onBackground),
                     obscureText: _obscurePassword,
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your password';
-                      }
-                      if (value.length < 6) {
-                        return 'Password must be at least 6 characters';
-                      }
+                      if (value == null || value.isEmpty) return 'Please enter your password'.tr();
+                      if (value.length < 6) return 'Password must be at least 6 characters'.tr();
                       return null;
                     },
                   ),
@@ -166,9 +153,9 @@ class _LoginPageState extends State<Login> {
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: _forgotPassword,
-                      child: const Text(
-                        'Forgot Password?',
-                        style: TextStyle(color: Colors.blue),
+                      child: Text(
+                        'Forgot Password?'.tr(),
+                        style: TextStyle(color: theme.colorScheme.primary),
                       ),
                     ),
                   ),
@@ -183,12 +170,12 @@ class _LoginPageState extends State<Login> {
                       onPressed: _login,
                       style: ElevatedButton.styleFrom(
                         minimumSize: const Size(double.infinity, 50),
-                        backgroundColor: Colors.black,
-                        foregroundColor: Colors.white,
+                        backgroundColor: theme.colorScheme.primary,
+                        foregroundColor: theme.colorScheme.onPrimary,
                       ),
-                      child: const Text(
-                        'Login',
-                        style: TextStyle(color: Colors.white),
+                      child: Text(
+                        'Login'.tr(),
+                        style: TextStyle(color: theme.colorScheme.onPrimary),
                       ),
                     ),
 
@@ -203,13 +190,13 @@ class _LoginPageState extends State<Login> {
                         width: 24,
                         height: 24,
                       ),
-                      label: const Text(
-                        'Sign in with Google',
-                        style: TextStyle(color: Colors.black),
+                      label: Text(
+                        'Sign in with Google'.tr(),
+                        style: TextStyle(color: theme.colorScheme.onBackground),
                       ),
                       style: OutlinedButton.styleFrom(
                         minimumSize: const Size(double.infinity, 50),
-                        side: const BorderSide(color: Colors.black),
+                        side: BorderSide(color: theme.colorScheme.onBackground),
                       ),
                     ),
 
@@ -219,13 +206,13 @@ class _LoginPageState extends State<Login> {
                     onPressed: () {
                       Navigator.pushNamed(context, '/root');
                     },
-                    label: const Text(
-                      'Continue as Guest',
-                      style: TextStyle(color: Colors.black),
+                    label: Text(
+                      'Continue as Guest'.tr(),
+                      style: TextStyle(color: theme.colorScheme.onBackground),
                     ),
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 50),
-                      side: const BorderSide(color: Colors.black),
+                      side: BorderSide(color: theme.colorScheme.onBackground),
                     ),
                   ),
 
@@ -234,16 +221,13 @@ class _LoginPageState extends State<Login> {
                     TextButton(
                       onPressed: _navigateToSignUp,
                       child: RichText(
-                        text: const TextSpan(
-                          style: TextStyle(color: Colors.black),
+                        text: TextSpan(
+                          style: TextStyle(color: theme.colorScheme.onBackground),
                           children: [
-                            TextSpan(text: "Don't have an account? "),
+                            TextSpan(text: "Don't have an account? ".tr()),
                             TextSpan(
-                              text: "Sign up",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
-                              ),
+                              text: "Sign up".tr(),
+                              style: const TextStyle(fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),

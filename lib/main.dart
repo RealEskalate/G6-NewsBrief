@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:easy_localization/easy_localization.dart'; // <-- added
 import 'package:newsbrief/core/network_info/api_service.dart';
 import 'package:newsbrief/core/storage/token_secure_storage.dart';
 import 'package:newsbrief/features/auth/datasource/datasources/auth_local_data_sourcs.dart';
@@ -11,9 +12,14 @@ import 'package:newsbrief/features/auth/domain/usecases/get_interests_usecase.da
 import 'package:newsbrief/features/auth/domain/usecases/get_subscribed_sources.dart';
 import 'package:newsbrief/features/auth/domain/usecases/get_subscribed_topics.dart';
 import 'package:newsbrief/features/auth/domain/usecases/login_with_google_usecase.dart';
+
 import 'package:newsbrief/features/auth/domain/usecases/subscribe_to_sources.dart';
 import 'package:newsbrief/features/auth/domain/usecases/unsubscribe_from_source.dart';
 import 'package:newsbrief/features/auth/presentation/cubit/user_cubit.dart';
+
+import 'core/storage/theme_storage.dart';
+import 'core/theme/theme_cubit.dart';
+
 import 'features/auth/presentation/pages/signup_landing.dart';
 import 'package:newsbrief/features/auth/presentation/pages/login.dart';
 import 'package:newsbrief/features/auth/presentation/pages/profile_edit.dart';
@@ -37,9 +43,15 @@ import 'features/auth/domain/usecases/verify_email.dart';
 import 'features/auth/domain/usecases/request_verification_email.dart';
 import 'features/auth/presentation/cubit/auth_cubit.dart';
 
-void main() {
-  const baseUrl = 'https://news-brief-core-api.onrender.com/api/v1';
 
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await EasyLocalization.ensureInitialized(); // <-- initialize EasyLocalization
+
+  const baseUrl = 'https://news-brief-core-api-excr.onrender.com/api/v1';
+
+
+  final themeStorage = ThemeStorage();
   final tokenStorage = TokenSecureStorage();
   final api = ApiService(baseUrl: baseUrl, tokenStorage: tokenStorage);
   final remote = AuthRemoteDataSources(api);
@@ -47,22 +59,31 @@ void main() {
   final repo = AuthRepositoryImpl(remote: remote, local: local);
 
   runApp(
-    MultiBlocProvider(
-      providers: [
-        BlocProvider(
-          create: (_) => AuthCubit(
-            loginUser: LoginUser(repo),
-            registerUser: RegisterUser(repo),
-            getMe: GetMe(repo),
-            logout: Logout(repo),
-            forgotPassword: ForgotPassword(repo),
-            resetPassword: ResetPassword(repo),
-            verifyEmail: VerifyEmail(repo),
-            requestVerificationEmail: RequestVerificationEmail(repo),
-            loginWithGoogleUseCase: LoginWithGoogleUseCase(repo),
-            getInterestsUseCase: GetInterestsUseCase(repo),
+    EasyLocalization(
+      supportedLocales: const [Locale('en'), Locale('am')],
+      path: 'assets/translations',
+      fallbackLocale: const Locale('en'),
+      saveLocale: true,
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (_) => AuthCubit(
+              loginUser: LoginUser(repo),
+              registerUser: RegisterUser(repo),
+              getMe: GetMe(repo),
+              logout: Logout(repo),
+              forgotPassword: ForgotPassword(repo),
+              resetPassword: ResetPassword(repo),
+              verifyEmail: VerifyEmail(repo),
+              requestVerificationEmail: RequestVerificationEmail(repo),
+              loginWithGoogleUseCase: LoginWithGoogleUseCase(repo),
+              getInterestsUseCase: GetInterestsUseCase(repo),
+            ),
           ),
-        ),
+          BlocProvider(
+            create: (_) => ThemeCubit(themeStorage),
+          ),
+
         BlocProvider(
           create: (_) => UserCubit(
             getAllSources: GetAllSources(repo),
@@ -75,52 +96,60 @@ void main() {
         ),
       ],
       child: MyApp(),
+
+       
+      ),
+
     ),
   );
 }
 
 class MyApp extends StatelessWidget {
-  final CheckFirstRun checkFirstRun = CheckFirstRun(LocalStorage());
-
-  MyApp({super.key});
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'NewsBrief',
-      debugShowCheckedModeBanner: false,
-      routes: {
-        '/login': (context) => const Login(),
-        '/signup': (context) => const SignupLandingPage(),
-        '/edit': (context) => const EditProfilePage(),
-        '/setting': (context) => const SettingsPage(),
-        '/root': (context) => const RootPage(),
-        '/home': (context) => const HomePage(),
-        '/following': (context) => const FollowingPage(),
-        '/search': (context) => const SearchPage(),
-        '/saved': (context) => const SavedPage(),
-        '/profile': (context) => const ProfilePage(),
+    return BlocBuilder<ThemeCubit, ThemeData>(
+      builder: (context, theme) {
+        return MaterialApp(
+          title: 'NewsBrief',
+          debugShowCheckedModeBanner: false,
+          theme: theme,
+          localizationsDelegates: context.localizationDelegates,
+          supportedLocales: context.supportedLocales,
+          locale: context.locale,
+          routes: {
+            '/login': (context) => const Login(),
+            '/signup': (context) => const SignupLandingPage(),
+            '/edit': (context) => const EditProfilePage(),
+            '/setting': (context) => const SettingsPage(),
+            '/root': (context) => const RootPage(),
+            '/home': (context) => const HomePage(),
+            '/following': (context) => const FollowingPage(),
+            '/search': (context) => const SearchPage(),
+            '/saved': (context) => const SavedPage(),
+            '/profile': (context) => const ProfilePage(),
+          },
+          home: FutureBuilder<bool>(
+            future: CheckFirstRun(LocalStorage()).shouldShowOnboarding(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              }
+              if (snapshot.hasError) {
+                return Scaffold(
+                  body: Center(child: Text('Error: ${snapshot.error}')),
+                );
+              }
+              return snapshot.data == true
+                  ? OnboardingScreenWrapper(checkFirstRun: CheckFirstRun(LocalStorage()))
+                  : const Login();
+            },
+          ),
+        );
       },
-      home: FutureBuilder<bool>(
-        future: checkFirstRun.shouldShowOnboarding(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
-          }
-          if (snapshot.hasError) {
-            return Scaffold(
-              body: Center(child: Text('Error: ${snapshot.error}')),
-            );
-          }
-          if (snapshot.data == true) {
-            return OnboardingScreenWrapper(checkFirstRun: checkFirstRun);
-          } else {
-            return const Login(); // 👈 or SignupLandingPage, depending on your flow
-          }
-        },
-      ),
     );
   }
 }
@@ -135,7 +164,6 @@ class OnboardingScreenWrapper extends StatelessWidget {
     return OnboardingScreen(
       onFinish: () async {
         await checkFirstRun.completeOnboarding();
-        // Use a single navigation method to avoid redundancy
         Navigator.of(context).pushReplacementNamed('/login');
       },
     );
