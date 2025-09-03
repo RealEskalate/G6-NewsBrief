@@ -136,7 +136,7 @@ func main() {
 		userUsecase, emailUsecase,
 		userRepo, tokenRepo, hasher, jwtService, mailService,
 		appLogger, appConfig, appValidator, uuidGenerator, randomGenerator, sourceUsecase, topicUsecase, subscriptionUsecase,
-		newsRepo, geminiClient,
+		sourceRepo, newsRepo, geminiClient,
 	)
 
 	// Initialize Gin router

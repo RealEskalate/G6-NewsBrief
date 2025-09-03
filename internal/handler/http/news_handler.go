@@ -49,3 +49,43 @@ func (h *NewsHandler) GetNews(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, resp)
 }
+
+// GetForYou handles GET /api/v1/me/for-you
+func (h *NewsHandler) GetForYou(c *gin.Context) {
+	userIDVal, ok := c.Get("userID")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	userID, _ := userIDVal.(string)
+
+	pageStr := c.Query("page")
+	limitStr := c.Query("limit")
+	page := 1
+	limit := 10
+	if pageStr != "" {
+		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
+			page = p
+		}
+	}
+	if limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
+			limit = l
+		}
+	}
+
+	list, total, totalPages, err := h.uc.ListForYou(c.Request.Context(), userID, page, limit)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	resp := dto.NewsListResponseDTO{
+		News:       dto.MapNewsToDTOs(list),
+		Total:      total,
+		TotalPages: totalPages,
+		Page:       page,
+		Limit:      limit,
+	}
+	c.JSON(http.StatusOK, resp)
+}

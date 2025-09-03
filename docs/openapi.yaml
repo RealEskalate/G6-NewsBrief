@@ -257,6 +257,43 @@ paths:
       security: [{ bearerAuth: [] }]
       responses:
         '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/TopicDTO' } } } } }
+  /me/for-you:
+    get:
+      operationId: listForYou
+      tags: [user, news]
+      summary: Personalized feed (For You)
+      description: Returns news from the user's subscribed sources.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, default: 10 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NewsListResponseDTO'
+              example:
+                news:
+                  - id: "8f6b2c8a-7e3b-4c9d-b1f2-8d2e5a9b1234"
+                    title: "Inflation falls to 20%"
+                    body: "..."
+                    summary_en: "Inflation declined to 20% from 25% last month."
+                    language: "en"
+                    source_id: "d1e2f3a4-b5c6-7890-abcd-ef1234567890"
+                    topics: ["economy"]
+                    published_at: "2025-09-01T12:00:00Z"
+                    created_at: "2025-09-01T12:05:00Z"
+                    updated_at: "2025-09-01T12:05:00Z"
+                total: 42
+                total_pages: 5
+                page: 1
+                limit: 10
   /topics:
     get:
       operationId: listTopics
@@ -307,8 +344,30 @@ paths:
         content:
           application/json:
             schema: { $ref: '#/components/schemas/NewsIngestRequest' }
+            example:
+              title: Ethiopia launches new satellite
+              body: |
+                Ethiopia has successfully launched its third earth observation satellite...
+              language: en
+              source_id: 8f3c2a18-5a2b-4d3b-9b8a-7e2f1c0a9d11
+              topics: ["f1d3ff84-12ab-4cde-98ef-abcdef123456", "0cc175b9-6a6a-4e2f-bb1d-1234567890ab"]
+              published_at: 2025-09-01T08:30:00Z
       responses:
-        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/NewsIngestResponse' } } } }
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NewsIngestResponse' }
+              example:
+                id: 6c0b1a64-1b0f-4e53-9463-8d5c8bb4c9c1
+                title: Ethiopia launches new satellite
+                language: en
+                source_id: 8f3c2a18-5a2b-4d3b-9b8a-7e2f1c0a9d11
+                topics: ["f1d3ff84-12ab-4cde-98ef-abcdef123456", "0cc175b9-6a6a-4e2f-bb1d-1234567890ab"]
+                summary_en: Ethiopia has launched its third satellite focusing on agriculture and climate monitoring...
+                summary_am: ኢትዮጵያ ሶስተኛውን ሳተላይት ለማህበረሰብ አገልግሎት ተመልክቶ ሰከነ...
+                published_at: 2025-09-01T08:30:00Z
+                created_at: 2025-09-01T08:30:10Z
         '400': { description: Validation error }
   /news:
     get:
@@ -329,6 +388,23 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NewsListResponseDTO'
+              example:
+                news:
+                  - id: 6c0b1a64-1b0f-4e53-9463-8d5c8bb4c9c1
+                    title: Ethiopia launches new satellite
+                    body: Ethiopia has successfully launched its third earth observation satellite...
+                    summary_en: Ethiopia has launched its third satellite focusing on agriculture and climate monitoring...
+                    summary_am: ኢትዮጵያ ሶስተኛውን ሳተላይት አነሳች...
+                    language: en
+                    source_id: 8f3c2a18-5a2b-4d3b-9b8a-7e2f1c0a9d11
+                    topics: ["f1d3ff84-12ab-4cde-98ef-abcdef123456"]
+                    published_at: 2025-09-01T08:30:00Z
+                    created_at: 2025-09-01T08:30:10Z
+                    updated_at: 2025-09-01T08:35:00Z
+                total: 1
+                total_pages: 1
+                page: 1
+                limit: 10
   /chat/general:
     post:
       operationId: chatGeneral
@@ -370,8 +446,18 @@ paths:
         content:
           application/json:
             schema: { $ref: '#/components/schemas/TranslateRequest' }
+            example:
+              text: "Hello, how are you?"
+              source_lang: en
+              target_lang: am
       responses:
-        '200': { description: Translated, content: { application/json: { schema: { $ref: '#/components/schemas/TranslateResponse' } } } }
+        '200':
+          description: Translated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TranslateResponse' }
+              example:
+                translated_text: "ሰላም፣ እንዴት ነህ?"
         '400': { description: Invalid language or text }
   /news/{id}/translate:
     post:
@@ -384,7 +470,23 @@ paths:
           required: true
           schema: { type: string }
       responses:
-        '200': { description: Updated news, content: { application/json: { schema: { $ref: '#/components/schemas/News' } } } }
+        '200':
+          description: Updated news
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/News' }
+              example:
+                id: 6c0b1a64-1b0f-4e53-9463-8d5c8bb4c9c1
+                title: Ethiopia launches new satellite
+                body: Ethiopia has successfully launched its third earth observation satellite...
+                summary_en: Ethiopia has launched its third satellite focusing on agriculture and climate monitoring...
+                summary_am: ኢትዮጵያ ሶስተኛውን ሳተላይት አነሳች...
+                language: en
+                source_id: 8f3c2a18-5a2b-4d3b-9b8a-7e2f1c0a9d11
+                topics: ["f1d3ff84-12ab-4cde-98ef-abcdef123456"]
+                published_at: 2025-09-01T08:30:00Z
+                created_at: 2025-09-01T08:30:10Z
+                updated_at: 2025-09-01T08:35:00Z
         '404': { description: Not Found }
 components:
   securitySchemes:
@@ -496,11 +598,13 @@ components:
             en: { type: string }
             am: { type: string }
         story_count: { type: integer }
+
     TopicsResponseDTO:
       type: object
       properties:
         topics: { type: array, items: { $ref: '#/components/schemas/TopicDTO' } }
         total_topics: { type: integer }
+
     SubscribeTopicRequest:
       type: object
       required: [topicID]
@@ -560,20 +664,20 @@ components:
         summary_en: { type: string }
         summary_am: { type: string }
         language: { type: string }
-  source_id: { type: string, description: ID of the source }
-  topics: { type: array, items: { type: string } }
+        source_id: { type: string, description: "ID of the source" }
+        topics: { type: array, items: { type: string }, description: "List of topic IDs" }
         published_at: { type: string, format: date-time }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
     NewsIngestRequest:
       type: object
-      required: [title, body, language, source, published_at]
+      required: [title, body, language, source_id, published_at]
       properties:
         title: { type: string }
         body: { type: string }
         language: { type: string, enum: [en, am] }
-  source_id: { type: string }
-  topics: { type: array, items: { type: string } }
+        source_id: { type: string, description: "ID of the source to attribute this news to" }
+        topics: { type: array, items: { type: string }, description: "Optional list of topic IDs" }
         published_at: { type: string, format: date-time }
     NewsIngestResponse:
       type: object
@@ -581,8 +685,8 @@ components:
         id: { type: string }
         title: { type: string }
         language: { type: string }
-  source_id: { type: string }
-  topics: { type: array, items: { type: string } }
+        source_id: { type: string }
+        topics: { type: array, items: { type: string } }
         summary_en: { type: string }
         summary_am: { type: string }
         published_at: { type: string, format: date-time }
@@ -596,8 +700,8 @@ components:
         summary_en: { type: string }
         summary_am: { type: string }
         language: { type: string }
-  source_id: { type: string }
-  topics: { type: array, items: { type: string } }
+        source_id: { type: string }
+        topics: { type: array, items: { type: string } }
         published_at: { type: string, format: date-time }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }

@@ -21,6 +21,7 @@ func NewNewsRepositoryMongo(collection *mongo.Collection) contract.INewsReposito
 		collection: collection,
 	}
 }
+
 // save news to mongodb
 func (r *NewsRepositoryMongo) Save(news *entity.News) error {
 	news.CreatedAt = time.Now()
@@ -42,16 +43,16 @@ func (r *NewsRepositoryMongo) FindByID(id string) (*entity.News, error) {
 	err := r.collection.FindOne(context.Background(), bson.M{"_id": id}).Decode(&news)
 	if err != nil {
 		return nil, err
-	}	
+	}
 	return &news, nil
 }
 
-func (r *NewsRepositoryMongo) FindAll(page, limit int) ([]*entity.News, int64, int, error){
-	if page < 1{
+func (r *NewsRepositoryMongo) FindAll(page, limit int) ([]*entity.News, int64, int, error) {
+	if page < 1 {
 		page = 1 //default to first page
 	}
-    
-	skip := int64((page-1) * limit)
+
+	skip := int64((page - 1) * limit)
 	opts := options.Find().SetLimit(int64(limit)).SetSkip(skip)
 	cursor, err := r.collection.Find(context.Background(), bson.M{}, opts)
 	if err != nil {
@@ -79,4 +80,41 @@ func (r *NewsRepositoryMongo) FindAll(page, limit int) ([]*entity.News, int64, i
 	return newsList, total, totalPages, nil
 }
 
+// FindBySourceIDs returns news where source_id is in the provided list, paginated
+func (r *NewsRepositoryMongo) FindBySourceIDs(sourceIDs []string, page, limit int) ([]*entity.News, int64, int, error) {
+	if page < 1 {
+		page = 1
+	}
+	if limit <= 0 {
+		limit = 10
+	}
 
+	filter := bson.M{"source_id": bson.M{"$in": sourceIDs}}
+	skip := int64((page - 1) * limit)
+	opts := options.Find().SetLimit(int64(limit)).SetSkip(skip).SetSort(bson.D{{Key: "published_at", Value: -1}})
+
+	cursor, err := r.collection.Find(context.Background(), filter, opts)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+	defer cursor.Close(context.Background())
+
+	var newsList []*entity.News
+	for cursor.Next(context.Background()) {
+		var news entity.News
+		if err := cursor.Decode(&news); err != nil {
+			return nil, 0, 0, err
+		}
+		newsList = append(newsList, &news)
+	}
+
+	total, err := r.collection.CountDocuments(context.Background(), filter)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+	totalPages := int(total) / limit
+	if int(total)%limit != 0 {
+		totalPages++
+	}
+	return newsList, total, totalPages, nil
+}

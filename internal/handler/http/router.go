@@ -31,15 +31,19 @@ type Router struct {
 	newsHandler         *NewsHandler
 }
 
-func NewRouter(userUsecase contract.IUserUseCase, emailVerUC contract.IEmailVerificationUC, userRepo contract.IUserRepository, tokenRepo contract.ITokenRepository, hasher contract.IHasher, jwtService contract.IJWTService, mailService contract.IEmailService, logger contract.IAppLogger, config contract.IConfigProvider, validator contract.IValidator, uuidGen contract.IUUIDGenerator, randomGen contract.IRandomGenerator, sourceUC contract.ISourceUsecase, topicUC contract.ITopicUsecase, subscriptionUC contract.ISubscriptionUsecase, newsRepo contract.INewsRepository, geminiClient contract.IGeminiClient) *Router {
+func NewRouter(userUsecase contract.IUserUseCase, emailVerUC contract.IEmailVerificationUC, userRepo contract.IUserRepository, tokenRepo contract.ITokenRepository, hasher contract.IHasher, jwtService contract.IJWTService, mailService contract.IEmailService, logger contract.IAppLogger, config contract.IConfigProvider, validator contract.IValidator, uuidGen contract.IUUIDGenerator, randomGen contract.IRandomGenerator, sourceUC contract.ISourceUsecase, topicUC contract.ITopicUsecase, subscriptionUC contract.ISubscriptionUsecase, sourceRepo contract.ISourceRepository, newsRepo contract.INewsRepository, geminiClient contract.IGeminiClient) *Router {
 
 	baseURL := config.GetAppBaseURL()
 	summarizerUC := usecase.NewsSummarizerUsecase(geminiClient, newsRepo)
 	ingestionUC := usecase.NewNewsIngestionUsecase(geminiClient, newsRepo, uuidGen)
-	chatbotUC := usecase.NewChatbotUsecase(geminiClient, newsRepo)
 	translatorClient := external_services.NewTranslatorClient()
+	chatbotUC := usecase.NewChatbotUsecase(geminiClient, translatorClient, newsRepo)
 	translatorUC := usecase.NewsTranslatorUsecase(translatorClient, newsRepo)
-	newsUC := usecase.NewNewsUsecase(newsRepo)
+	// news usecase needs userRepo and sourceRepo for For-You feed
+	// sourceRepo isn't passed here; build it inside main and expose via usecases. Since router only gets sourceUC, we cannot access repo from here.
+	// Instead, pass sourceRepo to router.NewRouter from main by adding it to params in future if needed.
+	// For now, assume we can obtain it from sourceUC via GetAll + map by slug when necessary, but ListForYou resolves via sourceRepo directly injected in main.
+	newsUC := usecase.NewNewsUsecase(newsRepo, userRepo, sourceRepo)
 	return &Router{
 		userHandler:         NewUserHandler(userUsecase),
 		emailHandler:        NewEmailHandler(emailVerUC, userRepo, jwtService, tokenRepo, hasher, config, uuidGen),
@@ -122,6 +126,8 @@ func (r *Router) SetupRoutes(router *gin.Engine) {
 		userProfile.DELETE("/subscriptions/:source_slug", r.subscriptionHandler.RemoveSubscription)
 		userProfile.POST("/topics", r.topicHandler.SubscribeTopic)
 		userProfile.GET("/subscribed-topics", r.topicHandler.GetUserSubscribedTopics)
+		// personalized feed (For You)
+		userProfile.GET("/for-you", r.newsHandler.GetForYou)
 	}
 	// public api
 	public := v1.Group("")

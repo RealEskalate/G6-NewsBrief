@@ -9,14 +9,16 @@ import (
 )
 
 type ChatbotUsecase struct {
-	geminiClient contract.IGeminiClient
-	newsRepo contract.INewsRepository
+	geminiClient     contract.IGeminiClient
+	translatorClient contract.ITranslationClient
+	newsRepo         contract.INewsRepository
 }
 
-func NewChatbotUsecase(gemini contract.IGeminiClient, repo contract.INewsRepository) contract.IChatbotService {
+func NewChatbotUsecase(gemini contract.IGeminiClient, translator contract.ITranslationClient, repo contract.INewsRepository) contract.IChatbotService {
 	return &ChatbotUsecase{
-		geminiClient: gemini,
-		newsRepo: repo,
+		geminiClient:     gemini,
+		translatorClient: translator,
+		newsRepo:         repo,
 	}
 }
 
@@ -38,7 +40,7 @@ func (uc *ChatbotUsecase) ChatGeneral(sessionID, message string) (string, error)
 
 	// _ = entity.ChatMessage{
 	// 	ContextID: sessionID,
-	// 	Role:      "assistant",	
+	// 	Role:      "assistant",
 	// 	Text:   reply,
 	// 	Timestamp: time.Now(),
 	// }
@@ -52,7 +54,46 @@ func (uc *ChatbotUsecase) ChatForNews(newsID, sessionID, message string) (string
 		return "", fmt.Errorf("news not found: %w", err)
 	}
 
-	context := fmt.Sprintf("You are a chatbot restricted to this news article only. Title: %s. Summary: %s", news.Title, news.SummaryEN)
+	var context string
+
+	// Detect Amharic (basic Ethiopic Unicode block check)
+	isAmharic := func(s string) bool {
+		for _, r := range s {
+			if r >= 0x1200 && r <= 0x137F { // Ethiopic block
+				return true
+			}
+		}
+		return false
+	}
+
+	amharic := isAmharic(message)
+
+	if amharic {
+		if news.SummaryAM != "" {
+			context = fmt.Sprintf("You are a chatbot restricted to this news article only. Respond in Amharic only. Title: %s. Summary: %s", news.Title, news.SummaryAM)
+		} else if news.SummaryEN != "" {
+			translated, err := uc.translatorClient.Translate(news.SummaryEN, "en", "am")
+			if err != nil {
+				return "", fmt.Errorf("failed to translate summary to Amharic: %w", err)
+			}
+			context = fmt.Sprintf("You are a chatbot restricted to this news article only. Respond in Amharic only. Title: %s. Summary: %s", news.Title, translated)
+		} else {
+			return "", fmt.Errorf("there is no summary for the news")
+		}
+	} else {
+		if news.SummaryEN != "" {
+			context = fmt.Sprintf("You are a chatbot restricted to this news article only. Respond in English only. Title: %s. Summary: %s", news.Title, news.SummaryEN)
+		} else if news.SummaryAM != "" {
+			translated, err := uc.translatorClient.Translate(news.SummaryAM, "am", "en")
+			if err != nil {
+				return "", fmt.Errorf("failed to translate summary to English: %w", err)
+			}
+			context = fmt.Sprintf("You are a chatbot restricted to this news article only. Respond in English only. Title: %s. Summary: %s", news.Title, translated)
+		} else {
+			return "", fmt.Errorf("there is no summary for the news")
+		}
+	}
+
 	reply, err := uc.geminiClient.Chat([]string{message}, context)
 	if err != nil {
 		return "", err
