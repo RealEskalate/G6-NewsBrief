@@ -1,0 +1,646 @@
+openapi: 3.0.3
+info:
+  title: NewsBrief Core API
+  version: 1.0.0
+  description: |
+    REST API for authentication, user profile, topics, sources, news ingestion, summarization, translation, and chat.
+    Protected endpoints require a Bearer JWT.
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local
+paths:
+  /auth/register:
+    post:
+      operationId: registerUser
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+            example:
+              username: jdoe
+              email: jdoe@example.com
+              password: Password123!
+              fullname: John Doe
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400': { description: Validation error }
+        '409': { description: Email or username already exists }
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              email: jdoe@example.com
+              password: Password123!
+      responses:
+        '200':
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401': { description: Invalid credentials }
+  /auth/refresh-token:
+    post:
+      operationId: refreshToken
+      tags: [auth]
+      summary: Refresh access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RefreshTokenRequest' }
+            example: { refresh_token: '<refresh jwt>' }
+      responses:
+        '200':
+          description: Tokens refreshed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RefreshTokenResponse' }
+        '400': { description: Missing/invalid token }
+        '401': { description: Expired/invalid token }
+  /auth/verify-email:
+    get:
+      operationId: verifyEmail
+      tags: [auth]
+      summary: Verify email
+      parameters:
+        - name: token
+          in: query
+          required: true
+          schema: { type: string }
+        - name: verifier
+          in: query
+          required: true
+          schema: { type: string }
+        - name: platform
+          in: query
+          schema: { type: string, enum: [web, mobile] }
+      responses:
+        '200':
+          description: Verified
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EmailVerifyResponse' }
+        '400': { description: Invalid/expired token }
+  /auth/forgot-password:
+    post:
+      operationId: forgotPassword
+      tags: [auth]
+      summary: Request password reset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ForgotPasswordRequest' }
+            example: { email: jdoe@example.com }
+      responses:
+        '200': { description: Message sent }
+  /auth/reset-password:
+    post:
+      operationId: resetPassword
+      tags: [auth]
+      summary: Reset password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ResetPasswordRequest' }
+            example: { token: '<t>', verifier: '<v>', password: NewPassword123! }
+      responses:
+        '200': { description: Password reset }
+        '400': { description: Invalid token/password }
+  /auth/request-verification-email:
+    post:
+      operationId: resendVerificationEmail
+      tags: [auth]
+      summary: Resend verification email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RequestVerificationEmail' }
+            example: { email: jdoe@example.com }
+      responses:
+        '200': { description: Sent }
+  /auth/google/login:
+    get:
+      operationId: googleLogin
+      tags: [auth]
+      summary: Google OAuth login
+      responses:
+        '302': { description: Redirect to Google }
+  /auth/google/callback:
+    get:
+      operationId: googleCallback
+      tags: [auth]
+      summary: Google OAuth callback
+      responses:
+        '200': { description: Success }
+        '401': { description: Unauthorized }
+  /admin/create-topics:
+    post:
+      operationId: createTopic
+      tags: [admin]
+      summary: Create a topic
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminCreateTopicRequest' }
+      responses:
+        '201': { description: Created }
+        '403': { description: Forbidden }
+  /admin/create-sources:
+    post:
+      operationId: createSource
+      tags: [admin]
+      summary: Create a source
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SourceDTO' }
+      responses:
+        '201': { description: Created }
+        '403': { description: Forbidden }
+  /me:
+    get:
+      operationId: getCurrentUser
+      tags: [user]
+      summary: Get current user
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/UserResponse' } } } }
+        '401': { description: Unauthorized }
+    put:
+      operationId: updateCurrentUser
+      tags: [user]
+      summary: Update current user
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateUserRequest' }
+      responses:
+        '200': { description: Updated, content: { application/json: { schema: { $ref: '#/components/schemas/UserResponse' } } } }
+  /me/subscriptions:
+    get:
+      operationId: getSubscriptions
+      tags: [user]
+      summary: Get subscriptions
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/SubscriptionsResponseDTO' } } } }
+    post:
+      operationId: addSubscription
+      tags: [user]
+      summary: Add subscription
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AddSubscriptionRequest' }
+      responses:
+        '201': { description: Created }
+  /me/subscriptions/{source_slug}:
+    delete:
+      operationId: removeSubscription
+      tags: [user]
+      summary: Remove subscription
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: source_slug
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+  /me/topics:
+    post:
+      operationId: subscribeTopic
+      tags: [user]
+      summary: Subscribe to a topic
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SubscribeTopicRequest' }
+      responses:
+        '200': { description: OK }
+  /me/subscribed-topics:
+    get:
+      operationId: listSubscribedTopics
+      tags: [user]
+      summary: List subscribed topics
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/TopicDTO' } } } } }
+  /topics:
+    get:
+      operationId: listTopics
+      tags: [topics]
+      summary: List topics
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/TopicsResponseDTO' } } } }
+  /sources:
+    get:
+      operationId: listSources
+      tags: [sources]
+      summary: List sources
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/SourcesResponseDTO' } } } }
+  /logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RefreshTokenRequest' }
+      responses:
+        '200': { description: Logged out }
+        '400': { description: Invalid token }
+  /summarize:
+    post:
+      operationId: summarizeNews
+      tags: [utilities]
+      summary: Summarize news by ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SummarizeRequest' }
+      responses:
+        '200': { description: Summary, content: { application/json: { schema: { $ref: '#/components/schemas/SummarizeResponse' } } } }
+        '404': { description: News not found }
+  /news/ingest:
+    post:
+      operationId: ingestNews
+      tags: [utilities]
+      summary: Ingest news (summarize then save)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/NewsIngestRequest' }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/NewsIngestResponse' } } } }
+        '400': { description: Validation error }
+  /news:
+    get:
+      operationId: listNews
+      tags: [news]
+      summary: List news (paginated)
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NewsListResponseDTO'
+  /chat/general:
+    post:
+      operationId: chatGeneral
+      tags: [chat]
+      summary: General chat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ChatRequest' }
+      responses:
+        '200': { description: Reply, content: { application/json: { schema: { $ref: '#/components/schemas/ChatResponse' } } } }
+        '500': { description: LLM error }
+  /chat/news/{id}:
+    post:
+      operationId: chatForNews
+      tags: [chat]
+      summary: Chat for a news item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ChatRequest' }
+      responses:
+        '200': { description: Reply, content: { application/json: { schema: { $ref: '#/components/schemas/ChatResponse' } } } }
+        '404': { description: News not found }
+  /translate:
+    post:
+      operationId: translateText
+      tags: [translation]
+      summary: Translate text
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TranslateRequest' }
+      responses:
+        '200': { description: Translated, content: { application/json: { schema: { $ref: '#/components/schemas/TranslateResponse' } } } }
+        '400': { description: Invalid language or text }
+  /news/{id}/translate:
+    post:
+      operationId: translateNews
+      tags: [translation]
+      summary: Translate news summary and persist
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Updated news, content: { application/json: { schema: { $ref: '#/components/schemas/News' } } } }
+        '404': { description: Not Found }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    MessageResponse:
+      type: object
+      properties:
+        message: { type: string }
+    ErrorResponse:
+      type: object
+      properties:
+        error: { type: string }
+    CreateUserRequest:
+      type: object
+      required: [username, email, password, fullname]
+      properties:
+        username: { type: string }
+        email: { type: string, format: email }
+        password: { type: string }
+        fullname: { type: string }
+    UserResponse:
+      type: object
+      properties:
+        id: { type: string }
+        username: { type: string }
+        fullname: { type: string }
+        email: { type: string }
+        role: { type: string }
+        avatar_url: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+        preferences: { $ref: '#/components/schemas/PreferencesDTO' }
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string }
+    LoginResponse:
+      type: object
+      properties:
+        user: { $ref: '#/components/schemas/UserResponse' }
+        access_token: { type: string }
+        refresh_token: { type: string }
+    RefreshTokenRequest:
+      type: object
+      required: [refresh_token]
+      properties:
+        refresh_token: { type: string }
+    RefreshTokenResponse:
+      type: object
+      properties:
+        access_token: { type: string }
+        refresh_token: { type: string }
+    ForgotPasswordRequest:
+      type: object
+      required: [email]
+      properties:
+        email: { type: string, format: email }
+    ResetPasswordRequest:
+      type: object
+      required: [token, verifier, password]
+      properties:
+        token: { type: string }
+        verifier: { type: string }
+        password: { type: string }
+    RequestVerificationEmail:
+      type: object
+      required: [email]
+      properties:
+        email: { type: string, format: email }
+    EmailVerifyResponse:
+      type: object
+      properties:
+        message: { type: string }
+        user: { $ref: '#/components/schemas/UserResponse' }
+        access_token: { type: string }
+        refresh_token: { type: string }
+    PreferencesDTO:
+      type: object
+      properties:
+        lang: { type: string }
+        topics: { type: array, items: { type: string } }
+        subscribed_sources: { type: array, items: { type: string } }
+        brief_type: { type: string }
+        data_saver: { type: boolean }
+        notifications: { $ref: '#/components/schemas/NotificationsDTO' }
+    NotificationsDTO:
+      type: object
+      properties:
+        daily_brief: { type: boolean }
+        breaking_news: { type: boolean }
+    UpdateUserRequest:
+      type: object
+      properties:
+        username: { type: string }
+        fullname: { type: string }
+    TopicDTO:
+      type: object
+      properties:
+        slug: { type: string }
+        topic_name: { type: string }
+        label:
+          type: object
+          properties:
+            en: { type: string }
+            am: { type: string }
+        story_count: { type: integer }
+    TopicsResponseDTO:
+      type: object
+      properties:
+        topics: { type: array, items: { $ref: '#/components/schemas/TopicDTO' } }
+        total_topics: { type: integer }
+    SubscribeTopicRequest:
+      type: object
+      required: [topicID]
+      properties:
+        topicID: { type: string }
+    SourceDTO:
+      type: object
+      properties:
+        slug: { type: string }
+        name: { type: string }
+        description: { type: string }
+        url: { type: string }
+        logo_url: { type: string }
+        languages: { type: string }
+        topics: { type: array, items: { type: string } }
+        reliability_score: { type: number }
+    SourcesResponseDTO:
+      type: object
+      properties:
+        sources: { type: array, items: { $ref: '#/components/schemas/SourceDTO' } }
+        total_sources: { type: integer }
+    AddSubscriptionRequest:
+      type: object
+      required: [source_key]
+      properties:
+        source_key: { type: string }
+    SubscriptionDetailDTO:
+      type: object
+      properties:
+        source_slug: { type: string }
+        source_name: { type: string }
+        subscribed_at: { type: string, format: date-time }
+        topics: { type: array, items: { type: string } }
+    SubscriptionsResponseDTO:
+      type: object
+      properties:
+        subscriptions: { type: array, items: { $ref: '#/components/schemas/SubscriptionDetailDTO' } }
+        total_subscriptions: { type: integer }
+        subscription_limit: { type: integer }
+    SummarizeRequest:
+      type: object
+      required: [news_id]
+      properties:
+        news_id: { type: string }
+    SummarizeResponse:
+      type: object
+      properties:
+        news_id: { type: string }
+        summary: { type: string }
+        language: { type: string }
+    News:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        body: { type: string }
+        summary_en: { type: string }
+        summary_am: { type: string }
+        language: { type: string }
+  source_id: { type: string, description: ID of the source }
+  topics: { type: array, items: { type: string } }
+        published_at: { type: string, format: date-time }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    NewsIngestRequest:
+      type: object
+      required: [title, body, language, source, published_at]
+      properties:
+        title: { type: string }
+        body: { type: string }
+        language: { type: string, enum: [en, am] }
+  source_id: { type: string }
+  topics: { type: array, items: { type: string } }
+        published_at: { type: string, format: date-time }
+    NewsIngestResponse:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        language: { type: string }
+  source_id: { type: string }
+  topics: { type: array, items: { type: string } }
+        summary_en: { type: string }
+        summary_am: { type: string }
+        published_at: { type: string, format: date-time }
+        created_at: { type: string, format: date-time }
+    NewsListItemDTO:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        body: { type: string }
+        summary_en: { type: string }
+        summary_am: { type: string }
+        language: { type: string }
+  source_id: { type: string }
+  topics: { type: array, items: { type: string } }
+        published_at: { type: string, format: date-time }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    NewsListResponseDTO:
+      type: object
+      properties:
+        news:
+          type: array
+          items: { $ref: '#/components/schemas/NewsListItemDTO' }
+        total: { type: integer }
+        total_pages: { type: integer }
+        page: { type: integer }
+        limit: { type: integer }
+    ChatRequest:
+      type: object
+      required: [message]
+      properties:
+        message: { type: string }
+    ChatResponse:
+      type: object
+      properties:
+        reply: { type: string }
+    TranslateRequest:
+      type: object
+      required: [text, source_lang, target_lang]
+      properties:
+        text: { type: string }
+        source_lang: { type: string }
+        target_lang: { type: string }
+    TranslateResponse:
+      type: object
+      properties:
+        translated_text: { type: string }
+    AdminCreateTopicRequest:
+      type: object
+      required: [slug, label]
+      properties:
+        slug: { type: string, description: Unique topic slug }
+        label:
+          type: object
+          description: Bilingual label for the topic
+          required: [en, am]
+          properties:
+            en: { type: string }
+            am: { type: string }
+

@@ -53,7 +53,7 @@ func (h *TranslatorHandler) TranslateNews(c *gin.Context) {
 		SummaryEN:   updated.SummaryEN,
 		SummaryAM:   updated.SummaryAM,
 		Language:    updated.Language,
-		Source:      updated.Source,
+		SourceID:    updated.SourceID,
 		PublishedAt: updated.PublishedAt,
 		CreatedAt:   updated.CreatedAt,
 		UpdatedAt:   updated.UpdatedAt,

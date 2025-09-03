@@ -6,7 +6,8 @@ type NewsIngestRequest struct {
 	Title       string    `json:"title" binding:"required"`
 	Body        string    `json:"body" binding:"required"`
 	Language    string    `json:"language" binding:"required,oneof=en am"`
-	Source      string    `json:"source" binding:"required"`
+	SourceID    string    `json:"source_id" binding:"required"`
+	Topics      []string  `json:"topics"`
 	PublishedAt time.Time `json:"published_at" binding:"required"`
 }
 
@@ -14,7 +15,8 @@ type NewsIngestResponse struct {
 	ID          string    `json:"id"`
 	Title       string    `json:"title"`
 	Language    string    `json:"language"`
-	Source      string    `json:"source"`
+	SourceID    string    `json:"source_id"`
+	Topics      []string  `json:"topics,omitempty"`
 	SummaryEN   string    `json:"summary_en,omitempty"`
 	SummaryAM   string    `json:"summary_am,omitempty"`
 	PublishedAt time.Time `json:"published_at"`

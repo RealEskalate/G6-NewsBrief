@@ -29,7 +29,8 @@ func (h *IngestionHandler) IngestNews(c *gin.Context) {
 		Title:       req.Title,
 		Body:        req.Body,
 		Language:    req.Language,
-		Source:      req.Source,
+		SourceID:    req.SourceID,
+		Topics:      req.Topics,
 		PublishedAt: req.PublishedAt,
 	}
 
@@ -43,7 +44,8 @@ func (h *IngestionHandler) IngestNews(c *gin.Context) {
 		ID:          saved.ID,
 		Title:       saved.Title,
 		Language:    saved.Language,
-		Source:      saved.Source,
+		SourceID:    saved.SourceID,
+		Topics:      saved.Topics,
 		SummaryEN:   saved.SummaryEN,
 		SummaryAM:   saved.SummaryAM,
 		PublishedAt: saved.PublishedAt,

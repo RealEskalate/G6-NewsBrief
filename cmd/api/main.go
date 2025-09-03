@@ -1,9 +1,13 @@
 package main
 
 import (
+	"context"
+	"flag"
 	"log"
 	"os"
+	"time"
 
+	"github.com/RealEskalate/G6-NewsBrief/internal/domain/contract"
 	handlerHttp "github.com/RealEskalate/G6-NewsBrief/internal/handler/http"
 	"github.com/RealEskalate/G6-NewsBrief/internal/infrastructure/config"
 	database "github.com/RealEskalate/G6-NewsBrief/internal/infrastructure/database"
@@ -13,12 +17,45 @@ import (
 	passwordservice "github.com/RealEskalate/G6-NewsBrief/internal/infrastructure/password_service"
 	randomgenerator "github.com/RealEskalate/G6-NewsBrief/internal/infrastructure/random_generator"
 	"github.com/RealEskalate/G6-NewsBrief/internal/infrastructure/repository/mongodb"
+	"github.com/RealEskalate/G6-NewsBrief/internal/infrastructure/seeder"
 	"github.com/RealEskalate/G6-NewsBrief/internal/infrastructure/uuidgen"
 	"github.com/RealEskalate/G6-NewsBrief/internal/infrastructure/validator"
 	"github.com/RealEskalate/G6-NewsBrief/internal/usecase"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
+
+func adminSeeder(userUsecase contract.IUserUseCase, userRepo contract.IUserRepository) {
+	// Add a -seed flag to run seeder before starting the server
+	seed := flag.Bool("seed", true, "run database seeder and exit")
+	flag.Parse()
+
+	// Optionally allow seeding via env (useful on Render/CI)
+	seedOnStart := os.Getenv("SEED_ON_START") == "true"
+
+	if *seed || seedOnStart {
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+
+		adminEmail := os.Getenv("SEED_ADMIN_EMAIL")
+		if adminEmail == "" {
+			adminEmail = "admin@newsbrief.local"
+		}
+		adminPassword := os.Getenv("SEED_ADMIN_PASSWORD")
+		if adminPassword == "" {
+			adminPassword = "ChangeMe123!"
+		}
+
+		if err := seeder.SeedAdminUsingUC(ctx, userUsecase, userRepo, adminEmail, adminPassword); err != nil {
+			log.Fatalf("seeding failed: %v", err)
+		}
+		log.Println("seeding completed")
+		// Exit if seeding-only mode
+		if *seed {
+			return
+		}
+	}
+}
 
 func main() {
 	// Load environment variables from .env file
@@ -44,24 +81,22 @@ func main() {
 	defer mongoClient.Disconnect()
 
 	// Initialize email service
-	smtpHost := os.Getenv("EMAIL_HOST")
-	smtpPort := os.Getenv("EMAIL_PORT")
-	smtpUsername := os.Getenv("EMAIL_USERNAME")
-	smtpPassword := os.Getenv("EMAIL_APP_PASSWORD")
-	smtpFrom := os.Getenv("EMAIL_FROM")
+	emailHost := os.Getenv("EMAIL_HOST")
+	emailPort := os.Getenv("EMAIL_PORT")
+	emailUsername := os.Getenv("EMAIL_USERNAME")
+	emailAppPassword := os.Getenv("EMAIL_APP_PASSWORD")
+	emailFrom := os.Getenv("EMAIL_FROM")
 
 	// Register custom validators
 	validator.RegisterCustomValidators()
 
-	// Initialize Gin router
-	router := gin.Default()
-
 	// Dependency Injection: Repositories
 	userCollection := mongoClient.Client.Database(dbName).Collection("users")
-	userRepo := mongodb.NewMongoUserRepository(userCollection)
+	userRepo := mongodb.NewUserRepository(userCollection)
 	newsRepo := mongodb.NewNewsRepositoryMongo(mongoClient.Client.Database(dbName).Collection("news"))
 	tokenRepo := mongodb.NewTokenRepository(mongoClient.Client.Database(dbName).Collection("tokens"))
-
+	topicRepo := mongodb.NewTopicRepository(mongoClient.Client.Database(dbName).Collection("topics"))
+	sourceRepo := mongodb.NewSourceRepository(mongoClient.Client.Database(dbName).Collection("sources"))
 	// Dependency Injection: Services
 	hasher := passwordservice.NewHasher()
 	jwtSecret := os.Getenv("JWT_SECRET")
@@ -71,13 +106,11 @@ func main() {
 	jwtManager := jwt.NewJWTManager(jwtSecret)
 	jwtService := jwt.NewJWTService(jwtManager)
 	appLogger := logger.NewStdLogger()
-	mailService := external_services.NewEmailService(smtpHost, smtpPort, smtpUsername, smtpPassword, smtpFrom)
+	mailService := external_services.NewEmailService(emailHost, emailPort, emailUsername, emailAppPassword, emailFrom)
 	randomGenerator := randomgenerator.NewRandomGenerator()
 	appValidator := validator.NewValidator()
 	uuidGenerator := uuidgen.NewGenerator()
 	appConfig := config.NewConfig()
-	// config
-	baseURL := appConfig.GetAppBaseURL()
 	// External services
 	summarizerAPI := os.Getenv("GEMINI_API_URL")
 	GeminiAPIKey := os.Getenv("GEMINI_API_KEY")
@@ -87,18 +120,28 @@ func main() {
 	geminiClient := external_services.NewGeminiClient(GeminiAPIKey, summarizerAPI)
 
 	// Dependency Injection: Usecases
-	emailUsecase := usecase.NewEmailVerificationUseCase(tokenRepo, userRepo, mailService, randomGenerator, uuidGenerator, baseURL)
-	userUsecase := usecase.NewUserUsecase(userRepo, tokenRepo, emailUsecase, hasher, jwtService, mailService, appLogger, appConfig, appValidator, uuidGenerator, randomGenerator)
-
+	emailUsecase := usecase.NewEmailVerificationUseCase(tokenRepo, userRepo, mailService, randomGenerator, uuidGenerator, appConfig)
+	userUsecase := usecase.NewUserUsecase(userRepo, tokenRepo, topicRepo, emailUsecase, hasher, jwtService, mailService, appLogger, appConfig, appValidator, uuidGenerator, randomGenerator)
+	topicUsecase := usecase.NewTopicUsecase(topicRepo)
+	sourceUsecase := usecase.NewSourceUsecase(sourceRepo, uuidGenerator)
+	subscriptionUsecase := usecase.NewSubscriptionUsecase(userRepo, sourceRepo)
 	// Pass Prometheus metrics to handlers or usecases as needed (import from metrics package)
+
+	//---------------------- Admin seeder-------------------------------------
+	adminSeeder(userUsecase, userRepo)
+	//---------------------- end of admin seeder-------------------------------------
 
 	// Setup API routes
 	appRouter := handlerHttp.NewRouter(
 		userUsecase, emailUsecase,
 		userRepo, tokenRepo, hasher, jwtService, mailService,
-		appLogger, appConfig, appValidator, uuidGenerator, randomGenerator,
+		appLogger, appConfig, appValidator, uuidGenerator, randomGenerator, sourceUsecase, topicUsecase, subscriptionUsecase,
 		newsRepo, geminiClient,
 	)
+
+	// Initialize Gin router
+	router := gin.Default()
+
 	appRouter.SetupRoutes(router)
 
 	// Start the server
@@ -110,4 +153,5 @@ func main() {
 	if err := router.Run(":" + port); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
+
 }

@@ -3,6 +3,7 @@ module github.com/RealEskalate/G6-NewsBrief
 go 1.24.4
 
 require (
+	github.com/Conight/go-googletrans v0.2.4
 	github.com/didip/tollbooth/v7 v7.0.2
 	github.com/didip/tollbooth_gin v0.0.0-20250404214326-bb1a1fc0384e
 	github.com/gin-contrib/cors v1.7.6
@@ -10,6 +11,7 @@ require (
 	github.com/go-playground/validator/v10 v10.27.0
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/uuid v1.6.0
+	github.com/mssola/user_agent v0.6.0
 	go.mongodb.org/mongo-driver v1.17.4
 	golang.org/x/crypto v0.41.0
 	golang.org/x/net v0.43.0
@@ -17,7 +19,6 @@ require (
 )
 
 require (
-	github.com/Conight/go-googletrans v0.2.4 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
 )

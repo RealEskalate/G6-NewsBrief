@@ -11,17 +11,23 @@ import (
 type NewsIngestionUsecase struct {
 	geminiClient contract.IGeminiClient
 	newsRepo     contract.INewsRepository
+	uuidGen      contract.IUUIDGenerator
 }
 
-func NewNewsIngestionUsecase(geminiClient contract.IGeminiClient, repo contract.INewsRepository) contract.INewsIngestionService {
+func NewNewsIngestionUsecase(geminiClient contract.IGeminiClient, repo contract.INewsRepository, uuidGen contract.IUUIDGenerator) contract.INewsIngestionService {
 	return &NewsIngestionUsecase{
 		geminiClient: geminiClient,
 		newsRepo:     repo,
+		uuidGen:      uuidGen,
 	}
 }
 
 // SaveAfterSummarize summarizes the news then saves it.
 func (uc *NewsIngestionUsecase) SaveAfterSummarize(news *entity.News) (*entity.News, entity.Summary, error) {
+	// Ensure the news has an ID generated via UUID generator
+	if news.ID == "" {
+		news.ID = uc.uuidGen.NewUUID()
+	}
 	// Generate summary based on language
 	summaryText, err := uc.geminiClient.Summarize(news.Body, news.Language)
 	if err != nil {

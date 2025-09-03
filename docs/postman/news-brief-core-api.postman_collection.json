@@ -1,0 +1,281 @@
+{
+  "info": {
+    "name": "News Brief Core API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "2b9f8c7f-0000-4000-8000-aaaaaaaaaaaa"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8080/api/v1" },
+    { "key": "session_id", "value": "test-session" },
+    { "key": "news_id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{base_url}}/auth/register", "host": ["{{base_url}}"], "path": ["auth","register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username}}\",\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"fullname\": \"{{fullname}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200 or 201', function () {",
+                  "  pm.expect([200,201]).to.include(pm.response.code);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth","login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Login 200', () => pm.response.to.have.status(200));",
+                  "let json = {};",
+                  "try { json = pm.response.json(); } catch (e) {}",
+                  "if (json.access_token) pm.environment.set('access_token', json.access_token);",
+                  "if (json.refresh_token) pm.environment.set('refresh_token', json.refresh_token);",
+                  "pm.test('Captured tokens', function () {",
+                  "  pm.expect(pm.environment.get('access_token')).to.exist;",
+                  "  pm.expect(pm.environment.get('refresh_token')).to.exist;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{base_url}}/auth/refresh-token", "host": ["{{base_url}}"], "path": ["auth","refresh-token"] },
+            "body": { "mode": "raw", "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Refresh 200', () => pm.response.to.have.status(200));",
+                  "let json = {};",
+                  "try { json = pm.response.json(); } catch (e) {}",
+                  "if (json.access_token) pm.environment.set('access_token', json.access_token);",
+                  "if (json.refresh_token) pm.environment.set('refresh_token', json.refresh_token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Request Verification Email",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{base_url}}/auth/request-verification-email", "host": ["{{base_url}}"], "path": ["auth","request-verification-email"] },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{email}}\"\n}" }
+          }
+        },
+        {
+          "name": "Verify Email",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/auth/verify-email?token={{email_token}}",
+              "host": ["{{base_url}}"],
+              "path": ["auth","verify-email"],
+              "query": [{"key":"token","value":"{{email_token}}"}]
+            }
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{base_url}}/auth/forgot-password", "host": ["{{base_url}}"], "path": ["auth","forgot-password"] },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{email}}\"\n}" }
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{base_url}}/auth/reset-password", "host": ["{{base_url}}"], "path": ["auth","reset-password"] },
+            "body": { "mode": "raw", "raw": "{\n  \"token\": \"{{reset_token}}\",\n  \"verifier\": \"{{reset_verifier}}\",\n  \"password\": \"NewPassword123!\"\n}" }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{base_url}}/logout", "host": ["{{base_url}}"], "path": ["logout"] },
+            "body": { "mode": "raw", "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User (protected)",
+      "auth": { "type": "bearer", "bearer": [ {"key": "token", "value": "{{access_token}}", "type": "string"} ] },
+      "item": [
+        { "name": "Get Current User", "request": { "method": "GET", "url": { "raw": "{{base_url}}/me", "host": ["{{base_url}}"], "path": ["me"] } } },
+        { "name": "Update User", "request": { "method": "PUT", "header": [{"key":"Content-Type","value":"application/json"}], "url": { "raw": "{{base_url}}/me", "host": ["{{base_url}}"], "path": ["me"] }, "body": {"mode":"raw","raw":"{\n  \"fullname\": \"Updated Name\"\n}"} } },
+        { "name": "Get Subscriptions", "request": { "method": "GET", "url": { "raw": "{{base_url}}/me/subscriptions", "host": ["{{base_url}}"], "path": ["me","subscriptions"] } } },
+        { "name": "Add Subscription", "request": { "method": "POST", "header": [{"key":"Content-Type","value":"application/json"}], "url": { "raw": "{{base_url}}/me/subscriptions", "host": ["{{base_url}}"], "path": ["me","subscriptions"] }, "body": {"mode":"raw","raw":"{\n  \"source_key\": \"theethiopianpost\"\n}"} } },
+        { "name": "Remove Subscription", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/me/subscriptions/{{source_slug}}", "host": ["{{base_url}}"], "path": ["me","subscriptions", "{{source_slug}}"] } } },
+        { "name": "Subscribe Topics", "request": { "method": "POST", "header": [{"key":"Content-Type","value":"application/json"}], "url": { "raw": "{{base_url}}/me/topics", "host": ["{{base_url}}"], "path": ["me","topics"] }, "body": {"mode":"raw","raw":"{\n  \"topics\": [\"politics\", \"economy\"]\n}"} } },
+        { "name": "Get Subscribed Topics", "request": { "method": "GET", "url": { "raw": "{{base_url}}/me/subscribed-topics", "host": ["{{base_url}}"], "path": ["me","subscribed-topics"] } } }
+      ]
+    },
+    {
+      "name": "Public",
+      "item": [
+        { "name": "List Topics", "request": { "method": "GET", "url": { "raw": "{{base_url}}/topics", "host": ["{{base_url}}"], "path": ["topics"] } } },
+        { "name": "List Sources", "request": { "method": "GET", "url": { "raw": "{{base_url}}/sources", "host": ["{{base_url}}"], "path": ["sources"] } } }
+      ]
+    },
+    {
+      "name": "Admin (protected)",
+      "auth": { "type": "bearer", "bearer": [ {"key": "token", "value": "{{access_token}}", "type": "string"} ] },
+      "item": [
+        {
+          "name": "Create Topics",
+          "request": {
+            "method": "POST",
+            "header": [ {"key": "Content-Type", "value": "application/json"} ],
+            "url": { "raw": "{{base_url}}/admin/create-topics", "host": ["{{base_url}}"], "path": ["admin","create-topics"] },
+            "body": {"mode":"raw","raw":"{\n  \"topics\": [\n    { \"key\": \"politics\", \"name\": \"Politics\" },\n    { \"key\": \"economy\", \"name\": \"Economy\" }\n  ]\n}"}
+          }
+        },
+        {
+          "name": "Create Sources",
+          "request": {
+            "method": "POST",
+            "header": [ {"key": "Content-Type", "value": "application/json"} ],
+            "url": { "raw": "{{base_url}}/admin/create-sources", "host": ["{{base_url}}"], "path": ["admin","create-sources"] },
+            "body": {"mode":"raw","raw":"{\n  \"sources\": [\n    { \"key\": \"theethiopianpost\", \"name\": \"The Ethiopian Post\" }\n  ]\n}"}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Utilities",
+      "item": [
+        {
+          "name": "Ingest News (summarize then save)",
+          "request": {
+            "method": "POST",
+            "header": [ {"key":"Content-Type","value":"application/json"} ],
+            "url": { "raw": "{{base_url}}/news/ingest", "host": ["{{base_url}}"], "path": ["news","ingest"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Sample Title\",\n  \"body\": \"Long news body text...\",\n  \"language\": \"en\",\n  \"source\": \"example.com\",\n  \"published_at\": \"2025-08-25T09:05:00Z\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Created 201', () => pm.expect([200,201]).to.include(pm.response.code));",
+                  "let json = {};",
+                  "try { json = pm.response.json(); } catch (e) {}",
+                  "if (json.id) pm.environment.set('news_id', json.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Summarize by news_id",
+          "request": {
+            "method": "POST",
+            "header": [ {"key":"Content-Type","value":"application/json"} ],
+            "url": { "raw": "{{base_url}}/summarize", "host": ["{{base_url}}"], "path": ["summarize"] },
+            "body": { "mode": "raw", "raw": "{\n  \"news_id\": \"{{news_id}}\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Chat",
+      "item": [
+        {
+          "name": "General Chat",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key":"Content-Type","value":"application/json"},
+              {"key":"X-Session-ID","value":"{{session_id}}"}
+            ],
+            "url": { "raw": "{{base_url}}/chat/general", "host": ["{{base_url}}"], "path": ["chat","general"] },
+            "body": { "mode": "raw", "raw": "{\n  \"message\": \"What are today’s headlines?\"\n}" }
+          }
+        },
+        {
+          "name": "Chat for News",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key":"Content-Type","value":"application/json"},
+              {"key":"X-Session-ID","value":"{{session_id}}"}
+            ],
+            "url": { "raw": "{{base_url}}/chat/news/{{news_id}}", "host": ["{{base_url}}"], "path": ["chat","news","{{news_id}}"] },
+            "body": { "mode": "raw", "raw": "{\n  \"message\": \"Explain this article in simple terms.\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Translation",
+      "item": [
+        {
+          "name": "Translate Text",
+          "request": {
+            "method": "POST",
+            "header": [ {"key":"Content-Type","value":"application/json"} ],
+            "url": { "raw": "{{base_url}}/translate", "host": ["{{base_url}}"], "path": ["translate"] },
+            "body": { "mode": "raw", "raw": "{\n  \"text\": \"Hello world\",\n  \"source_lang\": \"en\",\n  \"target_lang\": \"am\"\n}" }
+          }
+        },
+        {
+          "name": "Translate News Summary",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{base_url}}/news/{{news_id}}/translate", "host": ["{{base_url}}"], "path": ["news","{{news_id}}","translate"] }
+          }
+        }
+      ]
+    }
+  ]
+}
