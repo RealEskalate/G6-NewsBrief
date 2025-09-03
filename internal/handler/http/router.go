@@ -51,6 +51,16 @@ func (r *Router) SetupRoutes(router *gin.Engine) {
 	lmt.SetMessage("Too many requests, please try again later.")
 	router.Use(middleware.RateLimiter(lmt))
 
+	// Ask browsers to send Client Hints and vary on hints/UA
+	router.Use(func(c *gin.Context) {
+		c.Header("Accept-CH", "Sec-CH-UA, Sec-CH-UA-Mobile, Sec-CH-UA-Platform, Sec-CH-UA-Model")
+		c.Header("Vary", "Sec-CH-UA, Sec-CH-UA-Mobile, Sec-CH-UA-Platform, Sec-CH-UA-Model, User-Agent")
+		c.Next()
+	})
+
+	// Attach device detector for downstream handlers
+	router.Use(middleware.DeviceDetector())
+
 	// router.GET("/metrics", gin.WrapH(promhttp.Handler()))
 	// router.GET("/api/v1/metrics", gin.WrapH(promhttp.Handler()))
 
@@ -70,6 +80,8 @@ func (r *Router) SetupRoutes(router *gin.Engine) {
 		// Google OAuth endpoints
 		auth.GET("/google/login", r.authHandler.HandleGoogleLogin)
 		auth.GET("/google/callback", r.authHandler.HandleGoogleCallback)
+		// Mobile-native Google Sign-In: accept ID token and issue app tokens
+		auth.POST("/google/mobile/token", r.authHandler.HandleGoogleMobileToken)
 	}
 
 	// Admin routes

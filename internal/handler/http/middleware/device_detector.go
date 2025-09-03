@@ -36,7 +36,7 @@ func DeviceDetector() gin.HandlerFunc {
 				Model:          strings.Trim(ch["Sec-CH-UA-Model"], `"`),
 				Browser:        strings.Trim(ch["Sec-CH-UA-Browser"], `"`),
 				BrowserVersion: strings.Trim(ch["Sec-CH-UA-Browser-Version"], `"`),
-				IsMobile:       ch["Sec-CH-UA-Mobile"] == "true",
+				IsMobile:       ch["Sec-CH-UA-Mobile"] == "?1" || strings.EqualFold(ch["Sec-CH-UA-Mobile"], "true"),
 				Source:         "client-hint",
 				RawUA:          "",
 				RawCH: strings.Join([]string{
@@ -48,31 +48,31 @@ func DeviceDetector() gin.HandlerFunc {
 					ch["Sec-CH-UA-Browser-Version"],
 				}, "; "),
 			}
-			ctx.Set("deviceInfo", &info)
-			ctx.Next()
+			ctx.Set("deviceInfo", info)
+		} else {
+			uaStr := h.Get("User-Agent")
+			ua := user_agent.New(uaStr)
+			name, version := ua.Browser()
+			platform := ""
+			switch {
+			case ua.Platform() != "":
+				platform = ua.Platform()
+			case ua.OS() != "":
+				platform = ua.OS()
+			}
+			info := &DeviceInfo{
+				Platform:       platform,
+				Model:          "",
+				Browser:        name,
+				BrowserVersion: version,
+				IsMobile:       ua.Mobile(),
+				Source:         "user-agent",
+				RawUA:          uaStr,
+				RawCH:          "",
+			}
+			ctx.Set("deviceInfo", info)
 		}
 
-		uaStr := h.Get("User-Agent")
-		ua := user_agent.New(uaStr)
-		name, version := ua.Browser()
-		platform := ""
-		switch {
-		case ua.Platform() != "":
-			platform = ua.Platform()
-		case ua.OS() != "":
-			platform = ua.OS()
-		}
-		info := DeviceInfo{
-			Platform:       platform,
-			Model:          "",
-			Browser:        name,
-			BrowserVersion: version,
-			IsMobile:       ua.Mobile(),
-			Source:         "user-agent",
-			RawUA:          uaStr,
-			RawCH:          "",
-		}
-		ctx.Set("deviceInfo", &info)
 		ctx.Next()
 	}
 }

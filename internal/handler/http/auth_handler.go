@@ -6,13 +6,17 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/url"
+	"os"
+	"time"
+
 	"github.com/RealEskalate/G6-NewsBrief/internal/domain/contract"
+	"github.com/RealEskalate/G6-NewsBrief/internal/handler/http/middleware"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
-	"net/http"
-	"os"
-	"time"
+	"google.golang.org/api/idtoken"
 )
 
 type AuthHandler struct {
@@ -116,7 +120,111 @@ func (h *AuthHandler) HandleGoogleCallback(ctx *gin.Context) {
 		return
 	}
 
-	// Fallback: return JSON if no frontend URL is configured
+	// Device-aware behavior: mobile gets JSON, web redirects to frontend
+	device := middleware.GetDeviceInfo(ctx)
+	platform := ctx.Query("platform")
+	isMobile := platform == "mobile"
+	if device != nil {
+		isMobile = isMobile || device.IsMobile || (device.Platform == "Android" || device.Platform == "iOS")
+	}
+	fmt.Printf("isMobile: %v, device: %+v\n", isMobile, device)
+
+	frontend := h.config.GetFrontendBaseURL()
+	mobile := h.config.GetFrontendMobileBaseURL()
+
+	if isMobile {
+		// Prefer mobile deep link if configured
+		if mobile != "" {
+			u, _ := url.Parse(mobile)
+			u.Path = "/auth/callback"
+			q := u.Query()
+			q.Set("access_token", accessToken)
+			q.Set("refresh_token", refreshToken)
+			u.RawQuery = q.Encode()
+			ctx.Redirect(http.StatusFound, u.String())
+			return
+		}
+		ctx.JSON(http.StatusOK, gin.H{
+			"message":       "login successful",
+			"access_token":  accessToken,
+			"refresh_token": refreshToken,
+		})
+		return
+	}
+
+	if frontend != "" {
+		u, _ := url.Parse(frontend)
+		u.Path = "/news"
+		q := u.Query()
+		q.Set("access_token", accessToken)
+		q.Set("refresh_token", refreshToken)
+		u.RawQuery = q.Encode()
+		ctx.Redirect(http.StatusFound, u.String())
+		return
+	}
+
+	// Fallback JSON if no frontend configured
+	ctx.JSON(http.StatusOK, gin.H{
+		"message":       "login successful",
+		"access_token":  accessToken,
+		"refresh_token": refreshToken,
+	})
+}
+
+// MobileGoogleTokenRequest represents the payload sent by mobile clients using native Google Sign-In
+type MobileGoogleTokenRequest struct {
+	IDToken string `json:"id_token" binding:"required"`
+}
+
+// HandleGoogleMobileToken verifies a Google ID token from a mobile client and issues app tokens
+func (h *AuthHandler) HandleGoogleMobileToken(ctx *gin.Context) {
+	var req MobileGoogleTokenRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
+		return
+	}
+
+	mobileClientID := os.Getenv("MOBILE_GOOGLE_CLIENT_ID")
+	if mobileClientID == "" {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "MOBILE_GOOGLE_CLIENT_ID not configured"})
+		return
+	}
+
+	requestCtx, cancel := context.WithTimeout(ctx.Request.Context(), 10*time.Second)
+	defer cancel()
+
+	payload, err := idtoken.Validate(requestCtx, req.IDToken, mobileClientID)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "invalid id_token"})
+		return
+	}
+
+	email, _ := payload.Claims["email"].(string)
+	name, _ := payload.Claims["name"].(string)
+	if name == "" {
+		given, _ := payload.Claims["given_name"].(string)
+		family, _ := payload.Claims["family_name"].(string)
+		if given != "" || family != "" {
+			if given != "" && family != "" {
+				name = fmt.Sprintf("%s %s", given, family)
+			} else if given != "" {
+				name = given
+			} else {
+				name = family
+			}
+		}
+	}
+	if email == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "email not present in id_token"})
+		return
+	}
+
+	accessToken, refreshToken, err := h.UserUseCase.LoginWithOAuth(requestCtx, name, email)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to login with OAuth"})
+		return
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{
 		"message":       "login successful",
 		"access_token":  accessToken,
