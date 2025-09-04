@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:newsbrief/features/news/presentation/widgets/animations/globe_background.dart';
 import 'package:newsbrief/features/news/presentation/widgets/chat_bot_popup.dart';
 import 'package:newsbrief/features/news/presentation/widgets/news_card.dart';
+
+import 'package:newsbrief/features/news/presentation/widgets/animations/bounce_button.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 class HomePage extends StatefulWidget {
@@ -12,6 +15,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   bool _isChatbotVisible = false;
+  late ScrollController _scrollController;
+  double _scrollOffset = 0;
 
   void _toggleChatbot() {
     setState(() {
@@ -20,8 +25,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _showLanguagePicker(BuildContext context) {
-    final theme = Theme.of(context);
-
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -50,6 +53,24 @@ class _HomePageState extends State<HomePage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+
+    _scrollController = ScrollController()
+      ..addListener(() {
+        setState(() {
+          _scrollOffset = _scrollController.offset * 0.2;
+        });
+      });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final textColor = theme.colorScheme.onBackground;
@@ -62,12 +83,15 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: background,
       body: Stack(
         children: [
+          const GlobeBackground(),
+
           SafeArea(
             child: Padding(
               padding: EdgeInsets.all(size.width * 0.04),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // 🔹 Header
                   Row(
                     children: [
                       Text(
@@ -79,25 +103,22 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       const Spacer(),
-                      IconButton(
-                        onPressed: () => _showLanguagePicker(context),
-                        icon: Icon(
-                          Icons.language_rounded,
-                          color: textColor,
-                          size: isTablet ? 30 : 24,
-                        ),
+                      BounceButton(
+                        icon: Icons.language_rounded,
+                        iconColor: textColor,
+                        onTap: () => _showLanguagePicker(context),
                       ),
-                      IconButton(
-                        onPressed: () {},
-                        icon: Icon(
-                          Icons.notifications_none,
-                          color: textColor,
-                          size: isTablet ? 30 : 24,
-                        ),
+                      BounceButton(
+                        icon: Icons.notifications_none,
+                        onTap: () {},
+                        iconColor: textColor,
                       ),
                     ],
                   ),
+
                   SizedBox(height: size.height * 0.04),
+
+                  // 🔹 Section Title
                   Text(
                     'for_you'.tr(),
                     style: TextStyle(
@@ -106,18 +127,37 @@ class _HomePageState extends State<HomePage> {
                       color: textColor,
                     ),
                   ),
+
                   SizedBox(height: size.height * 0.02),
+
+                  // 🔹 Animated News List
                   Expanded(
                     child: ListView.builder(
+                      controller: _scrollController,
+                      physics: const BouncingScrollPhysics(),
                       itemCount: sampleNews.length,
-                      itemBuilder: (BuildContext context, int index) {
-                        return Padding(
-                          padding: EdgeInsets.only(bottom: size.height * 0.02),
-                          child: NewsCard(
-                            title: sampleNews[index].title,
-                            description: sampleNews[index].description,
-                            source: sampleNews[index].source,
-                            imageUrl: sampleNews[index].imageUrl,
+                      itemBuilder: (context, index) {
+                        return MouseRegion(
+                          cursor: SystemMouseCursors.click,
+                          child: TweenAnimationBuilder(
+                            tween: Tween<double>(begin: 0, end: 1),
+                            duration: Duration(milliseconds: 600 + (index * 120)),
+                            curve: Curves.easeInOut,
+                            builder: (context, value, child) {
+                              return Transform.translate(
+                                offset: Offset(0, 50 * (1 - value)),
+                                child: Opacity(opacity: value, child: child),
+                              );
+                            },
+                            child: Padding(
+                              padding: EdgeInsets.only(bottom: size.height * 0.02),
+                              child: NewsCard(
+                                title: sampleNews[index].title,
+                                description: sampleNews[index].description,
+                                source: sampleNews[index].source,
+                                imageUrl: sampleNews[index].imageUrl,
+                              ),
+                            ),
                           ),
                         );
                       },
@@ -127,6 +167,8 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
+
+          // 🔹 Chatbot popup
           if (_isChatbotVisible)
             Align(
               alignment: Alignment.bottomCenter,
@@ -142,17 +184,13 @@ class _HomePageState extends State<HomePage> {
             ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _toggleChatbot,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        backgroundColor: theme.colorScheme.primary,
-        foregroundColor: theme.colorScheme.onPrimary,
-        child: Icon(
-          Icons.chat_outlined,
-          size: isTablet ? 28 : 22,
-        ),
+
+      // 🔹 FAB with BounceButton
+      floatingActionButton: BounceButton(
+        icon: Icons.chat_outlined,
+        onTap: _toggleChatbot,
+        isFab: true,
+        iconColor: theme.colorScheme.onPrimary,
       ),
     );
   }

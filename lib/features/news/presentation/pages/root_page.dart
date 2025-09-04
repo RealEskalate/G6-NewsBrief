@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'package:animations/animations.dart'; // <-- for PageTransitionSwitcher
+
 import 'package:easy_localization/easy_localization.dart';
+
 import 'package:newsbrief/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:newsbrief/features/auth/presentation/cubit/auth_state.dart';
 import 'package:newsbrief/features/auth/presentation/pages/profile_page.dart';
@@ -19,6 +23,14 @@ class RootPage extends StatefulWidget {
 class _RootPageState extends State<RootPage> {
   int currentPage = 0;
 
+  final List<Widget> _pages = const [
+    HomePage(),
+    FollowingPage(),
+    SearchPage(),
+    SavedPage(),
+    ProfilePage(),
+  ];
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -27,17 +39,27 @@ class _RootPageState extends State<RootPage> {
     final indicatorColor = theme.colorScheme.surfaceVariant;
 
     return Scaffold(
-      backgroundColor: backgroundColor,
-      body: IndexedStack(
-        index: currentPage,
-        children: const [
-          HomePage(),
-          FollowingPage(),
-          SearchPage(),
-          SavedPage(),
-          ProfilePage(),
-        ],
+
+      backgroundColor: Colors.white,
+
+      // 🔹 Instead of IndexedStack, use PageTransitionSwitcher for animation
+      body: PageTransitionSwitcher(
+        duration: const Duration(milliseconds: 300),
+        transitionBuilder: (child, animation, secondaryAnimation) {
+          const begin = Offset(1.0, 0.0);
+          const end = Offset.zero;
+          final tween = Tween(begin: begin, end: end)
+              .chain(CurveTween(curve: Curves.ease));
+
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          );
+        },
+        child: _pages[currentPage], // current page
+
       ),
+
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: backgroundColor,
@@ -58,7 +80,9 @@ class _RootPageState extends State<RootPage> {
             String? firstLetter;
 
             if (state is AuthAuthenticated) {
+
               final name = state.user.fullName;
+
               if (name.isNotEmpty) {
                 firstLetter = name[0].toUpperCase();
               }
