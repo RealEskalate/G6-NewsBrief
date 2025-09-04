@@ -5,5 +5,5 @@ class GetMe {
   final AuthRepository repo;
   GetMe(this.repo);
 
-  Future<AuthResponseEntity> call() => repo.getMe();
+  Future<UserEntity> call() => repo.getMe();
 }

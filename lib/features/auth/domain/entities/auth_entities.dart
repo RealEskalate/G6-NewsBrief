@@ -7,6 +7,9 @@ class UserEntity {
   final String? avatarUrl;
   final bool isVerified;
   final DateTime? createdAt;
+  List<String>? interest;
+  List<String>? subscribedSources;
+  bool notification;
 
   UserEntity({
     required this.id,
@@ -17,6 +20,9 @@ class UserEntity {
     this.avatarUrl,
     required this.isVerified,
     this.createdAt,
+    this.interest,
+    this.subscribedSources,
+    required this.notification,
   });
 }
 
@@ -30,4 +36,6 @@ class AuthResponseEntity {
     required this.accessToken,
     required this.refreshToken,
   });
+
+  set interest(List<String> interest) {}
 }

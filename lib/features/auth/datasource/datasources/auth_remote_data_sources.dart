@@ -1,10 +1,11 @@
-
+import 'dart:convert';
 import 'dart:developer';
 import 'package:dio/dio.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:newsbrief/core/network_info/api_service.dart';
 import 'package:newsbrief/features/auth/datasource/models/models.dart';
 import 'package:newsbrief/features/auth/datasource/models/tokens_model.dart';
+import 'package:newsbrief/features/auth/datasource/models/user_model.dart';
 
 class AuthRemoteDataSources {
   final ApiService api;
@@ -25,13 +26,18 @@ class AuthRemoteDataSources {
     }
   }
 
-  Future<void> register(String email, String password, String name) async {
+  Future<AuthResponseModel> register(
+    String email,
+    String password,
+    String name,
+  ) async {
     try {
       final res = await api.post(
         '/auth/register',
-        data: {'email': email, 'password': password, 'full_name': name},
+        data: {'email': email, 'password': password, 'fullname': name},
       );
       print('Register Response: ${res.data}');
+      return AuthResponseModel.fromJson(res.data);
     } catch (e) {
       print('Register Error: $e');
       rethrow;
@@ -51,11 +57,11 @@ class AuthRemoteDataSources {
     }
   }
 
-  Future<AuthResponseModel> getMe() async {
+  Future<UserModel> getMe() async {
     try {
       final res = await api.get('/me');
       log("GetMe response: ${res.data}");
-      return AuthResponseModel.fromJson(res.data as Map<String, dynamic>);
+      return UserModel.fromJson(res.data as Map<String, dynamic>);
     } catch (e, s) {
       log("GetMe failed: $e", stackTrace: s);
       rethrow;
@@ -159,22 +165,131 @@ class AuthRemoteDataSources {
     }
   }
 
-  
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: ['email', 'profile'],
+    serverClientId:
+        "662810615091-1h5hpu7ehtnvlo4bsnn934as57fjtqar.apps.googleusercontent.com",
+  );
 
-final GoogleSignIn googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
+  Future<void> loginWithGoogle() async {
+    try {
+      // Step 1: Trigger Google Sign-In
+      GoogleSignInAccount? googleUser;
+      try {
+        googleUser = await _googleSignIn.signIn();
+      } catch (e) {
+        print("❌ Google Sign-In threw an exception: $e");
+      }
 
-Future<void> signInWithGoogle() async {
-  try {
-    final account = await googleSignIn.signIn();
-    final auth = await account?.authentication;
-    final accessToken = auth?.accessToken;
-    final idToken = auth?.idToken;
+      if (googleUser == null) {
+        print(
+          "⚠️ Google Sign-In returned null (user canceled OR sign-in failed).",
+        );
+        return;
+      }
 
-    print('AccessToken: $accessToken');
-    print('ID Token: $idToken');
-  } catch (e) {
-    print('Google Sign-In failed: $e');
+      // Step 2: Get authentication details (ID token & access token)
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      final idToken = googleAuth.idToken;
+      final accessToken = googleAuth.accessToken;
+
+      if (idToken == null) {
+        print("❌ Failed to get ID Token");
+        // return;
+      }
+
+      print("✅ Google ID Token: $idToken");
+      print("✅ Google Access Token: $accessToken");
+
+      final response = await api.post(
+        'google/mobile/token',
+        data: {"id_token": idToken},
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.data);
+        print("✅ Backend Response: $data");
+
+        final serverAccessToken = data['access_token'];
+        final serverRefreshToken = data['refresh_token'];
+
+        print("🔑 Access Token: $serverAccessToken");
+        print("🔑 Refresh Token: $serverRefreshToken");
+      } else {
+        print("❌ Server error: ${response.data}");
+      }
+    } catch (e) {
+      print("❌ Google sign in failed: $e");
+    }
   }
-}
 
+  Future<List<dynamic>> getSubscriptions() async {
+    final response = await api.get("/me/subscriptions");
+    print(response.data);
+    return response.data["subscriptions"];
+  }
+
+  Future<void> subscribeToSources({required String source}) async {
+    try {
+      final res = await api.post("/me/subscriptions", data: source);
+      print(res);
+    } catch (e) {
+      log("SubscribeToSources $e");
+    }
+  }
+
+  Future<void> unSubscribeToSources({required String source}) async {
+    try {
+      final res = await api.delete("/me/subscriptions", data: source);
+      print(res);
+    } catch (e) {
+      log("UnSubscribeToSources $e");
+    }
+  }
+
+  Future<List<dynamic>> getSubscribedTopics() async {
+    try {
+      final res = await api.get("/me/subscribed-topics");
+      print(res.data);
+      return res.data['topics'];
+    } catch (e) {
+      log("getSubscribedTopics $e");
+      rethrow;
+    }
+  }
+
+  Future<List<dynamic>> getMyTopics() async {
+    try {
+      final res = await api.get("/me/topics");
+      print(res.data);
+      return res.data['topics'];
+    } catch (e) {
+      log("getMyTopics $e");
+      rethrow;
+    }
+  }
+
+  Future<List<dynamic>> getAllSources() async {
+    try {
+      final res = await api.get("/sources");
+      print(res.data);
+      return res.data['sources'];
+    } catch (e) {
+      log("Sources $e");
+      rethrow;
+    }
+  }
+
+  Future<List<dynamic>> getAllTopics() async {
+    try {
+      final res = await api.get("/topics");
+      print(res.data);
+      return res.data['topics'];
+    } catch (e) {
+      log("Topics $e");
+      rethrow;
+    }
+  }
 }

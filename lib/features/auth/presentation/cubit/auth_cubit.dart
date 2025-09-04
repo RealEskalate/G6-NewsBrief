@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:newsbrief/features/auth/domain/usecases/forgot_password.dart';
+import 'package:newsbrief/features/auth/domain/usecases/get_interests_usecase.dart';
 import 'package:newsbrief/features/auth/domain/usecases/get_me.dart';
 import 'package:newsbrief/features/auth/domain/usecases/login_user.dart';
 import 'package:newsbrief/features/auth/domain/usecases/login_with_google_usecase.dart';
@@ -22,6 +23,7 @@ class AuthCubit extends Cubit<AuthState> {
   final VerifyEmail verifyEmail;
   final RequestVerificationEmail requestVerificationEmail;
   final LoginWithGoogleUseCase loginWithGoogleUseCase;
+  final GetInterestsUseCase getInterestsUseCase;
 
   AuthCubit({
     required this.loginUser,
@@ -33,6 +35,7 @@ class AuthCubit extends Cubit<AuthState> {
     required this.verifyEmail,
     required this.requestVerificationEmail,
     required this.loginWithGoogleUseCase,
+    required this.getInterestsUseCase,
   }) : super(AuthInitial());
 
   Future<void> login({required String email, required String password}) async {
@@ -55,13 +58,12 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> register(String email, String password, String name) async {
     emit(AuthLoading());
     try {
-      await registerUser(email: email, password: password, name: name);
+      final response = await registerUser(email: email, password: password, name: name);
 
       emit(
         const AuthEmailActionSuccess('Registered. Please verify your email.'),
       );
 
-      final response = await loginUser(email: email, password: password);
       emit(AuthAuthenticated(response.user));
     } catch (e) {
       emit(AuthError(_msg(e)));
@@ -72,7 +74,7 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthLoading());
     try {
       final user = await getMe();
-      emit(AuthAuthenticated(user.user));
+      emit(AuthAuthenticated(user));
     } catch (e) {
       emit(AuthError(_msg(e)));
     }
@@ -84,7 +86,7 @@ class AuthCubit extends Cubit<AuthState> {
       await requestVerificationEmail(email: email);
       emit(const AuthEmailActionSuccess('Verification email sent.'));
       final user = await getMe();
-      emit(AuthAuthenticated(user.user));
+      emit(AuthAuthenticated(user));
     } catch (e) {
       emit(AuthError(_msg(e)));
     }
@@ -95,7 +97,7 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       await verifyEmail(token: token); // now returns Tokens
       final user = await getMe();
-      emit(AuthAuthenticated(user.user));
+      emit(AuthAuthenticated(user));
     } catch (e) {
       emit(AuthError(_msg(e)));
     }
@@ -133,11 +135,35 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<void> loginWithGoogle() async {
     emit(AuthLoading());
-    try{
-      final res = await loginWithGoogleUseCase();
-      emit(AuthAuthenticated(res.user));
-    }catch (e) {
+    try {
+      final authResponse = await loginWithGoogleUseCase();
+      print(authResponse);
+      final res = await getMe();
+      print(res);
+      emit(AuthAuthenticated(res));
+    } catch (e) {
       emit(AuthError(_msg(e)));
+    }
+  }
+
+  Future<void> loadInterests() async {
+    emit(AuthLoading());
+    try {
+      final interests = await getInterestsUseCase();
+      emit(InterestsLoaded(interests));
+    } catch (e) {
+      emit(AuthError(e.toString()));
+    }
+  }
+
+  Future<void> saveInterests(List<String> selectedInterests) async {
+    emit(AuthLoading());
+    try {
+      final user = await getMe();
+      user.interest = selectedInterests;
+      emit(InterestsSavedSuccess(selectedInterests));
+    } catch (e) {
+      emit(AuthError(e.toString()));
     }
   }
 

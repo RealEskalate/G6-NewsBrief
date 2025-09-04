@@ -1,53 +1,89 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class SignUpPage extends StatelessWidget {
   const SignUpPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text("Sign Up")),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const TextField(
-              decoration: InputDecoration(
-                labelText: "Email",
+      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: AppBar(
+        title: Text("sign_up.title".tr()),
+        backgroundColor: theme.appBarTheme.backgroundColor,
+        foregroundColor: theme.appBarTheme.foregroundColor,
+        elevation: 0,
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextField(
+                decoration: InputDecoration(
+                  labelText: "sign_up.email".tr(),
+                  labelStyle: TextStyle(color: theme.colorScheme.onBackground),
+                  border: const OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.emailAddress,
               ),
-            ),
-            const TextField(
-              decoration: InputDecoration(
-                labelText: "Password",
+              const SizedBox(height: 16),
+              TextField(
+                decoration: InputDecoration(
+                  labelText: "sign_up.password".tr(),
+                  labelStyle: TextStyle(color: theme.colorScheme.onBackground),
+                  border: const OutlineInputBorder(),
+                ),
+                obscureText: true,
               ),
-              obscureText: true,
-            ),
-            const TextField(
-              decoration: InputDecoration(
-                labelText: "Confirm Password",
+              const SizedBox(height: 16),
+              TextField(
+                decoration: InputDecoration(
+                  labelText: "sign_up.confirm_password".tr(),
+                  labelStyle: TextStyle(color: theme.colorScheme.onBackground),
+                  border: const OutlineInputBorder(),
+                ),
+                obscureText: true,
               ),
-              obscureText: true,
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushReplacementNamed(context, '/');
-              },
-              child: const Text("Sign Up"),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pushReplacementNamed(context, '/login');
-              },
-              child: const Text("Already have an account? Login"),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pushReplacementNamed(context, '/root');
-              },
-              child: const Text("Continue as guest"),
-            ),
-          ],
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushReplacementNamed(context, '/');
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: theme.colorScheme.primary,
+                    foregroundColor: theme.colorScheme.onPrimary,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: Text("sign_up.button".tr()),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: () {
+                  Navigator.pushReplacementNamed(context, '/login');
+                },
+                child: Text(
+                  "sign_up.already_have_account".tr(),
+                  style: TextStyle(color: theme.colorScheme.primary),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pushReplacementNamed(context, '/root');
+                },
+                child: Text(
+                  "sign_up.continue_as_guest".tr(),
+                  style: TextStyle(color: theme.colorScheme.primary),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

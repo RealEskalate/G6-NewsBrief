@@ -34,3 +34,19 @@ class AuthError extends AuthState {
   @override
   List<Object?> get props => [message];
 }
+
+class InterestsLoaded extends AuthState {
+  final List<String> interests;
+  const InterestsLoaded(this.interests);
+
+  @override
+  List<Object?> get props => [interests];
+}
+
+class InterestsSavedSuccess extends AuthState {
+  final List<String> selectedInterests;
+  const InterestsSavedSuccess(this.selectedInterests);
+
+  @override
+  List<Object?> get props => [selectedInterests];
+}

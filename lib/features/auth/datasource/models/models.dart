@@ -9,9 +9,9 @@ class AuthResponseModel extends AuthResponseEntity {
   });
 
   factory AuthResponseModel.fromJson(Map<String, dynamic> json) {
-  final userModel = UserModel.fromJson(json['user'] as Map<String, dynamic>);
+  final userModel = UserModel.fromJson(json['user']);
   return AuthResponseModel(
-    user: userModel as UserEntity, // explicitly cast to User
+    user: userModel, // explicitly cast to User
     accessToken: json['access_token'] ?? '',
     refreshToken: json['refresh_token'] ?? '',
   );

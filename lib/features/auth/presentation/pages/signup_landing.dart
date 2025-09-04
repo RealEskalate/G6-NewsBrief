@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:newsbrief/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:newsbrief/features/auth/presentation/cubit/auth_state.dart';
 import 'signup_email.dart';
@@ -10,8 +11,10 @@ class SignupLandingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.colorScheme.background,
       body: SafeArea(
         child: BlocConsumer<AuthCubit, AuthState>(
           listener: (context, state) {
@@ -29,7 +32,7 @@ class SignupLandingPage extends StatelessWidget {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.message),
-                  backgroundColor: Colors.red,
+                  backgroundColor: theme.colorScheme.error,
                 ),
               );
             }
@@ -47,39 +50,33 @@ class SignupLandingPage extends StatelessWidget {
                         onPressed: () {
                           Navigator.pop(context);
                         },
-                        icon: Icon(Icons.arrow_back),
+                        icon: Icon(Icons.arrow_back,
+                            color: theme.colorScheme.onBackground),
                       ),
                     ],
                   ),
                   const Spacer(),
-                  const Text(
-                    "NewsBrief",
-                    style: TextStyle(
-                      fontSize: 36,
+                  Text(
+                    "app_name".tr(),
+                    style: theme.textTheme.headlineLarge?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: Colors.black,
                       fontFamily: 'Inter',
                     ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    "From headings to understanding",
-                    style: TextStyle(
-                      fontSize: 22,
+                  Text(
+                    "signup_tagline".tr(),
+                    style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: Colors.black,
                       fontFamily: 'Inter',
                     ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 12),
-                  const Text(
-                    "Discover topics that deepen your understanding",
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.normal,
-                      color: Colors.black,
+                  Text(
+                    "signup_description".tr(),
+                    style: theme.textTheme.bodyMedium?.copyWith(
                       fontFamily: 'Inter',
                     ),
                     textAlign: TextAlign.center,
@@ -100,15 +97,14 @@ class SignupLandingPage extends StatelessWidget {
                           ),
                         );
                       },
-                      icon: const Icon(Icons.email, color: Colors.black),
-                      label: const Flexible(
+                      icon: Icon(Icons.email, color: theme.colorScheme.onSurface),
+                      label: Flexible(
                         child: Text(
-                          "Sign up with Email",
+                          "signup_with_email".tr(),
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontFamily: 'Inter',
+                          style: theme.textTheme.labelLarge?.copyWith(
                             fontWeight: FontWeight.w600,
+                            fontFamily: 'Inter',
                           ),
                         ),
                       ),
@@ -116,7 +112,7 @@ class SignupLandingPage extends StatelessWidget {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
                         ),
-                        side: const BorderSide(color: Colors.black),
+                        side: BorderSide(color: theme.colorScheme.onSurface),
                       ),
                     ),
                   ),
@@ -132,53 +128,58 @@ class SignupLandingPage extends StatelessWidget {
                       ),
                       label: state is AuthLoading
                           ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.black,
-                              ),
-                            )
-                          : const Flexible(
-                              child: Text(
-                                "Sign up with Google",
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontFamily: 'Inter',
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                        ),
+                      )
+                          : Flexible(
+                        child: Text(
+                          "signup_with_google".tr(),
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                      ),
                       style: OutlinedButton.styleFrom(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
                         ),
-                        side: const BorderSide(color: Colors.black),
+                        side: BorderSide(color: theme.colorScheme.onSurface),
                       ),
                       onPressed: state is AuthLoading
                           ? null
                           : () {
-                              context
-                                  .read<AuthCubit>()
-                                  .loginWithGoogleUseCase();
-                              Navigator.pushNamed(context, '/root');
-                            },
+                        context.read<AuthCubit>().loginWithGoogle();
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => BlocProvider.value(
+                              value: context.read<AuthCubit>(),
+                              child: const InterestsScreen(),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
-
                   const SizedBox(height: 12),
                   OutlinedButton.icon(
                     onPressed: () {
                       Navigator.pushNamed(context, '/root');
                     },
-                    label: const Text(
-                      'Continue as Guest',
-                      style: TextStyle(color: Colors.black),
+                    label: Text(
+                      'continue_as_guest'.tr(),
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        fontFamily: 'Inter',
+                      ),
                     ),
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 50),
-                      side: const BorderSide(color: Colors.black),
+                      side: BorderSide(color: theme.colorScheme.onSurface),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -187,11 +188,9 @@ class SignupLandingPage extends StatelessWidget {
                       Navigator.pushNamed(context, '/login');
                     },
                     child: Text(
-                      "Already have an account? Login",
-                      style: TextStyle(
-                        fontSize: 14,
+                      "already_have_account".tr(),
+                      style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w500,
-                        color: Colors.black,
                         fontFamily: 'Inter',
                       ),
                       textAlign: TextAlign.center,

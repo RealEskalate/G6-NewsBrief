@@ -7,13 +7,13 @@ abstract class AuthRepository {
     required String email,
     required String password,
   });
-  Future<void> register({
+  Future<AuthResponseEntity> register({
     required String email,
     required String password,
     required String name,
   });
   Future<void> logout({required String refreshToken});
-  Future<AuthResponseEntity> getMe();
+  Future<UserEntity> getMe();
   Future<void> updateMe({required String name, required String email});
 
   Future<void> requestVerificationEmail({required String email});
@@ -31,4 +31,12 @@ abstract class AuthRepository {
   void updateLastUser(User user);
   Future<User> signUpWithGoogle();
   Future<AuthResponseEntity> loginWithGoogle();
+
+  Future<List<String>> getSubscribedSources();
+  Future<void> subscribeToSource({required String sourceSlug});
+  Future<void> unsubscribeFromSource({required String sourceSlug});
+
+  Future<List<String>> getSubscribedTopics();
+  Future<List<String>> getAllTopics();
+  Future<List<String>> getAllSources();
 }

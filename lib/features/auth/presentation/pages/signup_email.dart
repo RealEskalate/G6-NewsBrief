@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:newsbrief/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:newsbrief/features/auth/presentation/cubit/auth_state.dart';
 import 'interests.dart';
@@ -16,18 +17,20 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController =
-      TextEditingController();
+  TextEditingController();
   bool agreeToTerms = false;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: theme.colorScheme.onBackground),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -37,60 +40,62 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text(
-                'NewsBrief',
+              Text(
+                'app_name'.tr(),
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 40,
+                style: theme.textTheme.displaySmall?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: Colors.black,
+                  color: theme.colorScheme.onBackground,
+                  fontFamily: 'Inter',
                 ),
               ),
               const SizedBox(height: 24),
-              const Text(
-                'Sign Up with Email',
+              Text(
+                'signup_with_email'.tr(),
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 24,
+                style: theme.textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: Colors.black,
+                  color: theme.colorScheme.onBackground,
+                  fontFamily: 'Inter',
                 ),
               ),
               const SizedBox(height: 32),
               TextField(
                 controller: fullNameController,
-                decoration: const InputDecoration(
-                  hintText: 'Full Name',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  hintText: 'full_name'.tr(),
+                  border: const OutlineInputBorder(),
+                  hintStyle: theme.textTheme.bodyMedium,
                 ),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: emailController,
-                decoration: const InputDecoration(
-                  hintText: 'Email',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  hintText: 'email'.tr(),
+                  border: const OutlineInputBorder(),
+                  hintStyle: theme.textTheme.bodyMedium,
                 ),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: passwordController,
-                decoration: const InputDecoration(
-                  hintText: 'Password',
-                  border: OutlineInputBorder(),
-                ),
                 obscureText: true,
+                decoration: InputDecoration(
+                  hintText: 'password'.tr(),
+                  border: const OutlineInputBorder(),
+                  hintStyle: theme.textTheme.bodyMedium,
+                ),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: confirmPasswordController,
-                decoration: const InputDecoration(
-                  hintText: 'Confirm Password',
-                  border: OutlineInputBorder(),
-                ),
                 obscureText: true,
+                decoration: InputDecoration(
+                  hintText: 'confirm_password'.tr(),
+                  border: const OutlineInputBorder(),
+                  hintStyle: theme.textTheme.bodyMedium,
+                ),
               ),
               const SizedBox(height: 16),
               Row(
@@ -103,13 +108,12 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
                       });
                     },
                   ),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'I agree to the Terms & Conditions',
-                      style: TextStyle(
+                      'agree_terms'.tr(),
+                      style: theme.textTheme.bodyMedium?.copyWith(
                         fontFamily: 'Inter',
-                        fontSize: 14,
-                        color: Colors.black,
+                        color: theme.colorScheme.onBackground,
                       ),
                     ),
                   ),
@@ -119,7 +123,6 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
               BlocConsumer<AuthCubit, AuthState>(
                 listener: (context, state) {
                   if (state is AuthAuthenticated) {
-                    // Go straight to Interests screen after verified + logged in
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
@@ -147,29 +150,45 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
                 },
                 builder: (context, state) {
                   return CustomHoverButton(
-                    iconWidget: const Icon(Icons.email, color: Colors.white),
-                    text: state is AuthLoading ? 'Signing Up...' : 'Sign Up',
-                    color: Colors.black,
-                    textColor: Colors.white,
+                    iconWidget:
+                    Icon(Icons.email, color: theme.colorScheme.onPrimary),
+                    text: state is AuthLoading
+                        ? 'signing_up'.tr()
+                        : 'sign_up'.tr(),
+                    color: theme.colorScheme.primary,
+                    textColor: theme.colorScheme.onPrimary,
                     onTap: (state is! AuthLoading && agreeToTerms)
                         ? () {
-                            if (passwordController.text !=
-                                confirmPasswordController.text) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Passwords do not match'),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                              return;
-                            }
+                      if (passwordController.text !=
+                          confirmPasswordController.text) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content:
+                            Text('passwords_not_match'.tr()),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                        return;
+                      }
 
-                            context.read<AuthCubit>().register(
-                              emailController.text,
-                              passwordController.text,
-                              fullNameController.text,
-                            );
-                          }
+                      context.read<AuthCubit>().register(
+                        emailController.text,
+                        passwordController.text,
+                        fullNameController.text,
+                      );
+
+                      if (state is AuthAuthenticated) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => BlocProvider.value(
+                              value: context.read<AuthCubit>(),
+                              child: const InterestsScreen(),
+                            ),
+                          ),
+                        );
+                      }
+                    }
                         : null,
                   );
                 },
@@ -179,13 +198,13 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
                 onPressed: () {
                   Navigator.pushNamed(context, '/root');
                 },
-                label: const Text(
-                  'Continue as Guest',
-                  style: TextStyle(color: Colors.black),
+                label: Text(
+                  'continue_as_guest'.tr(),
+                  style: TextStyle(color: theme.colorScheme.onBackground),
                 ),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 50),
-                  side: const BorderSide(color: Colors.black),
+                  side: BorderSide(color: theme.colorScheme.onBackground),
                 ),
               ),
             ],
@@ -260,19 +279,19 @@ class _CustomHoverButtonState extends State<CustomHoverButton>
                   borderRadius: BorderRadius.circular(30),
                   boxShadow: _hovering
                       ? [
-                          BoxShadow(
-                            color: Colors.black26,
-                            offset: const Offset(0, 4),
-                            blurRadius: 8,
-                          ),
-                        ]
+                    BoxShadow(
+                      color: Colors.black26,
+                      offset: const Offset(0, 4),
+                      blurRadius: 8,
+                    ),
+                  ]
                       : [
-                          BoxShadow(
-                            color: Colors.black12,
-                            offset: const Offset(0, 2),
-                            blurRadius: 4,
-                          ),
-                        ],
+                    BoxShadow(
+                      color: Colors.black12,
+                      offset: const Offset(0, 2),
+                      blurRadius: 4,
+                    ),
+                  ],
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,

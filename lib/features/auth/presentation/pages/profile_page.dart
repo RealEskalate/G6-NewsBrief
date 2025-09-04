@@ -1,8 +1,13 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:newsbrief/core/widgets/custom_dropdown_button.dart';
 import 'package:newsbrief/core/widgets/topic_chip.dart';
+import 'package:newsbrief/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:newsbrief/features/auth/presentation/cubit/auth_state.dart';
 import 'package:newsbrief/features/auth/presentation/pages/manage_subscription.dart';
 import 'package:newsbrief/features/auth/presentation/widgets/indicator_card.dart';
+import 'package:newsbrief/features/auth/presentation/cubit/user_cubit.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -13,15 +18,8 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage>
     with SingleTickerProviderStateMixin {
-  List<String> topics = [
-    "Technology",
-    "Sports",
-    "Business",
-    "Entertainment",
-    "Health",
-  ];
   bool isManagingTopics = false;
-
+  List<String> topicKeys = []; // make sure this exists
   late final AnimationController _animationController;
 
   @override
@@ -32,6 +30,9 @@ class _ProfilePageState extends State<ProfilePage>
       reverseDuration: const Duration(milliseconds: 100),
       vsync: this,
     )..repeat(reverse: true);
+
+    // Load topics from UserCubit
+    context.read<UserCubit>().loadSubscribedTopics();
   }
 
   @override
@@ -40,50 +41,36 @@ class _ProfilePageState extends State<ProfilePage>
     super.dispose();
   }
 
-  void _removeTopic(String topic) {
-    setState(() {
-      topics.remove(topic);
-    });
-  }
 
   void _showAddTopicDialog() {
     TextEditingController controller = TextEditingController();
+    final theme = Theme.of(context);
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: Colors.white,
-          title: const Text(
-            "Add New Topic",
-            style: TextStyle(color: Colors.black),
-          ),
+          backgroundColor: theme.scaffoldBackgroundColor,
+          title: Text("add_new_topic".tr(), style: TextStyle(color: theme.colorScheme.onBackground)),
           content: TextField(
             controller: controller,
             decoration: InputDecoration(
-              hintText: "Enter topic name",
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.0),
-              ),
+              hintText: "enter_topic_name".tr(),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text(
-                "Cancel",
-                style: TextStyle(color: Colors.black54),
-              ),
+              child: Text("cancel".tr(), style: TextStyle(color: theme.colorScheme.onBackground.withOpacity(0.6))),
             ),
             TextButton(
               onPressed: () {
                 if (controller.text.isNotEmpty) {
-                  setState(() {
-                    topics.add(controller.text);
-                  });
+                  setState(() => topicKeys.add(controller.text));
                   Navigator.pop(context);
                 }
               },
-              child: const Text("Add", style: TextStyle(color: Colors.black)),
+              child: Text("add".tr(), style: TextStyle(color: theme.colorScheme.primary)),
             ),
           ],
         );
@@ -93,178 +80,189 @@ class _ProfilePageState extends State<ProfilePage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    final theme = Theme.of(context);
+
+    return BlocBuilder<AuthCubit, AuthState>(
+      builder: (context, state) {
+        String? fullName;
+        String? email;
+        if (state is AuthAuthenticated) {
+          fullName = state.user.fullName;
+          email = state.user.email;
+        }
+
+        return Scaffold(
+          backgroundColor: theme.scaffoldBackgroundColor,
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  IconButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/root');
-                    },
-                    icon: const Icon(Icons.arrow_back, color: Colors.black),
-                  ),
+                  // Top Row
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      CustomDropdownButton(
-                        menuItems: [
-                          "Edit profile",
-                          if (!isManagingTopics) "Manage topic",
-                          "Manage Subscription",
-                          if (isManagingTopics) "Done",
-                        ],
-                        onSelected: (String result) {
-                          switch (result) {
-                            case "Edit profile":
-                              Navigator.pushNamed(context, '/edit');
-                              break;
-                            case "Manage topic":
-                              setState(() {
-                                isManagingTopics = true;
-                              });
-                              break;
-                            case "Done":
-                              setState(() {
-                                isManagingTopics = false;
-                              });
-                              break;
-                            case "Manage Subscription":
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const ManageSubscriptionPage(),
-                                ),
-                              );
-                              break;
-                          }
-                        },
-                        icon: Icon(Icons.edit),
-                      ),
                       IconButton(
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/setting');
-                        },
-                        icon: const Icon(Icons.settings, color: Colors.black),
+                        onPressed: () => Navigator.pushNamed(context, '/root'),
+                        icon: Icon(Icons.arrow_back, color: theme.colorScheme.onBackground),
+                      ),
+                      Row(
+                        children: [
+                          CustomDropdownButton(
+                            menuItems: [
+                              "edit_profile".tr(),
+                              if (!isManagingTopics) "manage_topic".tr(),
+                              "manage_subscription".tr(),
+                              if (isManagingTopics) "done".tr(),
+                            ],
+                            onSelected: (String result) {
+                              if (result == "edit_profile".tr()) {
+                                Navigator.pushNamed(context, '/edit');
+                              } else if (result == "manage_topic".tr()) {
+                                setState(() => isManagingTopics = true);
+                              } else if (result == "done".tr()) {
+                                setState(() => isManagingTopics = false);
+                              } else if (result == "manage_subscription".tr()) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const ManageSubscriptionPage(),
+                                  ),
+                                );
+                              }
+                            },
+                            icon: Icon(Icons.edit, color: theme.colorScheme.onBackground),
+                          ),
+                          IconButton(
+                            onPressed: () => Navigator.pushNamed(context, '/setting'),
+                            icon: Icon(Icons.settings, color: theme.colorScheme.onBackground),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
-              const SizedBox(height: 30),
-              CircleAvatar(
-                radius: 60,
-                backgroundColor: Colors.grey.shade300,
-                child: const Icon(
-                  Icons.person,
-                  size: 60,
-                  color: Colors.black54,
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                "John Doe",
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                "johndoe@example.com",
-                style: TextStyle(fontSize: 16, color: Colors.black54),
-              ),
-              const SizedBox(height: 30),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  IndicatorCard(
-                    title: "Subscribed",
-                    count: 12,
-                    color: Colors.grey.shade100,
-                    onTap: () {
-                      Navigator.pushNamed(context, '/following');
-                    },
+
+                  const SizedBox(height: 30),
+
+                  CircleAvatar(
+                    radius: 60,
+                    backgroundColor: theme.colorScheme.surfaceVariant,
+                    child: Icon(Icons.person, size: 60, color: theme.colorScheme.onSurface.withOpacity(0.6)),
                   ),
-                  IndicatorCard(
-                    title: "Saved News",
-                    count: 34,
-                    color: Colors.grey.shade400,
-                    onTap: () {
-                      Navigator.pushNamed(context, '/saved');
-                    },
+
+                  const SizedBox(height: 20),
+
+                  Text(
+                    fullName ?? "john_doe",
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: theme.colorScheme.onBackground),
                   ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              const SizedBox(height: 30),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Your Interests",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  const SizedBox(height: 8),
+                  Text(
+                    email ?? "johndoe_email",
+                    style: TextStyle(fontSize: 16, color: theme.colorScheme.onBackground.withOpacity(0.6)),
                   ),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
+
+                  const SizedBox(height: 30),
+
+                  // Indicator Cards
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      ...topics
-                          .map(
-                            (topic) => isManagingTopics
-                                ? RotationTransition(
-                                    turns: Tween(begin: -0.001, end: 0.002)
-                                        .animate(
-                                          CurvedAnimation(
-                                            parent: _animationController,
-                                            curve: const FlippedCurve(
-                                              Curves.easeOutCubic,
+                      IndicatorCard(
+                        title: "subscribed".tr(),
+                        count: 12,
+                        color: theme.colorScheme.surfaceVariant,
+                        onTap: () => Navigator.pushNamed(context, '/following'),
+                      ),
+                      IndicatorCard(
+                        title: "saved_news".tr(),
+                        count: 34,
+                        color: theme.colorScheme.surfaceVariant,
+                        onTap: () => Navigator.pushNamed(context, '/saved'),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 30),
+
+                  // Your Interests (UserCubit)
+                  BlocBuilder<UserCubit, UserState>(
+                    builder: (context, state) {
+                      List<String> userTopics = [];
+                      bool isLoading = false;
+
+                      if (state is UserLoading) {
+                        isLoading = true;
+                      } else if (state is SubscribedTopicsLoaded) {
+                        userTopics = state.topics;
+                      } else if (state is UserError) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(state.message),
+                              backgroundColor: theme.colorScheme.error,
+                            ),
+                          );
+                        });
+                      }
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "your_interests".tr(),
+                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: theme.colorScheme.onBackground),
+                          ),
+                          const SizedBox(height: 12),
+                          if (isLoading)
+                            const Center(child: CircularProgressIndicator())
+                          else
+                            Wrap(
+                              spacing: 12,
+                              runSpacing: 12,
+                              children: [
+                                ...userTopics.map(
+                                  (topic) => isManagingTopics
+                                      ? RotationTransition(
+                                          turns: Tween(begin: -0.001, end: 0.002).animate(
+                                            CurvedAnimation(
+                                              parent: _animationController,
+                                              curve: const FlippedCurve(Curves.easeOutCubic),
                                             ),
                                           ),
-                                        ),
-                                    child: TopicChip(
-                                      title: topic,
-                                      onDeleted: () => _removeTopic(topic),
-                                    ),
-                                  )
-                                : TopicChip(title: topic, onDeleted: null),
-                          )
-                          .toList(),
-                      if (isManagingTopics)
-                        ActionChip(
-                          label: const Text(
-                            "Add",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                          avatar: const Icon(Icons.add, color: Colors.white),
-                          backgroundColor: Colors.black,
-                          onPressed: _showAddTopicDialog,
-                        ),
-                      if (isManagingTopics)
-                        ActionChip(
-                          label: const Text(
-                            "Done",
-                            style: TextStyle(color: Colors.black),
-                          ),
-                          backgroundColor: Colors.white,
-                          onPressed: () {
-                            setState(() {
-                              isManagingTopics = false;
-                            });
-                          },
-                        ),
-                    ],
+                                          child: TopicChip(
+                                            title: topic,
+                                            onDeleted: () => context.read<UserCubit>().removeTopic(topic),
+                                          ),
+                                        )
+                                      : TopicChip(title: topic, onDeleted: null),
+                                ),
+                                if (isManagingTopics)
+                                  ActionChip(
+                                    label: Text("Add".tr(), style: TextStyle(color: theme.colorScheme.onPrimary)),
+                                    avatar: Icon(Icons.add, color: theme.colorScheme.onPrimary),
+                                    backgroundColor: theme.colorScheme.primary,
+                                    onPressed: _showAddTopicDialog,
+                                  ),
+                                if (isManagingTopics)
+                                  ActionChip(
+                                    label: Text("done".tr(), style: TextStyle(color: theme.colorScheme.onBackground)),
+                                    backgroundColor: theme.colorScheme.surfaceVariant,
+                                    onPressed: () => setState(() => isManagingTopics = false),
+                                  ),
+                              ],
+                            ),
+                        ],
+                      );
+                    },
                   ),
                 ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

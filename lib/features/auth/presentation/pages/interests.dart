@@ -1,8 +1,7 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../bloc/auth_bloc.dart';
-import '../bloc/auth_event.dart';
-import '../bloc/auth_state.dart';
+import 'package:newsbrief/features/auth/presentation/cubit/user_cubit.dart';
 
 class InterestsScreen extends StatefulWidget {
   const InterestsScreen({super.key});
@@ -18,46 +17,50 @@ class _InterestsScreenState extends State<InterestsScreen> {
   @override
   void initState() {
     super.initState();
-
-    context.read<AuthBloc>().add(LoadInterestsEvent());
+    context.read<UserCubit>().loadAllTopics();
   }
 
   bool get canContinue => selectedInterests.values.where((v) => v).length >= 3;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return BlocProvider.value(
-      value: context.read<AuthBloc>(),
+      value: context.read<UserCubit>(),
       child: Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(24.0),
-            child: BlocConsumer<AuthBloc, AuthState>(
+            child: BlocConsumer<UserCubit, UserState>(
               listener: (context, state) {
-                if (state is InterestsLoaded) {
-                  availableInterests = state.interests;
+                if (state is AllTopicsLoaded) {
+                  availableInterests = state.topics; // <-- from UserCubit
                   for (var i in availableInterests) {
-                    if (!selectedInterests.containsKey(i))
-                      selectedInterests[i] = false;
+
+                    selectedInterests.putIfAbsent(i, () => false);
+
                   }
-                } else if (state is InterestsSavedSuccess) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Interests saved!'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                } else if (state is AuthFailure) {
+                } else if (state is UserActionSuccess) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(state.error),
-                      backgroundColor: Colors.red,
+                      content: Text('Interests saved!'.tr()),
+                      backgroundColor: theme.colorScheme.primary,
+                    ),
+                  );
+                } else if (state is UserError) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(state.message),
+                      backgroundColor: theme.colorScheme.error,
                     ),
                   );
                 }
               },
+
               builder: (context, state) {
-                if (state is AuthLoading && availableInterests.isEmpty) {
+                if (state is UserLoading  && availableInterests.isEmpty) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
@@ -66,11 +69,11 @@ class _InterestsScreenState extends State<InterestsScreen> {
                   children: [
                     Center(
                       child: Text(
-                        'Welcome to NewsBrief',
-                        style: const TextStyle(
+                        'Welcome to NewsBrief'.tr(),
+                        style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black,
+                          color: theme.colorScheme.onBackground,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -79,11 +82,11 @@ class _InterestsScreenState extends State<InterestsScreen> {
                     Padding(
                       padding: const EdgeInsets.only(left: 24.0),
                       child: Text(
-                        'What are you interested in?',
-                        style: const TextStyle(
+                        'What are you interested in?'.tr(),
+                        style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black,
+                          color: theme.colorScheme.onBackground,
                         ),
                       ),
                     ),
@@ -91,28 +94,27 @@ class _InterestsScreenState extends State<InterestsScreen> {
                     Padding(
                       padding: const EdgeInsets.only(left: 90.0),
                       child: Text(
-                        'Choose three or more',
-                        style: const TextStyle(
+                        'Choose three or more'.tr(),
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.normal,
-                          color: Colors.black54,
+                          color: theme.colorScheme.onBackground.withOpacity(0.6),
                         ),
                       ),
                     ),
                     const SizedBox(height: 16),
                     Expanded(
                       child: GridView.builder(
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: 12,
-                              mainAxisSpacing: 12,
-                              childAspectRatio: 2.5,
-                            ),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: 2.5,
+                        ),
                         itemCount: availableInterests.length,
                         itemBuilder: (context, index) {
                           final category = availableInterests[index];
-                          final isSelected = selectedInterests[category]!;
+                          final isSelected = selectedInterests[category] ?? false;
                           return FilterChip(
                             label: Text(category),
                             selected: isSelected,
@@ -121,18 +123,20 @@ class _InterestsScreenState extends State<InterestsScreen> {
                                 selectedInterests[category] = selected;
                               });
                             },
-                            selectedColor: Colors.black,
-                            checkmarkColor: Colors.white,
+                            selectedColor: theme.colorScheme.primary,
+                            checkmarkColor: theme.colorScheme.onPrimary,
                             labelStyle: TextStyle(
-                              color: isSelected ? Colors.white : Colors.black87,
+                              color: isSelected
+                                  ? theme.colorScheme.onPrimary
+                                  : theme.colorScheme.onBackground,
                               fontWeight: FontWeight.w500,
                             ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                               side: BorderSide(
                                 color: isSelected
-                                    ? Colors.black
-                                    : Colors.grey[300]!,
+                                    ? theme.colorScheme.primary
+                                    : theme.dividerColor,
                                 width: 1,
                               ),
                             ),
@@ -146,31 +150,33 @@ class _InterestsScreenState extends State<InterestsScreen> {
                       child: ElevatedButton(
                         onPressed: canContinue
                             ? () {
+
                                 final selected = selectedInterests.entries
                                     .where((e) => e.value)
                                     .map((e) => e.key)
                                     .toList();
-                                context.read<AuthBloc>().add(
-                                  SaveInterestsEvent(selected),
+                                context.read<UserCubit>().saveInterests(
+                                  selected,
                                 );
                                 Navigator.pushNamed(context, '/root');
                               }
+
                             : null,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: canContinue
-                              ? Colors.black
-                              : Colors.black.withOpacity(0.5),
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.primary.withOpacity(0.5),
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30),
                           ),
                         ),
-                        child: const Text(
-                          'Continue',
+                        child: Text(
+                          'Continue'.tr(),
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                            color: theme.colorScheme.onPrimary,
                           ),
                         ),
                       ),

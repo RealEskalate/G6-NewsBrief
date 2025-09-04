@@ -1,7 +1,9 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:newsbrief/core/storage/token_secure_storage.dart';
 import 'package:newsbrief/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:newsbrief/features/auth/presentation/cubit/auth_state.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -11,147 +13,166 @@ class EditProfilePage extends StatefulWidget {
 }
 
 class _EditProfilePageState extends State<EditProfilePage> {
-  final _nameController = TextEditingController(text: "John Doe");
+  late var _nameController = TextEditingController();
   final _oldPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
 
   bool _showChangeName = false;
   bool _showResetPassword = false;
-  TokenSecureStorage storage = TokenSecureStorage();
+  final TokenSecureStorage storage = TokenSecureStorage();
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: ""); // default empty
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          "Edit Profile",
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            // Avatar
-            Center(
-              child: Stack(
-                children: [
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundColor: Colors.grey.shade100,
-                    child: const Text(
-                      "J",
-                      style: TextStyle(
-                        fontSize: 40,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
+    final theme = Theme.of(context);
+
+    return BlocBuilder<AuthCubit, AuthState>(
+      builder: (context, state) {
+        String? fullName;
+        String? firstLetter;
+        if (state is AuthAuthenticated) {
+          fullName = state.user.fullName;
+          _nameController.text = state.user.fullName;
+          firstLetter = fullName.isNotEmpty ? fullName[0].toUpperCase() : "J";
+        }
+
+        return Scaffold(
+          backgroundColor: theme.scaffoldBackgroundColor,
+          appBar: AppBar(
+            leading: IconButton(
+              icon: Icon(Icons.arrow_back, color: theme.colorScheme.onBackground),
+              onPressed: () => Navigator.pop(context),
+            ),
+            title: Text(
+              "Edit Profile".tr(),
+              style: TextStyle(
+                color: theme.colorScheme.onBackground,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            backgroundColor: theme.scaffoldBackgroundColor,
+            elevation: 0,
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                // Avatar
+                Center(
+                  child: Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 50,
+                        backgroundColor: theme.colorScheme.surfaceVariant,
+                        child: Text(
+                          firstLetter ?? "J",
+                          style: TextStyle(
+                            fontSize: 40,
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                        ),
                       ),
-                    ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: CircleAvatar(
+                          radius: 18,
+                          backgroundColor: theme.colorScheme.primary,
+                          child: Icon(
+                            Icons.edit,
+                            color: theme.colorScheme.onPrimary,
+                            size: 18,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: CircleAvatar(
-                      radius: 18,
-                      backgroundColor: Colors.black,
-                      child: const Icon(
-                        Icons.edit,
-                        color: Colors.white,
-                        size: 18,
-                      ),
+                ),
+                const SizedBox(height: 40),
+
+                // Change Name button
+                ListTile(
+                  leading: Icon(Icons.person_outline, color: theme.colorScheme.onBackground),
+                  title: Text("Change Name".tr(), style: TextStyle(color: theme.colorScheme.onBackground)),
+                  trailing: Icon(
+                    _showChangeName ? Icons.expand_less : Icons.expand_more,
+                    color: theme.colorScheme.onBackground.withOpacity(0.6),
+                  ),
+                  onTap: () => setState(() => _showChangeName = !_showChangeName),
+                ),
+                if (_showChangeName) ...[
+                  const SizedBox(height: 10),
+                  _buildTextField(
+                    controller: _nameController,
+                    label: "Name".tr(),
+                    icon: Icons.person,
+                  ),
+                  const SizedBox(height: 15),
+                  TextButton(
+                    onPressed: () {},
+                    child: Text(
+                      'Change'.tr(),
+                      style: TextStyle(color: theme.colorScheme.primary, fontSize: 15),
                     ),
                   ),
                 ],
-              ),
-            ),
-            const SizedBox(height: 40),
 
-            // Change Name button
-            ListTile(
-              leading: const Icon(Icons.person_outline, color: Colors.black),
-              title: const Text("Change Name"),
-              trailing: Icon(
-                _showChangeName ? Icons.expand_less : Icons.expand_more,
-                color: Colors.grey,
-              ),
-              onTap: () {
-                setState(() => _showChangeName = !_showChangeName);
-              },
-            ),
-            if (_showChangeName) ...[
-              const SizedBox(height: 10),
-              _buildTextField(
-                controller: _nameController,
-                label: "Name",
-                icon: Icons.person,
-                maxLength: 30,
-              ),
-              const SizedBox(height: 15),
-              TextButton(
-                onPressed: () {},
-                child: Text(
-                  'Change',
-                  style: TextStyle(color: Colors.black, fontSize: 15),
+                // Reset Password button
+                ListTile(
+                  leading: Icon(Icons.key, color: theme.colorScheme.onBackground),
+                  title: Text("Reset Password".tr(), style: TextStyle(color: theme.colorScheme.onBackground)),
+                  trailing: Icon(
+                    _showResetPassword ? Icons.expand_less : Icons.expand_more,
+                    color: theme.colorScheme.onBackground.withOpacity(0.6),
+                  ),
+                  onTap: () => setState(() => _showResetPassword = !_showResetPassword),
                 ),
-              ),
-            ],
-
-            // Reset Password button
-            ListTile(
-              leading: const Icon(Icons.key, color: Colors.black),
-              title: const Text("Reset Password"),
-              trailing: Icon(
-                _showResetPassword ? Icons.expand_less : Icons.expand_more,
-                color: Colors.grey,
-              ),
-              onTap: () {
-                setState(() => _showResetPassword = !_showResetPassword);
-              },
+                if (_showResetPassword) ...[
+                  const SizedBox(height: 10),
+                  _buildTextField(
+                    controller: _oldPasswordController,
+                    label: "Old Password".tr(),
+                    icon: Icons.key,
+                    obscureText: true,
+                  ),
+                  const SizedBox(height: 15),
+                  _buildTextField(
+                    controller: _newPasswordController,
+                    label: "New Password".tr(),
+                    icon: Icons.key_rounded,
+                    obscureText: true,
+                  ),
+                  const SizedBox(height: 15),
+                  TextButton(
+                    onPressed: () async {
+                      final token = await storage.readAccessToken();
+                      if (token != null) {
+                        context.read<AuthCubit>().resetPassword(
+                          password: _oldPasswordController.text,
+                          token: token,
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("No valid token found".tr())),
+                        );
+                      }
+                    },
+                    child: Text(
+                      'Change'.tr(),
+                      style: TextStyle(color: theme.colorScheme.primary, fontSize: 15),
+                    ),
+                  ),
+                ],
+              ],
             ),
-            if (_showResetPassword) ...[
-              const SizedBox(height: 10),
-              _buildTextField(
-                controller: _oldPasswordController,
-                label: "Old Password",
-                icon: Icons.key,
-                obscureText: true,
-              ),
-              const SizedBox(height: 15),
-              _buildTextField(
-                controller: _newPasswordController,
-                label: "New Password",
-                icon: Icons.key_rounded,
-                obscureText: true,
-              ),
-              const SizedBox(height: 15),
-              TextButton(
-  onPressed: () async {
-    final token = await storage.readAccessToken(); // token is now String? instead of Future<String?>
-    if (token != null) {
-      context.read<AuthCubit>().resetPassword(password: _oldPasswordController.text, token: token);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("No valid token found")),
-      );
-    }
-  },
-  child: const Text(
-    'Change',
-    style: TextStyle(color: Colors.black, fontSize: 15),
-  ),
-),
-
-            ],
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -160,24 +181,21 @@ class _EditProfilePageState extends State<EditProfilePage> {
     required String label,
     required IconData icon,
     bool obscureText = false,
-    TextInputType keyboardType = TextInputType.text,
-    int? maxLength,
   }) {
+    final theme = Theme.of(context);
     return TextField(
       controller: controller,
       obscureText: obscureText,
-      keyboardType: keyboardType,
-      maxLength: maxLength,
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon, color: Colors.blue),
+        prefixIcon: Icon(icon, color: theme.colorScheme.primary),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.blue, width: 2),
+          borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
         ),
-        counterText: "",
       ),
+      style: TextStyle(color: theme.colorScheme.onBackground),
     );
   }
 }

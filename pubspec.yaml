@@ -37,6 +37,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   shared_preferences: ^2.5.3
+  easy_localization: ^3.0.8
   lucide_icons: ^0.257.0
   equatable: ^2.0.5
   dartz: ^0.10.1
@@ -47,7 +48,9 @@ dependencies:
   font_awesome_flutter: ^10.9.1
   dio: ^5.9.0
   flutter_secure_storage: ^9.2.4
+
   animations: ^2.0.11 
+
 
 
 dev_dependencies:
@@ -77,6 +80,7 @@ flutter:
   assets:
     - assets/icons/google_logo.png
     - assets/images/
+    - assets/translations/
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
