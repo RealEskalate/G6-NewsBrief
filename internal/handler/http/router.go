@@ -128,6 +128,7 @@ func (r *Router) SetupRoutes(router *gin.Engine) {
 		userProfile.POST("/subscriptions", r.subscriptionHandler.AddSubscription)
 		userProfile.DELETE("/subscriptions/:source_slug", r.subscriptionHandler.RemoveSubscription)
 		userProfile.POST("/topics", r.topicHandler.SubscribeTopic)
+		userProfile.DELETE("/topics/:topicID", r.topicHandler.UnsubscribeTopic)
 		userProfile.GET("/subscribed-topics", r.topicHandler.GetUserSubscribedTopics)
 		// personalized feed (For You)
 		userProfile.GET("/for-you", r.newsHandler.GetForYou)

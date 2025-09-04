@@ -116,6 +116,12 @@ func (uc *UserUsecase) Register(ctx context.Context, username, email, password, 
 		Role:         entity.UserRoleUser,
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
+		// Ensure preferences arrays are initialized as empty arrays (not null)
+		Preferences: entity.Preferences{
+			Topics:            []string{},
+			SubscribedSources: []string{},
+			Notifications:     entity.NotificationsPreferences{},
+		},
 	}
 
 	// Save user to database
@@ -691,6 +697,74 @@ func (uc *UserUsecase) SubscribeTopic(ctx context.Context, userID, topicID strin
 
 	if err := uc.userRepo.SubscribeTopic(ctx, userID, topicID); err != nil {
 		return errors.New("failed to subscribe user to topic")
+	}
+	return nil
+}
+
+// SubscribeTopics subscribes the user to multiple topics; if the list is empty, no-op.
+func (uc *UserUsecase) SubscribeTopics(ctx context.Context, userID string, topicIDs []string) error {
+	if userID == "" {
+		return errors.New("user ID is required")
+	}
+	// no-op when empty per requirement
+	if len(topicIDs) == 0 {
+		return nil
+	}
+	// validate user exists
+	if _, err := uc.userRepo.GetUserByID(ctx, userID); err != nil {
+		return errors.New("user not found")
+	}
+	// deduplicate and validate topics exist in batch
+	uniq := make(map[string]struct{}, len(topicIDs))
+	ids := make([]string, 0, len(topicIDs))
+	for _, tid := range topicIDs {
+		if tid == "" {
+			return errors.New("invalid topic id")
+		}
+		if _, ok := uniq[tid]; !ok {
+			uniq[tid] = struct{}{}
+			ids = append(ids, tid)
+		}
+	}
+	// fetch existing topics; compare
+	existing, err := uc.topicRepo.GetUserSubscribedTopics(ctx, ids)
+	if err != nil {
+		return errors.New("failed to validate topics")
+	}
+	existSet := make(map[string]struct{}, len(existing))
+	for _, t := range existing {
+		existSet[t.ID] = struct{}{}
+	}
+	var missing []string
+	for _, id := range ids {
+		if _, ok := existSet[id]; !ok {
+			missing = append(missing, id)
+		}
+	}
+	if len(missing) > 0 {
+		return fmt.Errorf("topics not found: %v", missing)
+	}
+	if err := uc.userRepo.SubscribeTopics(ctx, userID, ids); err != nil {
+		fmt.Println(err)
+		return errors.New("failed to subscribe user to topics")
+	}
+	return nil
+}
+
+// UnsubscribeTopic removes a topic for user
+func (uc *UserUsecase) UnsubscribeTopic(ctx context.Context, userID, topicID string) error {
+	if userID == "" || topicID == "" {
+		return errors.New("user ID and topic ID are required")
+	}
+	if _, err := uc.userRepo.GetUserByID(ctx, userID); err != nil {
+		return errors.New("user not found")
+	}
+	// Topic existence is optional for pull, but validate for consistency
+	if _, err := uc.topicRepo.GetTopicByID(ctx, topicID); err != nil {
+		return errors.New("topic not found")
+	}
+	if err := uc.userRepo.UnsubscribeTopic(ctx, userID, topicID); err != nil {
+		return errors.New("failed to unsubscribe user from topic")
 	}
 	return nil
 }

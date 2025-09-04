@@ -2,6 +2,7 @@ package mongodb
 
 import (
 	"context"
+
 	"github.com/RealEskalate/G6-NewsBrief/internal/domain/entity"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -29,6 +30,16 @@ func (r *topicRepository) CreateTopic(ctx context.Context, topic *entity.Topic) 
 
 func (r *topicRepository) GetTopicByID(ctx context.Context, topicID string) (*entity.Topic, error) {
 	filter := bson.M{"_id": topicID}
+	var topic entity.Topic
+	err := r.collection.FindOne(ctx, filter).Decode(&topic)
+	if err != nil {
+		return nil, err
+	}
+	return &topic, nil
+}
+
+func (r *topicRepository) GetTopicBySlug(ctx context.Context, slug string) (*entity.Topic, error) {
+	filter := bson.M{"slug": slug}
 	var topic entity.Topic
 	err := r.collection.FindOne(ctx, filter).Decode(&topic)
 	if err != nil {

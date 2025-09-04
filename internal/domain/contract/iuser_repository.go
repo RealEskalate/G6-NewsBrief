@@ -26,5 +26,9 @@ type IUserRepository interface {
 	// GetSubscriptions retrieves the list of subscribed source keys for a user.
 	GetSubscriptions(ctx context.Context, userID string) ([]string, error)
 	SubscribeTopic(ctx context.Context, userID, topicID string) error
+	// SubscribeTopics adds many topic IDs to preferences.topics using $addToSet with $each
+	SubscribeTopics(ctx context.Context, userID string, topicIDs []string) error
+	// UnsubscribeTopic pulls a topic ID from preferences.topics
+	UnsubscribeTopic(ctx context.Context, userID, topicID string) error
 	GetUserSubscribedTopicsByID(ctx context.Context, userID string) ([]string, error)
 }

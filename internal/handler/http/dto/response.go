@@ -131,8 +131,9 @@ type NotificationsDTO struct {
 // topics
 // TopicDTO represents a single topic in the API response.
 type TopicDTO struct {
+	ID 	   string            `json:"id"`
 	Slug       string            `json:"slug"`
-	TopicName  string            `json:"topic_name"`
+	// TopicName  string            `json:"topic_name"`
 	Label      BilingualFieldDTO `json:"label"`
 	StoryCount int               `json:"story_count"`
 }
@@ -147,6 +148,7 @@ func MapTopicsToDTOs(topics []entity.Topic) []TopicDTO {
 	topicDTOs := make([]TopicDTO, len(topics))
 	for i, topic := range topics {
 		topicDTOs[i] = TopicDTO{
+			ID: 	  topic.ID,
 			Slug: topic.Slug,
 			Label: BilingualFieldDTO{
 				EN: topic.Label.EN,

@@ -238,17 +238,50 @@ paths:
         '200': { description: OK }
   /me/topics:
     post:
-      operationId: subscribeTopic
+      operationId: subscribeTopics
       tags: [user]
-      summary: Subscribe to a topic
+      summary: Subscribe to multiple topics (batch)
+      description: |
+        Accepts an array of topic IDs. If the array is empty, the server is a no-op and returns 200.
+        If non-empty, the topics are subscribed idempotently and a success message is returned.
       security: [{ bearerAuth: [] }]
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/SubscribeTopicRequest' }
+            schema: { $ref: '#/components/schemas/SubscribeTopicsRequest' }
+            example:
+              topics: [
+                "f1d3ff84-12ab-4cde-98ef-abcdef123456",
+                "0cc175b9-6a6a-4e2f-bb1d-1234567890ab"
+              ]
       responses:
-        '200': { description: OK }
+        '200':
+          description: Subscribed (or no-op when empty)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MessageResponse' }
+              example: { message: "Subscribed to topic successfully" }
+        '401': { description: Unauthorized }
+  /me/topics/{topicID}:
+    delete:
+      operationId: unsubscribeTopic
+      tags: [user]
+      summary: Unsubscribe from a topic
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: topicID
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Unsubscribed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MessageResponse' }
+              example: { message: "Unsubscribed from topic successfully" }
+        '401': { description: Unauthorized }
   /me/subscribed-topics:
     get:
       operationId: listSubscribedTopics
@@ -310,7 +343,7 @@ paths:
         '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/MessageResponse' } } } }
         '400': { description: Invalid request }
         '401': { description: Unauthorized }
-  '409': { description: Already bookmarked }
+        '409': { description: Already bookmarked }
     get:
       operationId: listBookmarks
       tags: [user, bookmarks]
@@ -677,6 +710,13 @@ components:
       required: [topicID]
       properties:
         topicID: { type: string }
+    SubscribeTopicsRequest:
+      type: object
+      required: [topics]
+      properties:
+        topics:
+          type: array
+          items: { type: string }
     SourceDTO:
       type: object
       properties:

@@ -23,5 +23,9 @@ type IUserUseCase interface {
 	GetUserByID(ctx context.Context, userID string) (*entity.User, error)
 	UpdatePreferences(ctx context.Context, userID string, req dto.UpdatePreferencesRequest) (*entity.Preferences, error)
 	SubscribeTopic(ctx context.Context, userID, topicID string) error
+	// SubscribeTopics subscribes the user to multiple topics (idempotent per topic).
+	SubscribeTopics(ctx context.Context, userID string, topicIDs []string) error
+	// UnsubscribeTopic removes a single topic subscription for the user.
+	UnsubscribeTopic(ctx context.Context, userID, topicID string) error
 	GetUserSubscribedTopics(ctx context.Context, userID string) ([]*entity.Topic, error)
 }
