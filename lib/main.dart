@@ -38,7 +38,6 @@ import 'core/theme/theme_cubit.dart';
 import 'features/auth/presentation/pages/signup_landing.dart';
 
 import 'package:newsbrief/features/auth/presentation/pages/login.dart';
-import 'package:newsbrief/features/auth/presentation/pages/signup_landing.dart';
 import 'package:newsbrief/features/auth/presentation/pages/profile_edit.dart';
 import 'package:newsbrief/features/auth/presentation/pages/profile_page.dart';
 import 'package:newsbrief/features/auth/presentation/pages/setting.dart';
