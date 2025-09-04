@@ -14,7 +14,6 @@ type LoginRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
-
 // RegisterRequest is the DTO for user registration.
 type RegisterRequest struct {
 	Username string `json:"username" binding:"required,min=3,max=32"`
@@ -81,4 +80,9 @@ type UpdatePreferencesRequest struct {
 	BriefType     *string                  `json:"brief_type"`
 	DataSaver     *bool                    `json:"data_saver"`
 	Notifications *NotificationsRequestDTO `json:"notifications,omitempty"`
+}
+
+// SaveBookmarkRequest is the DTO to bookmark a news item
+type SaveBookmarkRequest struct {
+	NewsID string `json:"news_id" binding:"required"`
 }

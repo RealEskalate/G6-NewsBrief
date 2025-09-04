@@ -1,6 +1,8 @@
 package contract
 
 import (
+	"context"
+
 	"github.com/RealEskalate/G6-NewsBrief/internal/domain/entity"
 )
 
@@ -11,5 +13,7 @@ type INewsRepository interface {
 	FindAll(page, limit int) ([]*entity.News, int64, int, error)
 	// FindBySourceIDs returns paginated news filtered by a set of source IDs.
 	FindBySourceIDs(sourceIDs []string, page, limit int) ([]*entity.News, int64, int, error)
+	// FindByIDs returns a list of news by IDs (no pagination, preserves order not guaranteed)
+	FindByIDs(ctx context.Context, ids []string) ([]*entity.News, error)
 	// Delete(id string) error
 }
