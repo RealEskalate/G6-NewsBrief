@@ -1,10 +1,12 @@
+// news_card.dart
 import 'package:flutter/material.dart';
 
-class NewsCard extends StatelessWidget {
+class NewsCard extends StatefulWidget {
   final String title;
   final String description;
   final String source;
   final String imageUrl;
+  final VoidCallback? onBookmark;
 
   const NewsCard({
     super.key,
@@ -12,87 +14,106 @@ class NewsCard extends StatelessWidget {
     required this.description,
     required this.source,
     required this.imageUrl,
+    this.onBookmark,
   });
 
   @override
+  State<NewsCard> createState() => _NewsCardState();
+}
+
+class _NewsCardState extends State<NewsCard> {
+  @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 2,
-      margin: const EdgeInsets.symmetric(vertical: 5),
-      color: Color.fromARGB(255, 255, 255, 255),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // LEFT SIDE (text content)
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.public, size: 14, color: Colors.grey),
-                      const SizedBox(width: 4),
-                      Text(
-                        source,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      elevation: 3,
+      color: Colors.white,
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Image
+          widget.imageUrl.isNotEmpty
+              ? Image.network(
+                  widget.imageUrl,
+                  height: 180,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                )
+              : Container(
+                  height: 180,
+                  width: double.infinity,
+                  color: Colors.grey[300],
+                  child: const Icon(Icons.image, size: 50, color: Colors.grey),
+                ),
+
+          // Content
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
                   ),
-                  const SizedBox(height: 5),
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    description,
-                    style: const TextStyle(fontSize: 14, color: Colors.black54),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  widget.description,
+                  style: const TextStyle(fontSize: 14, color: Colors.black87),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  widget.source,
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                const SizedBox(height: 12),
+
+                // Action buttons row
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: widget.onBookmark,
+                      child: const Icon(
                         Icons.bookmark_border,
                         size: 18,
                         color: Colors.black,
                       ),
-                      const SizedBox(width: 10),
-                      const Icon(
-                        Icons.thumb_down_alt_outlined,
+                    ),
+                    const SizedBox(width: 10),
+                    const Icon(
+                      Icons.thumb_down_alt_outlined,
+                      size: 18,
+                      color: Colors.black,
+                    ),
+                    const SizedBox(width: 10),
+                    GestureDetector(
+                      onTap: () {
+                        // TODO: Hook up FlutterTTS here
+                        print("Play news audio: ${widget.title}");
+                      },
+                      child: const Icon(
+                        Icons.volume_up,
                         size: 18,
                         color: Colors.black,
                       ),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            const SizedBox(width: 12),
-            // RIGHT SIDE (image)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.network(
-                imageUrl,
-                width: 100,
-                height: 100,
-                fit: BoxFit.cover,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -112,6 +133,7 @@ class NewsCardData {
   });
 }
 
+// 🔹 Dummy sample data
 List<NewsCardData> sampleNews = [
   NewsCardData(
     title: "Ethiopia Launches New Tech Hub in Addis Ababa",

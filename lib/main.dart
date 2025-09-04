@@ -1,13 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:newsbrief/core/navigation/app_navigator.dart';
 import 'package:newsbrief/core/network_info/api_service.dart';
 import 'package:newsbrief/core/storage/token_secure_storage.dart';
 import 'package:newsbrief/features/auth/datasource/datasources/auth_local_data_sourcs.dart';
 import 'package:newsbrief/features/auth/datasource/datasources/auth_remote_data_sources.dart';
 import 'package:newsbrief/features/auth/datasource/repositories/auth_repository_impl.dart';
 import 'package:newsbrief/features/auth/domain/usecases/login_with_google_usecase.dart';
-import 'features/auth/presentation/pages/signup_landing.dart';
+import 'package:newsbrief/features/auth/domain/usecases/login_user.dart';
+import 'package:newsbrief/features/auth/domain/usecases/register_user.dart';
+import 'package:newsbrief/features/auth/domain/usecases/get_me.dart';
+import 'package:newsbrief/features/auth/domain/usecases/logout.dart';
+import 'package:newsbrief/features/auth/domain/usecases/forgot_password.dart';
+import 'package:newsbrief/features/auth/domain/usecases/reset_password.dart';
+import 'package:newsbrief/features/auth/domain/usecases/verify_email.dart';
+import 'package:newsbrief/features/auth/domain/usecases/request_verification_email.dart';
+import 'package:newsbrief/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:newsbrief/features/auth/presentation/pages/login.dart';
+import 'package:newsbrief/features/auth/presentation/pages/signup_landing.dart';
 import 'package:newsbrief/features/auth/presentation/pages/profile_edit.dart';
 import 'package:newsbrief/features/auth/presentation/pages/profile_page.dart';
 import 'package:newsbrief/features/auth/presentation/pages/setting.dart';
@@ -16,18 +26,9 @@ import 'package:newsbrief/features/news/presentation/pages/home_page.dart';
 import 'package:newsbrief/features/news/presentation/pages/root_page.dart';
 import 'package:newsbrief/features/news/presentation/pages/saved_pages.dart';
 import 'package:newsbrief/features/news/presentation/pages/search_page.dart';
-import 'package:newsbrief/features/onboarding/datasources/local_storage.dart';
 import 'package:newsbrief/features/onboarding/presentation/onboarding.dart';
-import 'features/onboarding/domain/check_first_run.dart';
-import 'features/auth/domain/usecases/login_user.dart';
-import 'features/auth/domain/usecases/register_user.dart';
-import 'features/auth/domain/usecases/get_me.dart';
-import 'features/auth/domain/usecases/logout.dart';
-import 'features/auth/domain/usecases/forgot_password.dart';
-import 'features/auth/domain/usecases/reset_password.dart';
-import 'features/auth/domain/usecases/verify_email.dart';
-import 'features/auth/domain/usecases/request_verification_email.dart';
-import 'features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:newsbrief/features/onboarding/datasources/local_storage.dart';
+import 'package:newsbrief/features/onboarding/domain/check_first_run.dart';
 
 void main() {
   const baseUrl = 'https://news-brief-core-api-excr.onrender.com/api/v1';
@@ -70,18 +71,49 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'NewsBrief',
       debugShowCheckedModeBanner: false,
-      routes: {
-        '/login': (context) => const Login(),
-        '/signup': (context) => const SignupLandingPage(),
-        '/edit': (context) => const EditProfilePage(),
-        '/setting': (context) => const SettingsPage(),
-        '/root': (context) => const RootPage(),
-        '/home': (context) => const HomePage(),
-        '/following': (context) => const FollowingPage(),
-        '/search': (context) => const SearchPage(),
-        '/saved': (context) => const SavedPage(),
-        '/profile': (context) => const ProfilePage(),
+
+      // Use onGenerateRoute for all named routes
+      onGenerateRoute: (settings) {
+        Widget page;
+        switch (settings.name) {
+          case '/login':
+            page = const Login();
+            break;
+          case '/signup':
+            page = const SignupLandingPage();
+            break;
+          case '/edit':
+            page = const EditProfilePage();
+            break;
+          case '/setting':
+            page = const SettingsPage();
+            break;
+          case '/root':
+            page = const RootPage();
+            break;
+          case '/home':
+            page = const HomePage();
+            break;
+          case '/following':
+            page = const FollowingPage();
+            break;
+          case '/search':
+            page = const SearchPage();
+            break;
+          case '/saved':
+            page = const SavedPage();
+            break;
+          case '/profile':
+            page = const ProfilePage();
+            break;
+          default:
+            page = const Login();
+        }
+
+        return AppNavigator.slidePageRoute(page);
       },
+
+      // Initial screen for onboarding
       home: FutureBuilder<bool>(
         future: checkFirstRun.shouldShowOnboarding(),
         builder: (context, snapshot) {
@@ -98,7 +130,7 @@ class MyApp extends StatelessWidget {
           if (snapshot.data == true) {
             return OnboardingScreenWrapper(checkFirstRun: checkFirstRun);
           } else {
-            return const Login(); // 👈 or SignupLandingPage, depending on your flow
+            return const Login();
           }
         },
       ),
@@ -116,8 +148,9 @@ class OnboardingScreenWrapper extends StatelessWidget {
     return OnboardingScreen(
       onFinish: () async {
         await checkFirstRun.completeOnboarding();
-        // Use a single navigation method to avoid redundancy
-        Navigator.of(context).pushReplacementNamed('/login');
+
+        // Use AppNavigator for consistent slide transition
+        AppNavigator.pushReplacement(context, const Login());
       },
     );
   }

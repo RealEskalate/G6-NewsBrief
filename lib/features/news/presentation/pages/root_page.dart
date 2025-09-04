@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:animations/animations.dart'; // <-- for PageTransitionSwitcher
 import 'package:newsbrief/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:newsbrief/features/auth/presentation/cubit/auth_state.dart';
 import 'package:newsbrief/features/auth/presentation/pages/profile_page.dart';
@@ -18,20 +19,36 @@ class RootPage extends StatefulWidget {
 class _RootPageState extends State<RootPage> {
   int currentPage = 0;
 
+  final List<Widget> _pages = const [
+    HomePage(),
+    FollowingPage(),
+    SearchPage(),
+    SavedPage(),
+    ProfilePage(),
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: IndexedStack(
-        index: currentPage,
-        children: const [
-          HomePage(),
-          FollowingPage(),
-          SearchPage(),
-          SavedPage(),
-          ProfilePage(),
-        ],
+
+      // 🔹 Instead of IndexedStack, use PageTransitionSwitcher for animation
+      body: PageTransitionSwitcher(
+        duration: const Duration(milliseconds: 300),
+        transitionBuilder: (child, animation, secondaryAnimation) {
+          const begin = Offset(1.0, 0.0);
+          const end = Offset.zero;
+          final tween = Tween(begin: begin, end: end)
+              .chain(CurveTween(curve: Curves.ease));
+
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          );
+        },
+        child: _pages[currentPage], // current page
       ),
+
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -50,13 +67,9 @@ class _RootPageState extends State<RootPage> {
 
             if (state is AuthAuthenticated) {
               final name = state.user.email;
-              print(name);
               if (name.isNotEmpty) {
                 firstLetter = name[0].toUpperCase();
-                print("user UnAuthcaited");
               }
-            } else {
-              print("user UnAuthcaited");
             }
 
             return NavigationBar(
