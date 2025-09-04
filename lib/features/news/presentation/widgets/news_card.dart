@@ -1,11 +1,13 @@
+// news_card.dart
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 
-class NewsCard extends StatelessWidget {
+class NewsCard extends StatefulWidget {
   final String title;
   final String description;
   final String source;
   final String imageUrl;
+  final VoidCallback? onBookmark;
 
   const NewsCard({
     super.key,
@@ -13,8 +15,14 @@ class NewsCard extends StatelessWidget {
     required this.description,
     required this.source,
     required this.imageUrl,
+    this.onBookmark,
   });
 
+  @override
+  State<NewsCard> createState() => _NewsCardState();
+}
+
+class _NewsCardState extends State<NewsCard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -23,90 +31,120 @@ class NewsCard extends StatelessWidget {
     final secondaryTextColor = theme.textTheme.bodyMedium?.color ?? Colors.grey;
 
     return Card(
-      elevation: 2,
-      margin: const EdgeInsets.symmetric(vertical: 5),
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      elevation: 3,
       color: cardColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // LEFT SIDE (text content)
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.public, size: 14, color: secondaryTextColor),
-                      const SizedBox(width: 4),
-                      Text(
-                        source.tr(),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: secondaryTextColor,
-                        ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 🔹 Image
+          widget.imageUrl.isNotEmpty
+              ? Image.network(
+                  widget.imageUrl,
+                  height: 180,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                )
+              : Container(
+                  height: 180,
+                  width: double.infinity,
+                  color: Colors.grey[300],
+                  child: const Icon(Icons.image, size: 50, color: Colors.grey),
+                ),
+
+          // 🔹 Content
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Source row with icon
+                Row(
+                  children: [
+                    Icon(Icons.public, size: 14, color: secondaryTextColor),
+                    const SizedBox(width: 4),
+                    Text(
+                      widget.source.tr(),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: secondaryTextColor,
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    title.tr(),
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: textColor,
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                  ],
+                ),
+                const SizedBox(height: 6),
+
+                // Title
+                Text(
+                  widget.title.tr(),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: textColor,
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    description.tr(),
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: textColor.withOpacity(0.7),
-                    ),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+
+                const SizedBox(height: 6),
+
+                // Description
+                Text(
+                  widget.description.tr(),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: textColor.withOpacity(0.7),
                   ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+
+                const SizedBox(height: 12),
+
+                // 🔹 Action buttons row
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: widget.onBookmark,
+                      child: Icon(
                         Icons.bookmark_border,
                         size: 18,
                         color: textColor,
                       ),
-                      const SizedBox(width: 10),
-                      Icon(
-                        Icons.thumb_down_alt_outlined,
+                    ),
+                    const SizedBox(width: 10),
+                    Icon(
+                      Icons.thumb_down_alt_outlined,
+                      size: 18,
+                      color: textColor,
+                    ),
+                    const SizedBox(width: 10),
+                    GestureDetector(
+                      onTap: () {
+                        // TODO: Hook up FlutterTTS here
+                        debugPrint("Play news audio: ${widget.title}");
+                      },
+                      child: Icon(
+                        Icons.volume_up,
                         size: 18,
                         color: textColor,
                       ),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            const SizedBox(width: 12),
-            // RIGHT SIDE (image)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.network(
-                imageUrl,
-                width: 100,
-                height: 100,
-                fit: BoxFit.cover,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
+
 
 class NewsCardData {
   final String title;
@@ -122,7 +160,7 @@ class NewsCardData {
   });
 }
 
-// Use keys for translation
+
 List<NewsCardData> sampleNews = [
   NewsCardData(
     title: 'ethiopia_tech_hub_title',

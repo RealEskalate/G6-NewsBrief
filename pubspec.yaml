@@ -48,7 +48,9 @@ dependencies:
   font_awesome_flutter: ^10.9.1
   dio: ^5.9.0
   flutter_secure_storage: ^9.2.4
-  flutter_web_auth_2: ^4.1.0
+
+  animations: ^2.0.11 
+
 
 
 dev_dependencies:
