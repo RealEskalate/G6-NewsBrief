@@ -17,4 +17,6 @@ type INewsUsecase interface {
 	ListTrending(page, limit int) ([]*entity.News, int64, int, error)
 	// ListToday returns top-N news for today only (fixed 4 by default)
 	ListToday(limit int) ([]*entity.News, int64, int, error)
+	// allow admin to create news
+	AdminCreateNews(ctx context.Context, title, body, language, sourceID string, topicIDs []string) (*entity.News, error)
 }

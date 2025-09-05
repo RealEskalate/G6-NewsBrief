@@ -15,6 +15,8 @@ type INewsRepository interface {
 	FindTrending(page, limit int) ([]*entity.News, int64, int, error)
 	// FindToday returns today's news (from local midnight to now), limited and sorted by published_at desc
 	FindToday(limit int) ([]*entity.News, int64, int, error)
+	// create news by admin
+	AdminCreateNews(ctx context.Context, news *entity.News) error
 	// FindBySourceIDs returns paginated news filtered by a set of source IDs.
 	FindBySourceIDs(sourceIDs []string, page, limit int) ([]*entity.News, int64, int, error)
 	// FindByIDs returns a list of news by IDs (no pagination, preserves order not guaranteed)

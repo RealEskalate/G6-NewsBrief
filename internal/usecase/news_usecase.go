@@ -2,19 +2,48 @@ package usecase
 
 import (
 	"context"
+	"time"
 
 	"github.com/RealEskalate/G6-NewsBrief/internal/domain/contract"
 	"github.com/RealEskalate/G6-NewsBrief/internal/domain/entity"
 )
 
 type newsUsecase struct {
-	repo       contract.INewsRepository
-	userRepo   contract.IUserRepository
-	sourceRepo contract.ISourceRepository
+	repo         contract.INewsRepository
+	userRepo     contract.IUserRepository
+	sourceRepo   contract.ISourceRepository
+	uuidGen      contract.IUUIDGenerator
+	SummarizerUC contract.ISummarizerService
 }
 
-func NewNewsUsecase(repo contract.INewsRepository, userRepo contract.IUserRepository, sourceRepo contract.ISourceRepository) contract.INewsUsecase {
-	return &newsUsecase{repo: repo, userRepo: userRepo, sourceRepo: sourceRepo}
+func NewNewsUsecase(repo contract.INewsRepository, userRepo contract.IUserRepository, sourceRepo contract.ISourceRepository, uuidGen contract.IUUIDGenerator, summarizerUC contract.ISummarizerService) contract.INewsUsecase {
+	return &newsUsecase{repo: repo, userRepo: userRepo, sourceRepo: sourceRepo, uuidGen: uuidGen, SummarizerUC: summarizerUC}
+}
+
+func (u *newsUsecase) AdminCreateNews(ctx context.Context, title, body, language, sourceID string, topicIDs []string) (*entity.News, error) {
+	// Create news entity
+	news := &entity.News{
+		ID:          u.uuidGen.NewUUID(),
+		Title:       title,
+		Body:        body,
+		SummaryEN:   "",
+		SummaryAM:   "",
+		Language:    language,
+		SourceID:    sourceID,
+		Topics:      topicIDs,
+		PublishedAt: time.Now(),
+	}
+
+	// Save to repository
+	if err := u.repo.AdminCreateNews(ctx, news); err != nil {
+		return nil, err
+	}
+	// summarize the news after creation
+	_, err := u.SummarizerUC.Summarize(news.ID)
+	if err != nil {
+		return nil, err
+	}
+	return news, nil
 }
 
 func (u *newsUsecase) ListNews(page, limit int) ([]*entity.News, int64, int, error) {

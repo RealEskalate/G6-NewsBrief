@@ -181,3 +181,18 @@ func (h *NewsHandler) GetTrendingNews(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, resp)
 }
+
+// Admin create news
+func (h *NewsHandler) AdminCreateNews(c *gin.Context) {
+	var req dto.AdminCreateNews
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body: " + err.Error()})
+		return
+	}
+	news, err := h.uc.AdminCreateNews(c.Request.Context(), req.Title, req.Body, req.Language, req.SourceID, req.TopicsID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, news)
+}

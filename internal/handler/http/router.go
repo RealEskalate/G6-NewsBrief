@@ -46,7 +46,7 @@ func NewRouter(userUsecase contract.IUserUseCase, emailVerUC contract.IEmailVeri
 	// sourceRepo isn't passed here; build it inside main and expose via usecases. Since router only gets sourceUC, we cannot access repo from here.
 	// Instead, pass sourceRepo to router.NewRouter from main by adding it to params in future if needed.
 	// For now, assume we can obtain it from sourceUC via GetAll + map by slug when necessary, but ListForYou resolves via sourceRepo directly injected in main.
-	newsUC := usecase.NewNewsUsecase(newsRepo, userRepo, sourceRepo)
+	newsUC := usecase.NewNewsUsecase(newsRepo, userRepo, sourceRepo, uuidGen, summarizerUC)
 	bookmarkUC := usecase.NewBookmarkUsecase(bookmarkRepo, newsRepo, uuidGen)
 	return &Router{
 		userHandler:         NewUserHandler(userUsecase),
@@ -124,6 +124,7 @@ func (r *Router) SetupRoutes(router *gin.Engine) {
 	{
 		// admin routes
 		admin.POST("/create-topics", r.topicHandler.CreateTopic)
+		admin.POST("/news", r.newsHandler.AdminCreateNews)
 		// admin.POST("/topics/:id", r.topicHandler.UpdateTopic)
 		// admin.DELETE("/topics/:id", r.topicHandler.DeleteTopic)
 		admin.POST("/create-sources", r.sourceHandler.CreateSource)
