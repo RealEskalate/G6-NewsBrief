@@ -26,18 +26,13 @@ class AuthRemoteDataSources {
     }
   }
 
-  Future<AuthResponseModel> register(
-    String email,
-    String password,
-    String name,
-  ) async {
+  Future<void> register(String email, String password, String name) async {
     try {
       final res = await api.post(
         '/auth/register',
         data: {'email': email, 'password': password, 'fullname': name},
       );
       print('Register Response: ${res.data}');
-      return AuthResponseModel.fromJson(res.data);
     } catch (e) {
       print('Register Error: $e');
       rethrow;
@@ -171,7 +166,7 @@ class AuthRemoteDataSources {
         "662810615091-1h5hpu7ehtnvlo4bsnn934as57fjtqar.apps.googleusercontent.com",
   );
 
-  Future<void> loginWithGoogle() async {
+  Future<TokensModel> loginWithGoogle() async {
     try {
       // Step 1: Trigger Google Sign-In
       GoogleSignInAccount? googleUser;
@@ -185,7 +180,7 @@ class AuthRemoteDataSources {
         print(
           "⚠️ Google Sign-In returned null (user canceled OR sign-in failed).",
         );
-        return;
+        return TokensModel(accessToken: '', refreshToken: '');
       }
 
       // Step 2: Get authentication details (ID token & access token)
@@ -197,14 +192,14 @@ class AuthRemoteDataSources {
 
       if (idToken == null) {
         print("❌ Failed to get ID Token");
-        // return;
+        return TokensModel(accessToken: '', refreshToken: '');
       }
 
       print("✅ Google ID Token: $idToken");
       print("✅ Google Access Token: $accessToken");
 
       final response = await api.post(
-        'google/mobile/token',
+        '/auth/google/mobile/token',
         data: {"id_token": idToken},
       );
 
@@ -217,11 +212,14 @@ class AuthRemoteDataSources {
 
         print("🔑 Access Token: $serverAccessToken");
         print("🔑 Refresh Token: $serverRefreshToken");
+        return TokensModel.fromJson(data);
       } else {
         print("❌ Server error: ${response.data}");
+        return TokensModel(accessToken: '', refreshToken: '');
       }
     } catch (e) {
       print("❌ Google sign in failed: $e");
+      return TokensModel(accessToken: '', refreshToken: '');
     }
   }
 
@@ -231,12 +229,17 @@ class AuthRemoteDataSources {
     return response.data["subscriptions"];
   }
 
-  Future<void> subscribeToSources({required String source}) async {
+  Future<void> subscribeToSources({required String sources}) async {
     try {
-      final res = await api.post("/me/subscriptions", data: source);
-      print(res);
+      final res = await api.post(
+        "/me/subscriptions",
+        data: {
+          "source_key": sources, // ✅ match API schema
+        },
+      );
+      print(res.data);
     } catch (e) {
-      log("SubscribeToSources $e");
+      log("SubscribeToSources Exception: $e");
     }
   }
 
@@ -253,7 +256,7 @@ class AuthRemoteDataSources {
     try {
       final res = await api.get("/me/subscribed-topics");
       print(res.data);
-      return res.data['topics'];
+      return res.data;
     } catch (e) {
       log("getSubscribedTopics $e");
       rethrow;
@@ -289,6 +292,24 @@ class AuthRemoteDataSources {
       return res.data['topics'];
     } catch (e) {
       log("Topics $e");
+      rethrow;
+    }
+  }
+
+  Future<void> subscribeTopics(List<String> topicIds) async {
+    try {
+      await api.post('/me/topics', data: {'topics': topicIds});
+    } catch (e) {
+      log("SubscribeTopics $e");
+      rethrow;
+    }
+  }
+
+  Future<void> unsubscribeTopic(String topicId) async {
+    try {
+      await api.delete('/me/topics/$topicId');
+    } catch (e) {
+      log("UnsubscribeTopic $e");
       rethrow;
     }
   }

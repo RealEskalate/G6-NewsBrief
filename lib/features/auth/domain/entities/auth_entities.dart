@@ -9,7 +9,7 @@ class UserEntity {
   final DateTime? createdAt;
   List<String>? interest;
   List<String>? subscribedSources;
-  bool notification;
+  final Map<String, dynamic> notification;
 
   UserEntity({
     required this.id,

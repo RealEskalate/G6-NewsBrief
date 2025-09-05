@@ -1,5 +1,4 @@
 import 'package:easy_localization/easy_localization.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:newsbrief/features/auth/presentation/cubit/user_cubit.dart';
@@ -12,9 +11,9 @@ class ManageSubscriptionPage extends StatefulWidget {
 }
 
 class _ManageSubscriptionPageState extends State<ManageSubscriptionPage> {
-  List<String> allSources = [];
-  Set<String> subscribedSources = {};
-  List<String> filteredSources = [];
+  List<Map<String, dynamic>> allSources = [];
+  Set<String> subscribedSources = {}; // stores slugs
+  List<Map<String, dynamic>> filteredSources = [];
 
   final TextEditingController searchController = TextEditingController();
 
@@ -29,18 +28,19 @@ class _ManageSubscriptionPageState extends State<ManageSubscriptionPage> {
 
   void _onSearchChanged(String query) {
     setState(() {
-      filteredSources = allSources
-          .where((source) => source.toLowerCase().contains(query.toLowerCase()))
-          .toList();
+      filteredSources = allSources.where((source) {
+        final name = (source['name'] ?? '').toString();
+        return name.toLowerCase().contains(query.toLowerCase());
+      }).toList();
     });
   }
 
-  void _toggleSubscription(String source) {
+  void _toggleSubscription(String slug) {
     final userCubit = context.read<UserCubit>();
-    if (subscribedSources.contains(source)) {
-      userCubit.removeSources(source);
+    if (subscribedSources.contains(slug)) {
+      userCubit.removeSources(slug); // unsubscribe
     } else {
-      userCubit.addSources(source);
+      userCubit.addSources(slug); // subscribe
     }
   }
 
@@ -58,7 +58,7 @@ class _ManageSubscriptionPageState extends State<ManageSubscriptionPage> {
           icon: Icon(Icons.arrow_back, color: theme.colorScheme.onBackground),
         ),
         title: Text(
-          "Manage Subscriptions".tr(),
+          "manage_subscriptions".tr(),
           style: TextStyle(
             color: theme.colorScheme.onBackground,
             fontWeight: FontWeight.bold,
@@ -69,12 +69,12 @@ class _ManageSubscriptionPageState extends State<ManageSubscriptionPage> {
         listener: (context, state) {
           if (state is AllSourcesLoaded) {
             setState(() {
-              allSources = state.sources;
+              allSources = state.sources; // full list of sources (maps)
               filteredSources = allSources; // show all initially
             });
           } else if (state is SubscribedSourcesLoaded) {
             setState(() {
-              subscribedSources = state.sources.toSet();
+              subscribedSources = state.sources.toSet(); // list of slugs
             });
           } else if (state is UserActionSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -99,8 +99,6 @@ class _ManageSubscriptionPageState extends State<ManageSubscriptionPage> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final theme = Theme.of(context);
-
           return Column(
             children: [
               // 🔍 Search bar
@@ -113,7 +111,7 @@ class _ManageSubscriptionPageState extends State<ManageSubscriptionPage> {
                   controller: searchController,
                   onChanged: _onSearchChanged,
                   decoration: InputDecoration(
-                    hintText: "Search for sources...".tr(),
+                    hintText: "search_for_sources".tr(),
                     hintStyle: TextStyle(
                       color: theme.colorScheme.onBackground.withOpacity(0.6),
                     ),
@@ -148,15 +146,24 @@ class _ManageSubscriptionPageState extends State<ManageSubscriptionPage> {
                   itemCount: filteredSources.length,
                   itemBuilder: (context, index) {
                     final source = filteredSources[index];
-                    final isSubscribed = subscribedSources.contains(source);
+                    final name = source['name'] ?? '';
+                    final slug = source['slug'] ?? '';
+                    final isSubscribed = subscribedSources.contains(slug);
 
                     return ListTile(
                       title: Text(
-                        source,
+                        name,
                         style: TextStyle(color: theme.colorScheme.onBackground),
                       ),
+                      subtitle: Text(
+                        source['description'] ?? '',
+                        style: TextStyle(
+                          color: theme.colorScheme.onBackground.withOpacity(0.6),
+                          fontSize: 12,
+                        ),
+                      ),
                       trailing: ElevatedButton(
-                        onPressed: () => _toggleSubscription(source),
+                        onPressed: () => _toggleSubscription(slug),
                         style: ElevatedButton.styleFrom(
                           foregroundColor: isSubscribed
                               ? theme.colorScheme.onPrimary
@@ -173,7 +180,7 @@ class _ManageSubscriptionPageState extends State<ManageSubscriptionPage> {
                           ),
                         ),
                         child: Text(
-                          isSubscribed ? "Subscribed" : "Subscribe".tr(),
+                          isSubscribed ? "subscribed".tr() : "subscribe".tr(),
                         ),
                       ),
                     );
