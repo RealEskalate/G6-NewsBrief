@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dashboard_page.dart';
-import 'sources_page.dart';
-import 'topics_page.dart';
+import 'sources_page.dart'; // New API-integrated SourcesPage
+import 'topics_page.dart';  // New API-integrated TopicsPage
 import 'news_page.dart';
-import 'admin_settings_page.dart'; // Import the new settings page
+import 'admin_settings_page.dart';
 
 class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({super.key});
@@ -15,10 +15,11 @@ class AdminDashboardPage extends StatefulWidget {
 class _AdminDashboardPageState extends State<AdminDashboardPage> {
   int _selectedIndex = 0;
 
+  // Updated pages with new API-integrated versions
   final List<Widget> _pages = [
     const DashboardPage(),
-    const SourcesPage(),
-    const TopicsPage(),
+    const SourcesPage(), // Use API-integrated SourcesPage
+    const TopicsPage(),  // Use API-integrated TopicsPage
     const AddNewsPage(),
   ];
 
@@ -83,7 +84,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               ),
               onPressed: () => _onItemTapped(3),
             ),
-            // Profile avatar icon
             GestureDetector(
               onTap: () {
                 Navigator.push(
@@ -95,7 +95,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 radius: 15,
                 backgroundColor: const Color(0xFF2563EB),
                 child: const Text(
-                  "A", // Replace with first letter of admin name if available
+                  "A",
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 14,

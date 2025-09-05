@@ -77,7 +77,7 @@ class UserCubit extends Cubit<UserState> {
       emit(UserError(_msg(e)));
     }
   }
-  
+
   Future<void> removeTopic(String topicSlug) async {
     emit(UserLoading());
     try {
