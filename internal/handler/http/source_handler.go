@@ -29,6 +29,7 @@ func (h *SourceHandler) CreateSource(c *gin.Context) {
 		c.JSON(http.StatusForbidden, dto.ErrorResponse{Error: "Forbidden: Admins only"})
 		return
 	}
+
 	userRoleStr, ok := userRole.(string)
 	if !ok || strings.TrimSpace(userRoleStr) != "admin" {
 		c.JSON(http.StatusForbidden, dto.ErrorResponse{Error: "Forbidden: Admins only"})

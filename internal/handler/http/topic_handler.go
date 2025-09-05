@@ -40,6 +40,12 @@ func (h *TopicHandler) CreateTopic(c *gin.Context) {
 		StoryCount: 0,
 	}
 
+	userRole, exists := c.Get("userRole")
+	if !exists || userRole != "admin" {
+		c.JSON(http.StatusForbidden, dto.ErrorResponse{Error: "Forbidden: Admins only"})
+		return
+	}
+
 	if err := h.topicUsecase.CreateTopic(c.Request.Context(), &topic); err != nil {
 		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: "Failed to create topic"})
 		return
