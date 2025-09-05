@@ -39,10 +39,9 @@ func SeedAdminUsingUC(
 		Email:    email,
 		Password: password,
 		Fullname: "admin",
-		Username: "admin",
 	}
 
-	if _, err := userUC.Register(ctx, req.Username, req.Email, req.Password, req.Fullname); err != nil {
+	if _, err := userUC.Register(ctx, req.Email, req.Password, req.Fullname); err != nil {
 		return fmt.Errorf("seeder: register failed: %w", err)
 	}
 

@@ -10,7 +10,7 @@ type IUserRepository interface {
 	CreateUser(ctx context.Context, user *entity.User) error
 	GetUserByID(ctx context.Context, id string) (*entity.User, error)
 	// GetUserByUsername retrieves a user by username.
-	GetUserByUsername(ctx context.Context, username string) (*entity.User, error)
+	// GetUserByUsername(ctx context.Context, username string) (*entity.User, error)
 	// GetUserByEmail retrieves a user by email.
 	GetUserByEmail(ctx context.Context, email string) (*entity.User, error)
 	// UpdateUser updates an existing user and returns the updated user.
@@ -20,15 +20,16 @@ type IUserRepository interface {
 	// DeleteUser removes a user by ID.
 	DeleteUser(ctx context.Context, id string) error
 	// AddSubscription adds a source key to a user's list of subscriptions.
-	AddSubscription(ctx context.Context, userID string, sourceKey string) error
+	AddSourceSubscription(ctx context.Context, userID string, sourceKey string) error
 	// RemoveSubscription removes a source key from a user's list of subscriptions.
-	RemoveSubscription(ctx context.Context, userID string, sourceKey string) error
+	RemoveSourceSubscription(ctx context.Context, userID string, sourceKey string) error
 	// GetSubscriptions retrieves the list of subscribed source keys for a user.
-	GetSubscriptions(ctx context.Context, userID string) ([]string, error)
-	SubscribeTopic(ctx context.Context, userID, topicID string) error
+	GetSourceSubscriptions(ctx context.Context, userID string) ([]string, error)
+	// SubscribeTopic(ctx context.Context, userID, topicID string) error
 	// SubscribeTopics adds many topic IDs to preferences.topics using $addToSet with $each
 	SubscribeTopics(ctx context.Context, userID string, topicIDs []string) error
 	// UnsubscribeTopic pulls a topic ID from preferences.topics
 	UnsubscribeTopic(ctx context.Context, userID, topicID string) error
 	GetUserSubscribedTopicsByID(ctx context.Context, userID string) ([]string, error)
+	// UnsubscribeTopic(ctx context.Context, userID, topicSlug string) error
 }

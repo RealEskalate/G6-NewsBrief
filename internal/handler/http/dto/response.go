@@ -1,15 +1,13 @@
 package dto
 
 import (
-	"time"
-
 	"github.com/RealEskalate/G6-NewsBrief/internal/domain/entity"
+	"time"
 )
 
 // UserResponse is the DTO for a user.
 type UserResponse struct {
 	ID          string         `json:"id"`
-	Username    string         `json:"username"`
 	Fullname    string         `json:"fullname"`
 	Email       string         `json:"email"`
 	Role        string         `json:"role"`
@@ -29,7 +27,6 @@ type LoginResponse struct {
 func ToUserResponse(user entity.User) UserResponse {
 	return UserResponse{
 		ID:        user.ID,
-		Username:  user.Username,
 		Fullname:  user.Fullname,
 		Email:     user.Email,
 		Role:      string(user.Role),
@@ -115,7 +112,6 @@ func MapSourcesToDTOs(sources []entity.Source) []SourceDTO {
 			URL:              source.URL,
 			LogoURL:          source.LogoURL,
 			Languages:        string(source.Languages),
-			Topics:           source.Topics,
 			ReliabilityScore: source.ReliabilityScore,
 		}
 	}
@@ -131,8 +127,8 @@ type NotificationsDTO struct {
 // topics
 // TopicDTO represents a single topic in the API response.
 type TopicDTO struct {
-	ID 	   string            `json:"id"`
-	Slug       string            `json:"slug"`
+	ID   string `json:"id"`
+	Slug string `json:"slug"`
 	// TopicName  string            `json:"topic_name"`
 	Label      BilingualFieldDTO `json:"label"`
 	StoryCount int               `json:"story_count"`
@@ -148,7 +144,7 @@ func MapTopicsToDTOs(topics []entity.Topic) []TopicDTO {
 	topicDTOs := make([]TopicDTO, len(topics))
 	for i, topic := range topics {
 		topicDTOs[i] = TopicDTO{
-			ID: 	  topic.ID,
+			ID:   topic.ID,
 			Slug: topic.Slug,
 			Label: BilingualFieldDTO{
 				EN: topic.Label.EN,

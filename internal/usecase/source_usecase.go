@@ -10,14 +10,12 @@ import (
 
 type sourceUsecase struct {
 	sourceRepo contract.ISourceRepository
-	uuidGen    contract.IUUIDGenerator
 }
 
 // NewSourceUsecase creates a new instance of sourceUsecase.
-func NewSourceUsecase(sourceRepo contract.ISourceRepository, uuidGen contract.IUUIDGenerator) contract.ISourceUsecase {
+func NewSourceUsecase(sourceRepo contract.ISourceRepository) contract.ISourceUsecase {
 	return &sourceUsecase{
 		sourceRepo: sourceRepo,
-		uuidGen:    uuidGen,
 	}
 }
 func (uc *sourceUsecase) CreateSource(ctx context.Context, source *entity.Source) error {
@@ -43,10 +41,6 @@ func (uc *sourceUsecase) CreateSource(ctx context.Context, source *entity.Source
 	}
 	if urlExists {
 		return errors.New("source with URL already exists")
-	}
-	// Ensure ID exists and is a UUID
-	if source.ID == "" {
-		source.ID = uc.uuidGen.NewUUID()
 	}
 	return uc.sourceRepo.CreateSource(ctx, source)
 }

@@ -19,21 +19,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateUserRequest'
+              $ref: "#/components/schemas/CreateUserRequest"
             example:
-              username: jdoe
               email: jdoe@example.com
               password: Password123!
               fullname: John Doe
       responses:
-        '201':
+        "201":
           description: User created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserResponse'
-        '400': { description: Validation error }
-        '409': { description: Email or username already exists }
+                $ref: "#/components/schemas/UserResponse"
+        "400": { description: Validation error }
+        "409": { description: Email already exists }
   /auth/login:
     post:
       operationId: login
@@ -44,18 +43,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LoginRequest'
+              $ref: "#/components/schemas/LoginRequest"
             example:
               email: jdoe@example.com
               password: Password123!
       responses:
-        '200':
+        "200":
           description: Authenticated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LoginResponse'
-        '401': { description: Invalid credentials }
+                $ref: "#/components/schemas/LoginResponse"
+        "401": { description: Invalid credentials }
   /auth/refresh-token:
     post:
       operationId: refreshToken
@@ -65,16 +64,16 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/RefreshTokenRequest' }
-            example: { refresh_token: '<refresh jwt>' }
+            schema: { $ref: "#/components/schemas/RefreshTokenRequest" }
+            example: { refresh_token: "<refresh jwt>" }
       responses:
-        '200':
+        "200":
           description: Tokens refreshed
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/RefreshTokenResponse' }
-        '400': { description: Missing/invalid token }
-        '401': { description: Expired/invalid token }
+              schema: { $ref: "#/components/schemas/RefreshTokenResponse" }
+        "400": { description: Missing/invalid token }
+        "401": { description: Expired/invalid token }
   /auth/verify-email:
     get:
       operationId: verifyEmail
@@ -93,12 +92,12 @@ paths:
           in: query
           schema: { type: string, enum: [web, mobile] }
       responses:
-        '200':
+        "200":
           description: Verified
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/EmailVerifyResponse' }
-        '400': { description: Invalid/expired token }
+              schema: { $ref: "#/components/schemas/EmailVerifyResponse" }
+        "400": { description: Invalid/expired token }
   /auth/forgot-password:
     post:
       operationId: forgotPassword
@@ -108,10 +107,10 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/ForgotPasswordRequest' }
+            schema: { $ref: "#/components/schemas/ForgotPasswordRequest" }
             example: { email: jdoe@example.com }
       responses:
-        '200': { description: Message sent }
+        "200": { description: Message sent }
   /auth/reset-password:
     post:
       operationId: resetPassword
@@ -121,11 +120,12 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/ResetPasswordRequest' }
-            example: { token: '<t>', verifier: '<v>', password: NewPassword123! }
+            schema: { $ref: "#/components/schemas/ResetPasswordRequest" }
+            example:
+              { token: "<t>", verifier: "<v>", password: NewPassword123! }
       responses:
-        '200': { description: Password reset }
-        '400': { description: Invalid token/password }
+        "200": { description: Password reset }
+        "400": { description: Invalid token/password }
   /auth/request-verification-email:
     post:
       operationId: resendVerificationEmail
@@ -135,25 +135,25 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/RequestVerificationEmail' }
+            schema: { $ref: "#/components/schemas/RequestVerificationEmail" }
             example: { email: jdoe@example.com }
       responses:
-        '200': { description: Sent }
+        "200": { description: Sent }
   /auth/google/login:
     get:
       operationId: googleLogin
       tags: [auth]
       summary: Google OAuth login
       responses:
-        '302': { description: Redirect to Google }
+        "302": { description: Redirect to Google }
   /auth/google/callback:
     get:
       operationId: googleCallback
       tags: [auth]
       summary: Google OAuth callback
       responses:
-        '200': { description: Success }
-        '401': { description: Unauthorized }
+        "200": { description: Success }
+        "401": { description: Unauthorized }
   /admin/create-topics:
     post:
       operationId: createTopic
@@ -164,10 +164,10 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/AdminCreateTopicRequest' }
+            schema: { $ref: "#/components/schemas/AdminCreateTopicRequest" }
       responses:
-        '201': { description: Created }
-        '403': { description: Forbidden }
+        "201": { description: Created }
+        "403": { description: Forbidden }
   /admin/create-sources:
     post:
       operationId: createSource
@@ -178,10 +178,10 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/SourceDTO' }
+            schema: { $ref: "#/components/schemas/SourceDTO" }
       responses:
-        '201': { description: Created }
-        '403': { description: Forbidden }
+        "201": { description: Created }
+        "403": { description: Forbidden }
   /me:
     get:
       operationId: getCurrentUser
@@ -189,8 +189,16 @@ paths:
       summary: Get current user
       security: [{ bearerAuth: [] }]
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/UserResponse' } } } }
-        '401': { description: Unauthorized }
+        "200":
+          {
+            description: OK,
+            content:
+              {
+                application/json:
+                  { schema: { $ref: "#/components/schemas/UserResponse" } },
+              },
+          }
+        "401": { description: Unauthorized }
     put:
       operationId: updateCurrentUser
       tags: [user]
@@ -200,9 +208,17 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/UpdateUserRequest' }
+            schema: { $ref: "#/components/schemas/UpdateUserRequest" }
       responses:
-        '200': { description: Updated, content: { application/json: { schema: { $ref: '#/components/schemas/UserResponse' } } } }
+        "200":
+          {
+            description: Updated,
+            content:
+              {
+                application/json:
+                  { schema: { $ref: "#/components/schemas/UserResponse" } },
+              },
+          }
   /me/subscriptions:
     get:
       operationId: getSubscriptions
@@ -210,7 +226,18 @@ paths:
       summary: Get subscriptions
       security: [{ bearerAuth: [] }]
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/SubscriptionsResponseDTO' } } } }
+        "200":
+          {
+            description: OK,
+            content:
+              {
+                application/json:
+                  {
+                    schema:
+                      { $ref: "#/components/schemas/SubscriptionsResponseDTO" },
+                  },
+              },
+          }
     post:
       operationId: addSubscription
       tags: [user]
@@ -220,9 +247,9 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/AddSubscriptionRequest' }
+            schema: { $ref: "#/components/schemas/AddSubscriptionRequest" }
       responses:
-        '201': { description: Created }
+        "201": { description: Created }
   /me/subscriptions/{source_slug}:
     delete:
       operationId: removeSubscription
@@ -235,7 +262,7 @@ paths:
           required: true
           schema: { type: string }
       responses:
-        '200': { description: OK }
+        "200": { description: OK }
   /me/topics:
     post:
       operationId: subscribeTopics
@@ -249,20 +276,21 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/SubscribeTopicsRequest' }
+            schema: { $ref: "#/components/schemas/SubscribeTopicsRequest" }
             example:
-              topics: [
-                "f1d3ff84-12ab-4cde-98ef-abcdef123456",
-                "0cc175b9-6a6a-4e2f-bb1d-1234567890ab"
-              ]
+              topics:
+                [
+                  "f1d3ff84-12ab-4cde-98ef-abcdef123456",
+                  "0cc175b9-6a6a-4e2f-bb1d-1234567890ab",
+                ]
       responses:
-        '200':
+        "200":
           description: Subscribed (or no-op when empty)
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/MessageResponse' }
+              schema: { $ref: "#/components/schemas/MessageResponse" }
               example: { message: "Subscribed to topic successfully" }
-        '401': { description: Unauthorized }
+        "401": { description: Unauthorized }
   /me/topics/{topicID}:
     delete:
       operationId: unsubscribeTopic
@@ -275,13 +303,13 @@ paths:
           required: true
           schema: { type: string }
       responses:
-        '200':
+        "200":
           description: Unsubscribed
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/MessageResponse' }
+              schema: { $ref: "#/components/schemas/MessageResponse" }
               example: { message: "Unsubscribed from topic successfully" }
-        '401': { description: Unauthorized }
+        "401": { description: Unauthorized }
   /me/subscribed-topics:
     get:
       operationId: listSubscribedTopics
@@ -289,7 +317,21 @@ paths:
       summary: List subscribed topics
       security: [{ bearerAuth: [] }]
       responses:
-        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/TopicDTO' } } } } }
+        "200":
+          {
+            description: OK,
+            content:
+              {
+                application/json:
+                  {
+                    schema:
+                      {
+                        type: array,
+                        items: { $ref: "#/components/schemas/TopicDTO" },
+                      },
+                  },
+              },
+          }
   /me/for-you:
     get:
       operationId: listForYou
@@ -305,12 +347,12 @@ paths:
           name: limit
           schema: { type: integer, minimum: 1, default: 10 }
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NewsListResponseDTO'
+                $ref: "#/components/schemas/NewsListResponseDTO"
               example:
                 news:
                   - id: "8f6b2c8a-7e3b-4c9d-b1f2-8d2e5a9b1234"
@@ -337,13 +379,21 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/SaveBookmarkRequest' }
-            example: { news_id: '6c0b1a64-1b0f-4e53-9463-8d5c8bb4c9c1' }
+            schema: { $ref: "#/components/schemas/SaveBookmarkRequest" }
+            example: { news_id: "6c0b1a64-1b0f-4e53-9463-8d5c8bb4c9c1" }
       responses:
-        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/MessageResponse' } } } }
-        '400': { description: Invalid request }
-        '401': { description: Unauthorized }
-        '409': { description: Already bookmarked }
+        "201":
+          {
+            description: Created,
+            content:
+              {
+                application/json:
+                  { schema: { $ref: "#/components/schemas/MessageResponse" } },
+              },
+          }
+        "400": { description: Invalid request }
+        "401": { description: Unauthorized }
+        "409": { description: Already bookmarked }
     get:
       operationId: listBookmarks
       tags: [user, bookmarks]
@@ -357,11 +407,11 @@ paths:
           name: limit
           schema: { type: integer, minimum: 1, default: 10 }
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/NewsListResponseDTO' }
+              schema: { $ref: "#/components/schemas/NewsListResponseDTO" }
               example:
                 news:
                   - id: 6c0b1a64-1b0f-4e53-9463-8d5c8bb4c9c1
@@ -378,7 +428,7 @@ paths:
                 total_pages: 1
                 page: 1
                 limit: 10
-        '401': { description: Unauthorized }
+        "401": { description: Unauthorized }
   /me/bookmarks/{news_id}:
     delete:
       operationId: unsaveBookmark
@@ -391,23 +441,51 @@ paths:
           required: true
           schema: { type: string }
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/MessageResponse' } } } }
-        '401': { description: Unauthorized }
-        '404': { description: Not Found }
+        "200":
+          {
+            description: OK,
+            content:
+              {
+                application/json:
+                  { schema: { $ref: "#/components/schemas/MessageResponse" } },
+              },
+          }
+        "401": { description: Unauthorized }
+        "404": { description: Not Found }
   /topics:
     get:
       operationId: listTopics
       tags: [topics]
       summary: List topics
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/TopicsResponseDTO' } } } }
+        "200":
+          {
+            description: OK,
+            content:
+              {
+                application/json:
+                  {
+                    schema: { $ref: "#/components/schemas/TopicsResponseDTO" },
+                  },
+              },
+          }
   /sources:
     get:
       operationId: listSources
       tags: [sources]
       summary: List sources
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/SourcesResponseDTO' } } } }
+        "200":
+          {
+            description: OK,
+            content:
+              {
+                application/json:
+                  {
+                    schema: { $ref: "#/components/schemas/SourcesResponseDTO" },
+                  },
+              },
+          }
   /logout:
     post:
       operationId: logout
@@ -417,10 +495,10 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/RefreshTokenRequest' }
+            schema: { $ref: "#/components/schemas/RefreshTokenRequest" }
       responses:
-        '200': { description: Logged out }
-        '400': { description: Invalid token }
+        "200": { description: Logged out }
+        "400": { description: Invalid token }
   /summarize:
     post:
       operationId: summarizeNews
@@ -430,10 +508,20 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/SummarizeRequest' }
+            schema: { $ref: "#/components/schemas/SummarizeRequest" }
       responses:
-        '200': { description: Summary, content: { application/json: { schema: { $ref: '#/components/schemas/SummarizeResponse' } } } }
-        '404': { description: News not found }
+        "200":
+          {
+            description: Summary,
+            content:
+              {
+                application/json:
+                  {
+                    schema: { $ref: "#/components/schemas/SummarizeResponse" },
+                  },
+              },
+          }
+        "404": { description: News not found }
   /news/ingest:
     post:
       operationId: ingestNews
@@ -443,32 +531,40 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/NewsIngestRequest' }
+            schema: { $ref: "#/components/schemas/NewsIngestRequest" }
             example:
               title: Ethiopia launches new satellite
               body: |
                 Ethiopia has successfully launched its third earth observation satellite...
               language: en
               source_id: 8f3c2a18-5a2b-4d3b-9b8a-7e2f1c0a9d11
-              topics: ["f1d3ff84-12ab-4cde-98ef-abcdef123456", "0cc175b9-6a6a-4e2f-bb1d-1234567890ab"]
+              topics:
+                [
+                  "f1d3ff84-12ab-4cde-98ef-abcdef123456",
+                  "0cc175b9-6a6a-4e2f-bb1d-1234567890ab",
+                ]
               published_at: 2025-09-01T08:30:00Z
       responses:
-        '201':
+        "201":
           description: Created
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/NewsIngestResponse' }
+              schema: { $ref: "#/components/schemas/NewsIngestResponse" }
               example:
                 id: 6c0b1a64-1b0f-4e53-9463-8d5c8bb4c9c1
                 title: Ethiopia launches new satellite
                 language: en
                 source_id: 8f3c2a18-5a2b-4d3b-9b8a-7e2f1c0a9d11
-                topics: ["f1d3ff84-12ab-4cde-98ef-abcdef123456", "0cc175b9-6a6a-4e2f-bb1d-1234567890ab"]
+                topics:
+                  [
+                    "f1d3ff84-12ab-4cde-98ef-abcdef123456",
+                    "0cc175b9-6a6a-4e2f-bb1d-1234567890ab",
+                  ]
                 summary_en: Ethiopia has launched its third satellite focusing on agriculture and climate monitoring...
                 summary_am: ኢትዮጵያ ሶስተኛውን ሳተላይት ለማህበረሰብ አገልግሎት ተመልክቶ ሰከነ...
                 published_at: 2025-09-01T08:30:00Z
                 created_at: 2025-09-01T08:30:10Z
-        '400': { description: Validation error }
+        "400": { description: Validation error }
   /news:
     get:
       operationId: listNews
@@ -482,12 +578,12 @@ paths:
           name: limit
           schema: { type: integer, minimum: 1 }
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NewsListResponseDTO'
+                $ref: "#/components/schemas/NewsListResponseDTO"
               example:
                 news:
                   - id: 6c0b1a64-1b0f-4e53-9463-8d5c8bb4c9c1
@@ -514,10 +610,18 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/ChatRequest' }
+            schema: { $ref: "#/components/schemas/ChatRequest" }
       responses:
-        '200': { description: Reply, content: { application/json: { schema: { $ref: '#/components/schemas/ChatResponse' } } } }
-        '500': { description: LLM error }
+        "200":
+          {
+            description: Reply,
+            content:
+              {
+                application/json:
+                  { schema: { $ref: "#/components/schemas/ChatResponse" } },
+              },
+          }
+        "500": { description: LLM error }
   /chat/news/{id}:
     post:
       operationId: chatForNews
@@ -532,10 +636,18 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/ChatRequest' }
+            schema: { $ref: "#/components/schemas/ChatRequest" }
       responses:
-        '200': { description: Reply, content: { application/json: { schema: { $ref: '#/components/schemas/ChatResponse' } } } }
-        '404': { description: News not found }
+        "200":
+          {
+            description: Reply,
+            content:
+              {
+                application/json:
+                  { schema: { $ref: "#/components/schemas/ChatResponse" } },
+              },
+          }
+        "404": { description: News not found }
   /translate:
     post:
       operationId: translateText
@@ -545,20 +657,20 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/TranslateRequest' }
+            schema: { $ref: "#/components/schemas/TranslateRequest" }
             example:
               text: "Hello, how are you?"
               source_lang: en
               target_lang: am
       responses:
-        '200':
+        "200":
           description: Translated
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/TranslateResponse' }
+              schema: { $ref: "#/components/schemas/TranslateResponse" }
               example:
                 translated_text: "ሰላም፣ እንዴት ነህ?"
-        '400': { description: Invalid language or text }
+        "400": { description: Invalid language or text }
   /news/{id}/translate:
     post:
       operationId: translateNews
@@ -570,11 +682,11 @@ paths:
           required: true
           schema: { type: string }
       responses:
-        '200':
+        "200":
           description: Updated news
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/News' }
+              schema: { $ref: "#/components/schemas/News" }
               example:
                 id: 6c0b1a64-1b0f-4e53-9463-8d5c8bb4c9c1
                 title: Ethiopia launches new satellite
@@ -587,7 +699,7 @@ paths:
                 published_at: 2025-09-01T08:30:00Z
                 created_at: 2025-09-01T08:30:10Z
                 updated_at: 2025-09-01T08:35:00Z
-        '404': { description: Not Found }
+        "404": { description: Not Found }
 components:
   securitySchemes:
     bearerAuth:
@@ -605,9 +717,8 @@ components:
         error: { type: string }
     CreateUserRequest:
       type: object
-      required: [username, email, password, fullname]
+      required: [email, password, fullname]
       properties:
-        username: { type: string }
         email: { type: string, format: email }
         password: { type: string }
         fullname: { type: string }
@@ -615,13 +726,12 @@ components:
       type: object
       properties:
         id: { type: string }
-        username: { type: string }
         fullname: { type: string }
         email: { type: string }
         role: { type: string }
         avatar_url: { type: string, nullable: true }
         created_at: { type: string, format: date-time }
-        preferences: { $ref: '#/components/schemas/PreferencesDTO' }
+        preferences: { $ref: "#/components/schemas/PreferencesDTO" }
     LoginRequest:
       type: object
       required: [email, password]
@@ -631,7 +741,7 @@ components:
     LoginResponse:
       type: object
       properties:
-        user: { $ref: '#/components/schemas/UserResponse' }
+        user: { $ref: "#/components/schemas/UserResponse" }
         access_token: { type: string }
         refresh_token: { type: string }
     RefreshTokenRequest:
@@ -665,7 +775,7 @@ components:
       type: object
       properties:
         message: { type: string }
-        user: { $ref: '#/components/schemas/UserResponse' }
+        user: { $ref: "#/components/schemas/UserResponse" }
         access_token: { type: string }
         refresh_token: { type: string }
     PreferencesDTO:
@@ -676,7 +786,7 @@ components:
         subscribed_sources: { type: array, items: { type: string } }
         brief_type: { type: string }
         data_saver: { type: boolean }
-        notifications: { $ref: '#/components/schemas/NotificationsDTO' }
+        notifications: { $ref: "#/components/schemas/NotificationsDTO" }
     NotificationsDTO:
       type: object
       properties:
@@ -685,7 +795,6 @@ components:
     UpdateUserRequest:
       type: object
       properties:
-        username: { type: string }
         fullname: { type: string }
     TopicDTO:
       type: object
@@ -702,7 +811,8 @@ components:
     TopicsResponseDTO:
       type: object
       properties:
-        topics: { type: array, items: { $ref: '#/components/schemas/TopicDTO' } }
+        topics:
+          { type: array, items: { $ref: "#/components/schemas/TopicDTO" } }
         total_topics: { type: integer }
 
     SubscribeTopicRequest:
@@ -731,7 +841,8 @@ components:
     SourcesResponseDTO:
       type: object
       properties:
-        sources: { type: array, items: { $ref: '#/components/schemas/SourceDTO' } }
+        sources:
+          { type: array, items: { $ref: "#/components/schemas/SourceDTO" } }
         total_sources: { type: integer }
     AddSubscriptionRequest:
       type: object
@@ -748,7 +859,11 @@ components:
     SubscriptionsResponseDTO:
       type: object
       properties:
-        subscriptions: { type: array, items: { $ref: '#/components/schemas/SubscriptionDetailDTO' } }
+        subscriptions:
+          {
+            type: array,
+            items: { $ref: "#/components/schemas/SubscriptionDetailDTO" },
+          }
         total_subscriptions: { type: integer }
         subscription_limit: { type: integer }
     SummarizeRequest:
@@ -772,7 +887,12 @@ components:
         summary_am: { type: string }
         language: { type: string }
         source_id: { type: string, description: "ID of the source" }
-        topics: { type: array, items: { type: string }, description: "List of topic IDs" }
+        topics:
+          {
+            type: array,
+            items: { type: string },
+            description: "List of topic IDs",
+          }
         published_at: { type: string, format: date-time }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
@@ -783,8 +903,17 @@ components:
         title: { type: string }
         body: { type: string }
         language: { type: string, enum: [en, am] }
-        source_id: { type: string, description: "ID of the source to attribute this news to" }
-        topics: { type: array, items: { type: string }, description: "Optional list of topic IDs" }
+        source_id:
+          {
+            type: string,
+            description: "ID of the source to attribute this news to",
+          }
+        topics:
+          {
+            type: array,
+            items: { type: string },
+            description: "Optional list of topic IDs",
+          }
         published_at: { type: string, format: date-time }
     NewsIngestResponse:
       type: object
@@ -812,13 +941,18 @@ components:
         published_at: { type: string, format: date-time }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
-        is_bookmarked: { type: boolean, nullable: true, description: "Present when authenticated; true if current user bookmarked this news" }
+        is_bookmarked:
+          {
+            type: boolean,
+            nullable: true,
+            description: "Present when authenticated; true if current user bookmarked this news",
+          }
     NewsListResponseDTO:
       type: object
       properties:
         news:
           type: array
-          items: { $ref: '#/components/schemas/NewsListItemDTO' }
+          items: { $ref: "#/components/schemas/NewsListItemDTO" }
         total: { type: integer }
         total_pages: { type: integer }
         page: { type: integer }
@@ -860,4 +994,3 @@ components:
           properties:
             en: { type: string }
             am: { type: string }
-

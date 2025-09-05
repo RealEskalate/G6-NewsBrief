@@ -69,7 +69,7 @@ func (eu *EmailVerificationUseCase) RequestVerificationEmail(ctx context.Context
 	verificationLink := fmt.Sprintf("%s/api/v1/auth/verify-email?verifier=%s&token=%s", frontendURL, verifier, plainToken)
 
 	emailSubject := "Verify your email address"
-	emailBody := fmt.Sprintf("Hello %s\n, please click the following link to verify your email address: %s", user.Username, verificationLink)
+	emailBody := fmt.Sprintf("Hello %s\n, please click the following link to verify your email address: %s", user.Fullname, verificationLink)
 	if err = eu.emailService.SendEmail(ctx, user.Email, emailSubject, emailBody); err != nil {
 		return fmt.Errorf("failed to send verification email: %w", err)
 	}

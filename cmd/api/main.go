@@ -124,7 +124,7 @@ func main() {
 	emailUsecase := usecase.NewEmailVerificationUseCase(tokenRepo, userRepo, mailService, randomGenerator, uuidGenerator, appConfig)
 	userUsecase := usecase.NewUserUsecase(userRepo, tokenRepo, topicRepo, emailUsecase, hasher, jwtService, mailService, appLogger, appConfig, appValidator, uuidGenerator, randomGenerator)
 	topicUsecase := usecase.NewTopicUsecase(topicRepo)
-	sourceUsecase := usecase.NewSourceUsecase(sourceRepo, uuidGenerator)
+	sourceUsecase := usecase.NewSourceUsecase(sourceRepo)
 	subscriptionUsecase := usecase.NewSubscriptionUsecase(userRepo, sourceRepo)
 	// Pass Prometheus metrics to handlers or usecases as needed (import from metrics package)
 

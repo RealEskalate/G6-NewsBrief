@@ -30,7 +30,7 @@ func (u *newsUsecase) ListForYou(ctx context.Context, userID string, page, limit
 		limit = 10
 	}
 	// Get subscribed source slugs from user profile
-	slugs, err := u.userRepo.GetSubscriptions(ctx, userID)
+	slugs, err := u.userRepo.GetSourceSubscriptions(ctx, userID)
 	if err != nil {
 		return nil, 0, 0, err
 	}

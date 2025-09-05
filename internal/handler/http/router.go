@@ -139,6 +139,7 @@ func (r *Router) SetupRoutes(router *gin.Engine) {
 		userProfile.GET("/subscriptions", r.subscriptionHandler.GetSubscriptions)
 		userProfile.POST("/subscriptions", r.subscriptionHandler.AddSubscription)
 		userProfile.DELETE("/subscriptions/:source_slug", r.subscriptionHandler.RemoveSubscription)
+		userProfile.GET("/topics", r.topicHandler.GetUserSubscribedTopics)
 		userProfile.POST("/topics", r.topicHandler.SubscribeTopic)
 		userProfile.DELETE("/topics/:topicID", r.topicHandler.UnsubscribeTopic)
 		userProfile.GET("/subscribed-topics", r.topicHandler.GetUserSubscribedTopics)
@@ -152,21 +153,25 @@ func (r *Router) SetupRoutes(router *gin.Engine) {
 	// public api
 	public := v1.Group("")
 	{
+		// News listing for frontend mockdata
+		public.GET("/news", r.newsHandler.GetNews)
 		public.GET("/topics", r.topicHandler.GetTopics)
 		public.GET("/sources", r.sourceHandler.GetSources)
 	}
 	// Logout route (no authentication required just accept the refresh token from the request body and invalidate the user session)
 	v1.POST("/logout", r.userHandler.Logout)
 
-	// Utilities
-	v1.POST("/summarize", r.summarizerHandler.Summarize)
-	v1.POST("/news/ingest", r.ingestionHandler.IngestNews)
-	// News listing for frontend mockdata
-	v1.GET("/news", r.newsHandler.GetNews)
-	// Chat endpoints
-	v1.POST("/chat/general", r.chatHandler.ChatGeneral)
-	v1.POST("/chat/news/:id", r.chatHandler.ChatForNews)
-	// Translation endpoints
-	v1.POST("/translate", r.translatorHandler.Translate)
-	v1.POST("/news/:id/translate", r.translatorHandler.TranslateNews)
+	// ai api
+	ai := v1.Group("")
+	{
+		// Utilities
+		ai.POST("/summarize", r.summarizerHandler.Summarize)
+		ai.POST("/news/ingest", r.ingestionHandler.IngestNews)
+		// Chat endpoints
+		ai.POST("/chat/general", r.chatHandler.ChatGeneral)
+		ai.POST("/chat/news/:id", r.chatHandler.ChatForNews)
+		// Translation endpoints
+		ai.POST("/translate", r.translatorHandler.Translate)
+		ai.POST("/news/:id/translate", r.translatorHandler.TranslateNews)
+	}
 }

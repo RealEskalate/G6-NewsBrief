@@ -42,9 +42,10 @@ func (uc *SummarizerUsecase) Summarize(newsID string) (entity.Summary, error) {
 	}
 
 	// Save summary to news entity
-	if news.Language == "en" {
+	switch news.Language {
+	case "en":
 		news.SummaryEN = summaryText
-	} else if news.Language == "am" {
+	case "am":
 		news.SummaryAM = summaryText
 	}
 

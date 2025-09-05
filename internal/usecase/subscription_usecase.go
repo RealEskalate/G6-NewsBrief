@@ -27,7 +27,7 @@ func NewSubscriptionUsecase(userRepo contract.IUserRepository, sourceRepo contra
 // Get now uses the IUserRepository to fetch the list of subscribed source keys.
 func (uc *subscriptionUsecase) Get(ctx context.Context, userID string) (*dto.SubscriptionsResponseDTO, error) {
 	// 1. Get the list of subscribed source slugs directly from the user document.
-	subscribedSlugs, err := uc.userRepo.GetSubscriptions(ctx, userID)
+	subscribedSlugs, err := uc.userRepo.GetSourceSubscriptions(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,6 @@ func (uc *subscriptionUsecase) Get(ctx context.Context, userID string) (*dto.Sub
 			SourceSlug: source.Slug,
 			SourceName: source.Name,
 			// SubscribedAt: This data is no longer stored in the embedded model.
-			Topics: source.Topics,
 		})
 	}
 
@@ -71,7 +70,7 @@ func (uc *subscriptionUsecase) Create(ctx context.Context, userID, SourceSlug st
 	}
 
 	// 2. Check the subscription limit by getting the current count.
-	currentSubs, err := uc.userRepo.GetSubscriptions(ctx, userID)
+	currentSubs, err := uc.userRepo.GetSourceSubscriptions(ctx, userID)
 	if err != nil {
 		return err
 	}
@@ -80,10 +79,10 @@ func (uc *subscriptionUsecase) Create(ctx context.Context, userID, SourceSlug st
 	}
 
 	// 3. Add the subscription directly to the user's document.
-	return uc.userRepo.AddSubscription(ctx, userID, SourceSlug)
+	return uc.userRepo.AddSourceSubscription(ctx, userID, SourceSlug)
 }
 
 // Delete now uses the IUserRepository to remove a subscription.
 func (uc *subscriptionUsecase) Delete(ctx context.Context, userID, SourceSlug string) error {
-	return uc.userRepo.RemoveSubscription(ctx, userID, SourceSlug)
+	return uc.userRepo.RemoveSourceSubscription(ctx, userID, SourceSlug)
 }

@@ -34,9 +34,10 @@ func (uc *NewsIngestionUsecase) SaveAfterSummarize(news *entity.News) (*entity.N
 		return nil, entity.Summary{}, err
 	}
 
-	if news.Language == "en" {
+	switch news.Language {
+	case "en":
 		news.SummaryEN = summaryText
-	} else if news.Language == "am" {
+	case "am":
 		news.SummaryAM = summaryText
 	}
 

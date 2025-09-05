@@ -2,7 +2,6 @@ package dto
 
 // CreateUserRequest is the DTO for creating a new user.
 type CreateUserRequest struct {
-	Username string `json:"username" binding:"required,min=3,max=32"`
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required,min=8,max=32,containsuppercase,containslowercase,containsdigit,containssymbol"`
 	Fullname string `json:"fullname" binding:"required,min=3,max=50"`
@@ -16,7 +15,6 @@ type LoginRequest struct {
 
 // RegisterRequest is the DTO for user registration.
 type RegisterRequest struct {
-	Username string `json:"username" binding:"required,min=3,max=32"`
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required,min=8,max=32"`
 	Fullname string `json:"fullname" binding:"required,min=3,max=50"`
@@ -24,7 +22,6 @@ type RegisterRequest struct {
 
 // UpdateUserRequest is the DTO for updating user profile.
 type UpdateUserRequest struct {
-	Username *string `json:"username,omitempty" binding:"omitempty,min=3,max=32"`
 	Fullname *string `json:"fullname,omitempty" binding:"omitempty,max=50"`
 }
 

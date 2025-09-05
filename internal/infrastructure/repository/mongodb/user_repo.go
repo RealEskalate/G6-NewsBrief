@@ -48,26 +48,26 @@ func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*ent
 	return &user, nil
 }
 
-func (r *UserRepository) GetUserByUsername(ctx context.Context, username string) (*entity.User, error) {
-	var user entity.User
-	err := r.collection.FindOne(ctx, bson.M{"username": username}).Decode(&user)
-	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return nil, errors.New("user not found")
-		}
-		return nil, err
-	}
-	return &user, nil
-}
+// func (r *UserRepository) GetUserByUsername(ctx context.Context, username string) (*entity.User, error) {
+// 	var user entity.User
+// 	err := r.collection.FindOne(ctx, bson.M{"username": username}).Decode(&user)
+// 	if err != nil {
+// 		if err == mongo.ErrNoDocuments {
+// 			return nil, errors.New("user not found")
+// 		}
+// 		return nil, err
+// 	}
+// 	return &user, nil
+// }
 
-func (r *UserRepository) GetByUserName(ctx context.Context, username string) (*entity.User, error) {
-	var user entity.User
-	err := r.collection.FindOne(ctx, bson.M{"username": username}).Decode(&user)
-	if err != nil {
-		return nil, errors.New("user not found")
-	}
-	return &user, nil
-}
+// func (r *UserRepository) GetByUserName(ctx context.Context, username string) (*entity.User, error) {
+// 	var user entity.User
+// 	err := r.collection.FindOne(ctx, bson.M{"username": username}).Decode(&user)
+// 	if err != nil {
+// 		return nil, errors.New("user not found")
+// 	}
+// 	return &user, nil
+// }
 
 // UpdateUser updates an existing user and returns the updated user
 func (r *UserRepository) UpdateUser(ctx context.Context, user *entity.User) (*entity.User, error) {
@@ -115,16 +115,16 @@ func (r *UserRepository) DeleteUser(ctx context.Context, id string) error {
 	return nil
 }
 
-// AddSubscription adds a source key to the user's embedded list of subscriptions.
+// AddSubscription adds a source slug to the user's embedded list of subscriptions.
 // It uses $addToSet to automatically prevent duplicates.
-func (r *UserRepository) AddSubscription(ctx context.Context, id string, sourceKey string) error {
+func (r *UserRepository) AddSourceSubscription(ctx context.Context, id string, sourceSlug string) error {
 	filter := bson.M{"_id": id}
 	// Ensure the array field exists as an array before $addToSet to avoid "non-array type null"
 	if err := r.ensureArrayField(ctx, id, "preferences.subscribed_sources"); err != nil {
 		return err
 	}
 	update := bson.M{
-		"$addToSet": bson.M{"preferences.subscribed_sources": sourceKey},
+		"$addToSet": bson.M{"preferences.subscribed_sources": sourceSlug},
 	}
 
 	result, err := r.collection.UpdateOne(ctx, filter, update)
@@ -138,14 +138,14 @@ func (r *UserRepository) AddSubscription(ctx context.Context, id string, sourceK
 	return nil
 }
 
-// RemoveSubscription removes a source key from the user's embedded list of subscriptions.
-func (r *UserRepository) RemoveSubscription(ctx context.Context, id string, sourceKey string) error {
+// RemoveSubscription removes a source slug from the user's embedded list of subscriptions.
+func (r *UserRepository) RemoveSourceSubscription(ctx context.Context, id string, sourceSlug string) error {
 	filter := bson.M{"_id": id}
 	if err := r.ensureArrayField(ctx, id, "preferences.subscribed_sources"); err != nil {
 		return err
 	}
 	update := bson.M{
-		"$pull": bson.M{"preferences.subscribed_sources": sourceKey},
+		"$pull": bson.M{"preferences.subscribed_sources": sourceSlug},
 	}
 
 	result, err := r.collection.UpdateOne(ctx, filter, update)
@@ -159,9 +159,9 @@ func (r *UserRepository) RemoveSubscription(ctx context.Context, id string, sour
 	return nil
 }
 
-// GetSubscriptions retrieves only the list of subscribed source keys for a user.
+// GetSubscriptions retrieves only the list of subscribed source slugs for a user.
 // This uses a projection for efficiency, so the entire user document is not fetched.
-func (r *UserRepository) GetSubscriptions(ctx context.Context, id string) ([]string, error) {
+func (r *UserRepository) GetSourceSubscriptions(ctx context.Context, id string) ([]string, error) {
 	// Local struct for decoding only the field we need.
 	var result struct {
 		Preferences struct {
@@ -184,7 +184,7 @@ func (r *UserRepository) GetSubscriptions(ctx context.Context, id string) ([]str
 	return result.Preferences.SubscribedSources, nil
 }
 
-func (r *UserRepository) SubscribeTopic(ctx context.Context, userID, topicID string) error {
+/* func (r *UserRepository) SubscribeTopic(ctx context.Context, userID, topicID string) error {
 	filter := bson.M{"_id": userID}
 	if err := r.ensureArrayField(ctx, userID, "preferences.topics"); err != nil {
 		return err
@@ -196,8 +196,26 @@ func (r *UserRepository) SubscribeTopic(ctx context.Context, userID, topicID str
 	if err != nil {
 		return err
 	}
-
-	if count.MatchedCount == 0 {
+	if res.MatchedCount == 0 {
+		return errors.New("user not found")
+	}
+	return nil
+}
+*/
+// UnsubscribeTopic pulls a topic from preferences.topics
+func (r *UserRepository) UnsubscribeTopic(ctx context.Context, userID, topicID string) error {
+	filter := bson.M{"_id": userID}
+	if err := r.ensureArrayField(ctx, userID, "preferences.topics"); err != nil {
+		return err
+	}
+	update := bson.M{
+		"$pull": bson.M{"preferences.topics": topicID},
+	}
+	res, err := r.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+	if res.MatchedCount == 0 {
 		return errors.New("user not found")
 	}
 	return nil
@@ -216,25 +234,6 @@ func (r *UserRepository) SubscribeTopics(ctx context.Context, userID string, top
 		"$addToSet": bson.M{
 			"preferences.topics": bson.M{"$each": topicIDs},
 		},
-	}
-	res, err := r.collection.UpdateOne(ctx, filter, update)
-	if err != nil {
-		return err
-	}
-	if res.MatchedCount == 0 {
-		return errors.New("user not found")
-	}
-	return nil
-}
-
-// UnsubscribeTopic pulls a topic from preferences.topics
-func (r *UserRepository) UnsubscribeTopic(ctx context.Context, userID, topicID string) error {
-	filter := bson.M{"_id": userID}
-	if err := r.ensureArrayField(ctx, userID, "preferences.topics"); err != nil {
-		return err
-	}
-	update := bson.M{
-		"$pull": bson.M{"preferences.topics": topicID},
 	}
 	res, err := r.collection.UpdateOne(ctx, filter, update)
 	if err != nil {
