@@ -4,7 +4,7 @@ class GetSubscribedTopics {
   final AuthRepository repo;
   GetSubscribedTopics(this.repo);
 
-  Future<List<String>> call() {
+  Future<List<Map<String, dynamic>>> call() {
     return repo.getSubscribedTopics();
   }
 }

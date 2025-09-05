@@ -4,7 +4,7 @@ class GetAllTopic {
   final AuthRepository repo;
   GetAllTopic(this.repo);
 
-  Future<List<String>> call() {
+  Future<List<Map<String, dynamic>>> call() {
     return repo.getAllTopics();
   }
 }

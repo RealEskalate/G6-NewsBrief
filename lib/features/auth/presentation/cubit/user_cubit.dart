@@ -4,7 +4,9 @@ import 'package:newsbrief/features/auth/domain/usecases/get_all_topic.dart';
 import 'package:newsbrief/features/auth/domain/usecases/get_subscribed_sources.dart';
 import 'package:newsbrief/features/auth/domain/usecases/get_subscribed_topics.dart';
 import 'package:newsbrief/features/auth/domain/usecases/subscribe_to_sources.dart';
+import 'package:newsbrief/features/auth/domain/usecases/subscrible_to_topics.dart';
 import 'package:newsbrief/features/auth/domain/usecases/unsubscribe_from_source.dart';
+import 'package:newsbrief/features/auth/domain/usecases/unsubscrible_to_topic.dart';
 
 part 'user_state.dart';
 
@@ -15,6 +17,8 @@ class UserCubit extends Cubit<UserState> {
   final GetSubscribedTopics getSubscribedTopics;
   final GetAllTopic getAllTopic;
   final GetAllSources getAllSources;
+  final SubscribeToTopics subscribeUseCase;
+  final UnsubscribeFromTopic unsubscribeUseCase;
 
   UserCubit({
     required this.getSubscribedSources,
@@ -23,6 +27,9 @@ class UserCubit extends Cubit<UserState> {
     required this.getSubscribedTopics,
     required this.getAllTopic,
     required this.getAllSources,
+    required this.subscribeUseCase,
+    required this.unsubscribeUseCase,
+
   }) : super(UserInitial());
 
   String _msg(Object e) => e.toString().replaceFirst('Exception: ', '');
@@ -63,25 +70,7 @@ class UserCubit extends Cubit<UserState> {
     emit(UserLoading());
     try {
       final topics = await getSubscribedTopics();
-      emit(SubscribedSourcesLoaded(topics));
-    } catch (e) {
-      emit(UserError(_msg(e)));
-    }
-  }
-
-  Future<void> addTopic(String topicSlug) async {
-    emit(UserLoading());
-    try {
-      // final SubscribeToTopics();
-    } catch (e) {
-      emit(UserError(_msg(e)));
-    }
-  }
-
-  Future<void> removeTopic(String topicSlug) async {
-    emit(UserLoading());
-    try {
-      // final SubscribeToTopics();
+      emit(SubscribedTopicsLoaded(topics));
     } catch (e) {
       emit(UserError(_msg(e)));
     }
@@ -90,12 +79,16 @@ class UserCubit extends Cubit<UserState> {
   Future<void> loadAllTopics() async {
     emit(UserLoading());
     try {
-      final topic = await getSubscribedTopics();
-      emit(SubscribedTopicsLoaded(topic));
+      // Get raw topics from your repository
+      final topicsData =
+          await getAllTopic(); // this returns List<Map<String, dynamic>>
+
+      emit(AllTopicsLoaded(topicsData));
     } catch (e) {
       emit(UserError(_msg(e)));
     }
   }
+
 
   Future<void> loadAllSources() async {
     emit(UserLoading());
@@ -114,6 +107,26 @@ class UserCubit extends Cubit<UserState> {
       emit(UserActionSuccess("Interests saved!"));
     } catch (e) {
       emit(UserError(e.toString()));
+    }
+  }
+
+  Future<void> subscribe(List<String> topicIds) async {
+    emit(TopicLoading());
+    try {
+      await subscribeUseCase(topicIds);
+      emit(TopicActionSuccess("Subscribed successfully"));
+    } catch (e) {
+      emit(TopicError(e.toString()));
+    }
+  }
+
+  Future<void> unsubscribe(String topicId) async {
+    emit(TopicLoading());
+    try {
+      await unsubscribeUseCase(topicId);
+      emit(TopicActionSuccess("Unsubscribed successfully"));
+    } catch (e) {
+      emit(TopicError(e.toString()));
     }
   }
 }

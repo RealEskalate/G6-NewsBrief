@@ -4,7 +4,7 @@ class GetAllSources {
   final AuthRepository repo;
   GetAllSources(this.repo);
 
-  Future<List<String>> call() {
+  Future<List<Map<String, dynamic>>> call() {
     return repo.getAllSources();
   }
 }

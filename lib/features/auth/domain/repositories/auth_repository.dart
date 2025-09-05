@@ -24,8 +24,6 @@ abstract class AuthRepository {
 
   Future<Tokens> refreshToken({required String refreshToken});
 
-  Future<void> signUp(User user);
-  Future<User> Login({required String email, required String password});
   Future<List<String>> getAvailableInterests();
   User? get lastUser;
   void updateLastUser(User user);
@@ -36,7 +34,10 @@ abstract class AuthRepository {
   Future<void> subscribeToSource({required String sourceSlug});
   Future<void> unsubscribeFromSource({required String sourceSlug});
 
-  Future<List<String>> getSubscribedTopics();
-  Future<List<String>> getAllTopics();
-  Future<List<String>> getAllSources();
+  Future<void> subscribeTopics(List<String> topicIds);
+  Future<void> unsubscribeTopic(String topicId);
+  
+  Future<List<Map<String, dynamic>>> getSubscribedTopics();
+  Future<List<Map<String, dynamic>>> getAllTopics();
+  Future<List<Map<String, dynamic>>> getAllSources();
 }

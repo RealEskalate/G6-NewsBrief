@@ -141,7 +141,9 @@ class _HomePageState extends State<HomePage> {
                           cursor: SystemMouseCursors.click,
                           child: TweenAnimationBuilder(
                             tween: Tween<double>(begin: 0, end: 1),
-                            duration: Duration(milliseconds: 600 + (index * 120)),
+                            duration: Duration(
+                              milliseconds: 600 + (index * 120),
+                            ),
                             curve: Curves.easeInOut,
                             builder: (context, value, child) {
                               return Transform.translate(
@@ -150,12 +152,31 @@ class _HomePageState extends State<HomePage> {
                               );
                             },
                             child: Padding(
-                              padding: EdgeInsets.only(bottom: size.height * 0.02),
-                              child: NewsCard(
-                                title: sampleNews[index].title,
-                                description: sampleNews[index].description,
-                                source: sampleNews[index].source,
-                                imageUrl: sampleNews[index].imageUrl,
+                              padding: EdgeInsets.only(
+                                bottom: size.height * 0.02,
+                              ),
+                              child: GestureDetector(
+                                onTap: () {
+                                  Navigator.pushNamed(
+                                    context,
+                                    '/news_detail',
+                                    arguments: {
+                                      'topic': 'for_you'
+                                          .tr(), // or actual topic
+                                      'title': sampleNews[index].title.tr(),
+                                      'source': sampleNews[index].source.tr(),
+                                      'imageUrl': sampleNews[index].imageUrl,
+                                      'detail': sampleNews[index].description
+                                          .tr(), // or full detail if available
+                                    },
+                                  );
+                                },
+                                child: NewsCard(
+                                  title: sampleNews[index].title,
+                                  description: sampleNews[index].description,
+                                  source: sampleNews[index].source,
+                                  imageUrl: sampleNews[index].imageUrl,
+                                ),
                               ),
                             ),
                           ),
@@ -175,9 +196,7 @@ class _HomePageState extends State<HomePage> {
               child: Padding(
                 padding: EdgeInsets.all(size.width * 0.04),
                 child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxHeight: size.height * 0.6,
-                  ),
+                  constraints: BoxConstraints(maxHeight: size.height * 0.6),
                   child: ChatbotPopup(onClose: _toggleChatbot),
                 ),
               ),
