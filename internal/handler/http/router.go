@@ -32,11 +32,13 @@ type Router struct {
 	bookmarkHandler     *BookmarkHandler
 }
 
-func NewRouter(userUsecase contract.IUserUseCase, emailVerUC contract.IEmailVerificationUC, userRepo contract.IUserRepository, tokenRepo contract.ITokenRepository, hasher contract.IHasher, jwtService contract.IJWTService, mailService contract.IEmailService, logger contract.IAppLogger, config contract.IConfigProvider, validator contract.IValidator, uuidGen contract.IUUIDGenerator, randomGen contract.IRandomGenerator, sourceUC contract.ISourceUsecase, topicUC contract.ITopicUsecase, subscriptionUC contract.ISubscriptionUsecase, sourceRepo contract.ISourceRepository, newsRepo contract.INewsRepository, bookmarkRepo contract.IBookmarkRepository, geminiClient contract.IGeminiClient) *Router {
+func NewRouter(userUsecase contract.IUserUseCase, emailVerUC contract.IEmailVerificationUC, userRepo contract.IUserRepository, tokenRepo contract.ITokenRepository, hasher contract.IHasher, jwtService contract.IJWTService, mailService contract.IEmailService, logger contract.IAppLogger, config contract.IConfigProvider, validator contract.IValidator, uuidGen contract.IUUIDGenerator, randomGen contract.IRandomGenerator, sourceUC contract.ISourceUsecase, topicUC contract.ITopicUsecase, subscriptionUC contract.ISubscriptionUsecase, sourceRepo contract.ISourceRepository, newsRepo contract.INewsRepository, topicRepo contract.ITopicRepository, bookmarkRepo contract.IBookmarkRepository, geminiClient contract.IGeminiClient) *Router {
 
 	baseURL := config.GetAppBaseURL()
 	summarizerUC := usecase.NewsSummarizerUsecase(geminiClient, newsRepo)
 	ingestionUC := usecase.NewNewsIngestionUsecase(geminiClient, newsRepo, uuidGen)
+	providerClient := external_services.NewNewsProviderClient()
+	providerIngestionUC := usecase.NewProviderIngestionUsecase(providerClient, geminiClient, topicRepo, newsRepo, uuidGen)
 	translatorClient := external_services.NewTranslatorClient()
 	chatbotUC := usecase.NewChatbotUsecase(geminiClient, translatorClient, newsRepo)
 	translatorUC := usecase.NewsTranslatorUsecase(translatorClient, newsRepo)
@@ -51,7 +53,7 @@ func NewRouter(userUsecase contract.IUserUseCase, emailVerUC contract.IEmailVeri
 		emailHandler:        NewEmailHandler(emailVerUC, userRepo, jwtService, tokenRepo, hasher, config, uuidGen),
 		authHandler:         NewAuthHandler(userUsecase, baseURL, config, jwtService),
 		summarizerHandler:   NewsSummarizeHandler(summarizerUC),
-		ingestionHandler:    NewIngestionHandler(ingestionUC),
+		ingestionHandler:    NewIngestionHandler(ingestionUC, providerIngestionUC),
 		chatHandler:         NewChatHandler(chatbotUC),
 		translatorHandler:   NewTranslatorHandler(translatorUC, newsRepo),
 		topicHandler:        NewTopicHandler(topicUC, userUsecase, uuidGen),
@@ -125,6 +127,7 @@ func (r *Router) SetupRoutes(router *gin.Engine) {
 		// admin.POST("/topics/:id", r.topicHandler.UpdateTopic)
 		// admin.DELETE("/topics/:id", r.topicHandler.DeleteTopic)
 		admin.POST("/create-sources", r.sourceHandler.CreateSource)
+		admin.POST("/ingest/scraper", r.ingestionHandler.IngestFromProvider)
 		// admin.PUT("/sources/:id", r.sourceHandler.UpdateSource)
 		// admin.DELETE("/sources/:id", r.sourceHandler.DeleteSource)
 	}

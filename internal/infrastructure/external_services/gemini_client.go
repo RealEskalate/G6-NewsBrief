@@ -110,6 +110,55 @@ func (c *GeminiClient) Summarize(text, lang string) (string, error) {
 	return extractText(result)
 }
 
+// ClassifyTopics asks the model to output a JSON array of concise topic labels
+func (c *GeminiClient) ClassifyTopics(text, lang string, topK int) ([]string, error) {
+	if topK <= 0 {
+		topK = 3
+	}
+	prompt := fmt.Sprintf("Return a JSON array (no prose) of up to %d high-level topic labels in %s for the following text. Keep labels concise, 1-3 words. If uncertain, still return best guesses. Text:\n\n%s", topK, lang, text)
+	reqBody := genReq{Contents: []content{{Parts: []part{{Text: prompt}}}}}
+	data, _ := json.Marshal(reqBody)
+	req, _ := http.NewRequest("POST", c.buildURLWithKey(), bytes.NewBuffer(data))
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := c.httpClient().Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	bodyBytes, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("gemini error %d: %s", resp.StatusCode, string(bodyBytes))
+	}
+	var result genResp
+	if err := json.Unmarshal(bodyBytes, &result); err == nil {
+		// try structured extraction then parse as JSON
+		textOut, err := extractText(result)
+		if err != nil {
+			return nil, err
+		}
+		// parse textOut as JSON array
+		var arr []string
+		if err := json.Unmarshal([]byte(textOut), &arr); err == nil {
+			return arr, nil
+		}
+		// fallback: split by commas/newlines
+		raw := strings.ReplaceAll(textOut, "\n", ",")
+		parts := strings.Split(raw, ",")
+		out := make([]string, 0, len(parts))
+		for _, p := range parts {
+			s := strings.TrimSpace(p)
+			if s != "" {
+				out = append(out, s)
+			}
+		}
+		if len(out) > topK {
+			out = out[:topK]
+		}
+		return out, nil
+	}
+	return nil, fmt.Errorf("failed to parse gemini response for topics")
+}
+
 func (c *GeminiClient) Chat(messages []string, context string) (string, error) {
 	// Build conversation with the latest user message only for now
 	userMsg := ""

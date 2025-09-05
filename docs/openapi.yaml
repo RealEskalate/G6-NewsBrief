@@ -410,37 +410,6 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/NewsListResponseDTO" }
   /topics/{topicID}/news:
-  /news/today:
-    get:
-      operationId: getTodayNews
-      tags: [news]
-  summary: Get today's news (exactly 4 most recent items)
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/NewsListResponseDTO" }
-        "500": { description: Server error }
-  /news/trending:
-    get:
-      operationId: getTrendingNews
-      tags: [news]
-      summary: Get trending news (paginated, sorted by recency)
-      parameters:
-        - in: query
-          name: page
-          schema: { type: integer, minimum: 1, default: 1 }
-        - in: query
-          name: limit
-          schema: { type: integer, minimum: 1, default: 10 }
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/NewsListResponseDTO" }
-        "500": { description: Server error }
     get:
       operationId: listNewsByTopic
       tags: [news, topics]
@@ -481,6 +450,60 @@ paths:
                 limit: 10
         "400": { description: Missing or invalid topicID }
         "500": { description: Internal server error }
+  /news/today:
+    get:
+      operationId: getTodayNews
+      tags: [news]
+      summary: Get today's news (exactly 4 most recent items)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NewsListResponseDTO" }
+        "500": { description: Server error }
+  /news/trending:
+    get:
+      operationId: getTrendingNews
+      tags: [news]
+      summary: Get trending news (paginated, sorted by recency)
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, default: 10 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NewsListResponseDTO" }
+        "500": { description: Server error }
+
+  /admin/ingest/scraper:
+    post:
+      operationId: ingestFromProvider
+      tags: [admin, ingestion]
+      summary: Fetch latest news from external provider, summarize, classify topics, and save
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/IngestFromProviderRequest" }
+            example: { query: "", top_k: 5 }
+      responses:
+        "201":
+          description: Ingestion result
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/IngestFromProviderResponse" }
+              example: { ingested: 5, ids: ["..."], skipped: 0 }
+        "400": { description: Invalid request }
+        "401": { description: Unauthorized }
+        "502": { description: Provider error }
   /me/bookmarks/{news_id}:
     delete:
       operationId: unsaveBookmark
@@ -1034,6 +1057,18 @@ components:
       type: object
       properties:
         translated_text: { type: string }
+    IngestFromProviderRequest:
+      type: object
+      properties:
+        query: { type: string, description: Optional search string; empty for latest }
+        top_k: { type: integer, minimum: 1, default: 5 }
+      required: [top_k]
+    IngestFromProviderResponse:
+      type: object
+      properties:
+        ingested: { type: integer }
+        ids: { type: array, items: { type: string } }
+        skipped: { type: integer }
     AdminCreateTopicRequest:
       type: object
       required: [slug, label]
