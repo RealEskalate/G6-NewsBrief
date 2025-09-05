@@ -19,8 +19,10 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage>
     with SingleTickerProviderStateMixin {
   bool isManagingTopics = false;
+
   List<Map<String, dynamic>> userTopics =
       []; // full topic objects with id + slug
+
   late final AnimationController _animationController;
 
   @override
@@ -32,7 +34,9 @@ class _ProfilePageState extends State<ProfilePage>
       vsync: this,
     )..repeat(reverse: true);
 
+
     // Load subscribed topics from UserCubit
+
     context.read<UserCubit>().loadSubscribedTopics();
   }
 
@@ -51,6 +55,7 @@ class _ProfilePageState extends State<ProfilePage>
     showDialog(
       context: context,
       builder: (context) {
+
         return BlocBuilder<UserCubit, UserState>(
           builder: (context, state) {
             if (state is UserLoading) {
@@ -116,6 +121,7 @@ class _ProfilePageState extends State<ProfilePage>
               return const SizedBox.shrink();
             }
           },
+
         );
       },
     );
@@ -124,6 +130,9 @@ class _ProfilePageState extends State<ProfilePage>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final backgroundColor = theme.brightness == Brightness.dark
+        ? Colors.grey.shade900
+        : Colors.grey.shade50;
 
     return BlocBuilder<AuthCubit, AuthState>(
       builder: (context, authState) {
@@ -135,7 +144,7 @@ class _ProfilePageState extends State<ProfilePage>
         }
 
         return Scaffold(
-          backgroundColor: theme.scaffoldBackgroundColor,
+          backgroundColor: backgroundColor,
           body: SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
@@ -148,11 +157,12 @@ class _ProfilePageState extends State<ProfilePage>
                     children: [
                       IconButton(
                         onPressed: () => Navigator.pushNamed(context, '/root'),
+
                         icon: Icon(
                           Icons.arrow_back,
                           color: theme.colorScheme.onBackground,
                         ),
-                      ),
+
                       Row(
                         children: [
                           CustomDropdownButton(
@@ -174,6 +184,7 @@ class _ProfilePageState extends State<ProfilePage>
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) =>
+
                                         const ManageSubscriptionPage(),
                                   ),
                                 );
@@ -183,6 +194,7 @@ class _ProfilePageState extends State<ProfilePage>
                               Icons.edit,
                               color: theme.colorScheme.onBackground,
                             ),
+
                           ),
                           IconButton(
                             onPressed: () =>
@@ -191,6 +203,7 @@ class _ProfilePageState extends State<ProfilePage>
                               Icons.settings,
                               color: theme.colorScheme.onBackground,
                             ),
+
                           ),
                         ],
                       ),
@@ -201,12 +214,14 @@ class _ProfilePageState extends State<ProfilePage>
 
                   CircleAvatar(
                     radius: 60,
+
                     backgroundColor: theme.colorScheme.surfaceVariant,
                     child: Icon(
                       Icons.person,
                       size: 60,
                       color: theme.colorScheme.onSurface.withOpacity(0.6),
                     ),
+
                   ),
 
                   const SizedBox(height: 20),
@@ -214,18 +229,22 @@ class _ProfilePageState extends State<ProfilePage>
                   Text(
                     fullName ?? "john_doe",
                     style: TextStyle(
+
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.onBackground,
                     ),
+
                   ),
                   const SizedBox(height: 8),
                   Text(
                     email ?? "johndoe_email",
                     style: TextStyle(
+
                       fontSize: 16,
                       color: theme.colorScheme.onBackground.withOpacity(0.6),
                     ),
+
                   ),
 
                   const SizedBox(height: 30),
@@ -236,14 +255,18 @@ class _ProfilePageState extends State<ProfilePage>
                     children: [
                       IndicatorCard(
                         title: "subscribed".tr(),
+
                         count: userTopics.length,
                         color: theme.colorScheme.surfaceVariant,
+
                         onTap: () => Navigator.pushNamed(context, '/following'),
                       ),
                       IndicatorCard(
                         title: "saved_news".tr(),
                         count: 34,
-                        color: theme.colorScheme.surfaceVariant,
+                        color: theme.brightness == Brightness.dark
+                            ? Colors.blueGrey.shade800
+                            : Colors.blueGrey.shade100,
                         onTap: () => Navigator.pushNamed(context, '/saved'),
                       ),
                     ],
@@ -285,15 +308,18 @@ class _ProfilePageState extends State<ProfilePage>
                           Text(
                             "your_interests".tr(),
                             style: TextStyle(
+
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                               color: theme.colorScheme.onBackground,
                             ),
+
                           ),
                           const SizedBox(height: 12),
                           if (isLoading)
                             const Center(child: CircularProgressIndicator())
                           else
+
                             Wrap(
                               spacing: 12,
                               runSpacing: 12,
@@ -353,8 +379,28 @@ class _ProfilePageState extends State<ProfilePage>
                                     onPressed: () => setState(
                                       () => isManagingTopics = false,
                                     ),
+
                                   ),
-                              ],
+                                  if (isManagingTopics)
+                                    ActionChip(
+                                      label: Text("Add".tr(),
+                                          style: TextStyle(
+                                              color: theme.colorScheme.onPrimary)),
+                                      avatar: Icon(Icons.add,
+                                          color: theme.colorScheme.onPrimary),
+                                      backgroundColor: theme.colorScheme.primary,
+                                      onPressed: _showAddTopicDialog,
+                                    ),
+                                  if (isManagingTopics)
+                                    ActionChip(
+                                      label: Text("done".tr(),
+                                          style: TextStyle(
+                                              color: theme.colorScheme.onBackground)),
+                                      backgroundColor: theme.colorScheme.surfaceVariant,
+                                      onPressed: () => setState(() => isManagingTopics = false),
+                                    ),
+                                ],
+                              ),
                             ),
                         ],
                       );

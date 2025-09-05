@@ -1,12 +1,14 @@
 import 'dart:ui';
+
 class News {
-  final String id; // optional: for caching or backend reference
+  final String id;
   final String titleEn;
   final String titleAm;
   final String descriptionEn;
   final String descriptionAm;
   final String source;
   final String imageUrl;
+  final List<String>? topics; // <-- optional topics field
 
   News({
     required this.id,
@@ -16,6 +18,7 @@ class News {
     required this.descriptionAm,
     required this.source,
     required this.imageUrl,
+    this.topics, // <-- optional
   });
 
   /// Returns title based on current locale
@@ -35,6 +38,7 @@ class News {
       descriptionAm: json['description_am'] ?? '',
       source: json['source'] ?? '',
       imageUrl: json['image_url'] ?? '',
+      topics: (json['topics'] as List<dynamic>?)?.map((e) => e.toString()).toList(),
     );
   }
 
@@ -48,6 +52,7 @@ class News {
       'description_am': descriptionAm,
       'source': source,
       'image_url': imageUrl,
+      'topics': topics, // <-- include topics in JSON
     };
   }
 }

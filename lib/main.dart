@@ -37,6 +37,8 @@ import 'package:newsbrief/features/news/presentation/pages/news_detail_page.dart
 import 'core/storage/theme_storage.dart';
 import 'core/theme/theme_cubit.dart';
 
+import 'features/auth/presentation/pages/admin_dashboard.dart';
+import 'features/auth/presentation/pages/dashboard_page.dart';
 import 'features/auth/presentation/pages/signup_landing.dart';
 
 import 'package:newsbrief/features/auth/presentation/pages/login.dart';
@@ -159,6 +161,7 @@ class MyApp extends StatelessWidget {
               case '/profile':
                 page = const ProfilePage();
                 break;
+
               case '/news_detail':
                 final args = settings.arguments as Map<String, dynamic>;
                 page = NewsDetailPage(
@@ -168,6 +171,9 @@ class MyApp extends StatelessWidget {
                   imageUrl: args['imageUrl'] as String,
                   detail: args['detail'] as String,
                 );
+              case '/admin_dashboard': // <-- add this case
+                page = const AdminDashboardPage();
+
                 break;
               default:
                 page = const Login();
