@@ -147,20 +147,3 @@ func (h *TopicHandler) GetUserSubscribedTopics(c *gin.Context) {
 
 	c.JSON(http.StatusOK, topics)
 }
-
-func (h *TopicHandler) UnsubscribeTopic(c *gin.Context) {
-	userID := c.GetString("userID")
-	topicID := c.Param("topicID")
-
-	if userID == "" || topicID == "" {
-		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "User ID and Topic ID are required"})
-		return
-	}
-
-	if err := h.userUsecase.UnsubscribeTopic(c.Request.Context(), userID, topicID); err != nil {
-		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: "Failed to unsubscribe from topic"})
-		return
-	}
-
-	c.JSON(http.StatusOK, dto.MessageResponse{Message: "Unsubscribed from topic successfully"})
-}
