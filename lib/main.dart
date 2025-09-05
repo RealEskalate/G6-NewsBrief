@@ -35,6 +35,8 @@ import 'package:newsbrief/features/auth/presentation/cubit/user_cubit.dart';
 import 'core/storage/theme_storage.dart';
 import 'core/theme/theme_cubit.dart';
 
+import 'features/auth/presentation/pages/admin_dashboard.dart';
+import 'features/auth/presentation/pages/dashboard_page.dart';
 import 'features/auth/presentation/pages/signup_landing.dart';
 
 import 'package:newsbrief/features/auth/presentation/pages/login.dart';
@@ -159,6 +161,9 @@ class MyApp extends StatelessWidget {
                 break;
               case '/profile':
                 page = const ProfilePage();
+                break;
+              case '/admin_dashboard': // <-- add this case
+                page = const AdminDashboardPage();
                 break;
               default:
                 page = const Login();
