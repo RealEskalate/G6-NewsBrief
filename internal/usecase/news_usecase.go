@@ -54,3 +54,30 @@ func (u *newsUsecase) ListForYou(ctx context.Context, userID string, page, limit
 	}
 	return u.repo.FindBySourceIDs(ids, page, limit)
 }
+
+// ListByTopicID lists news associated with a specific topic ID
+func (u *newsUsecase) ListByTopicID(ctx context.Context, topicID string, page, limit int) ([]*entity.News, int64, int, error) {
+	if limit <= 0 {
+		limit = 10
+	}
+	if topicID == "" {
+		return []*entity.News{}, 0, 0, nil
+	}
+	return u.repo.FindByTopicID(ctx, topicID, page, limit)
+}
+
+// ListTrending returns paginated news sorted by recency (as a basic trending mechanism)
+func (u *newsUsecase) ListTrending(page, limit int) ([]*entity.News, int64, int, error) {
+	if limit <= 0 {
+		limit = 10
+	}
+	return u.repo.FindTrending(page, limit)
+}
+
+// ListToday returns the top-N news items from today only
+func (u *newsUsecase) ListToday(limit int) ([]*entity.News, int64, int, error) {
+	if limit <= 0 {
+		limit = 4
+	}
+	return u.repo.FindToday(limit)
+}

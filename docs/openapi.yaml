@@ -8,6 +8,8 @@ info:
 servers:
   - url: http://localhost:8080/api/v1
     description: Local
+  - url: https://news-brief-core-api.onrender.com/api/v1
+    description: Global
 paths:
   /auth/register:
     post:
@@ -290,6 +292,7 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/MessageResponse" }
               example: { message: "Subscribed to topic successfully" }
+        "400": { description: Invalid topic IDs or payload }
         "401": { description: Unauthorized }
   /me/topics/{topicID}:
     delete:
@@ -309,7 +312,8 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/MessageResponse" }
               example: { message: "Unsubscribed from topic successfully" }
-        "401": { description: Unauthorized }
+  "401": { description: Unauthorized }
+  "404": { description: Topic or user not found }
   /me/subscribed-topics:
     get:
       operationId: listSubscribedTopics
@@ -399,6 +403,30 @@ paths:
       tags: [user, bookmarks]
       summary: List bookmarks for the authenticated user
       security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NewsListResponseDTO" }
+  /topics/{topicID}/news:
+  /news/today:
+    get:
+      operationId: getTodayNews
+      tags: [news]
+  summary: Get today's news (exactly 4 most recent items)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NewsListResponseDTO" }
+        "500": { description: Server error }
+  /news/trending:
+    get:
+      operationId: getTrendingNews
+      tags: [news]
+      summary: Get trending news (paginated, sorted by recency)
       parameters:
         - in: query
           name: page
@@ -412,6 +440,30 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/NewsListResponseDTO" }
+        "500": { description: Server error }
+    get:
+      operationId: listNewsByTopic
+      tags: [news, topics]
+      summary: List news for a given topic
+      description: Returns paginated news where the news document contains the given topic ID in its topics array.
+      parameters:
+        - in: path
+          name: topicID
+          required: true
+          schema: { type: string }
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, default: 10 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NewsListResponseDTO"
               example:
                 news:
                   - id: 6c0b1a64-1b0f-4e53-9463-8d5c8bb4c9c1
@@ -423,12 +475,12 @@ paths:
                     published_at: 2025-09-01T08:30:00Z
                     created_at: 2025-09-01T08:30:10Z
                     updated_at: 2025-09-01T08:35:00Z
-                    is_bookmarked: true
                 total: 1
                 total_pages: 1
                 page: 1
                 limit: 10
-        "401": { description: Unauthorized }
+        "400": { description: Missing or invalid topicID }
+        "500": { description: Internal server error }
   /me/bookmarks/{news_id}:
     delete:
       operationId: unsaveBookmark

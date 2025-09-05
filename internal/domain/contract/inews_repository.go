@@ -11,9 +11,15 @@ type INewsRepository interface {
 	Update(news *entity.News) error
 	FindByID(id string) (*entity.News, error)
 	FindAll(page, limit int) ([]*entity.News, int64, int, error)
+	// FindTrending returns paginated news sorted by published_at desc
+	FindTrending(page, limit int) ([]*entity.News, int64, int, error)
+	// FindToday returns today's news (from local midnight to now), limited and sorted by published_at desc
+	FindToday(limit int) ([]*entity.News, int64, int, error)
 	// FindBySourceIDs returns paginated news filtered by a set of source IDs.
 	FindBySourceIDs(sourceIDs []string, page, limit int) ([]*entity.News, int64, int, error)
 	// FindByIDs returns a list of news by IDs (no pagination, preserves order not guaranteed)
 	FindByIDs(ctx context.Context, ids []string) ([]*entity.News, error)
+	// FindByTopicID returns paginated news filtered by a given topic ID
+	FindByTopicID(ctx context.Context, topicID string, page, limit int) ([]*entity.News, int64, int, error)
 	// Delete(id string) error
 }
