@@ -29,9 +29,10 @@ type Router struct {
 	sourceHandler       *SourceHandler
 	subscriptionHandler *SubscriptionHandler
 	newsHandler         *NewsHandler
+	bookmarkHandler     *BookmarkHandler
 }
 
-func NewRouter(userUsecase contract.IUserUseCase, emailVerUC contract.IEmailVerificationUC, userRepo contract.IUserRepository, tokenRepo contract.ITokenRepository, hasher contract.IHasher, jwtService contract.IJWTService, mailService contract.IEmailService, logger contract.IAppLogger, config contract.IConfigProvider, validator contract.IValidator, uuidGen contract.IUUIDGenerator, randomGen contract.IRandomGenerator, sourceUC contract.ISourceUsecase, topicUC contract.ITopicUsecase, subscriptionUC contract.ISubscriptionUsecase, sourceRepo contract.ISourceRepository, newsRepo contract.INewsRepository, geminiClient contract.IGeminiClient) *Router {
+func NewRouter(userUsecase contract.IUserUseCase, emailVerUC contract.IEmailVerificationUC, userRepo contract.IUserRepository, tokenRepo contract.ITokenRepository, hasher contract.IHasher, jwtService contract.IJWTService, mailService contract.IEmailService, logger contract.IAppLogger, config contract.IConfigProvider, validator contract.IValidator, uuidGen contract.IUUIDGenerator, randomGen contract.IRandomGenerator, sourceUC contract.ISourceUsecase, topicUC contract.ITopicUsecase, subscriptionUC contract.ISubscriptionUsecase, sourceRepo contract.ISourceRepository, newsRepo contract.INewsRepository, bookmarkRepo contract.IBookmarkRepository, geminiClient contract.IGeminiClient) *Router {
 
 	baseURL := config.GetAppBaseURL()
 	summarizerUC := usecase.NewsSummarizerUsecase(geminiClient, newsRepo)
@@ -44,6 +45,7 @@ func NewRouter(userUsecase contract.IUserUseCase, emailVerUC contract.IEmailVeri
 	// Instead, pass sourceRepo to router.NewRouter from main by adding it to params in future if needed.
 	// For now, assume we can obtain it from sourceUC via GetAll + map by slug when necessary, but ListForYou resolves via sourceRepo directly injected in main.
 	newsUC := usecase.NewNewsUsecase(newsRepo, userRepo, sourceRepo)
+	bookmarkUC := usecase.NewBookmarkUsecase(bookmarkRepo, newsRepo, uuidGen)
 	return &Router{
 		userHandler:         NewUserHandler(userUsecase),
 		emailHandler:        NewEmailHandler(emailVerUC, userRepo, jwtService, tokenRepo, hasher, config, uuidGen),
@@ -56,6 +58,7 @@ func NewRouter(userUsecase contract.IUserUseCase, emailVerUC contract.IEmailVeri
 		sourceHandler:       NewSourceHandler(sourceUC, uuidGen),
 		subscriptionHandler: NewSubscriptionHandler(subscriptionUC),
 		newsHandler:         NewNewsHandler(newsUC),
+		bookmarkHandler:     NewBookmarkHandler(bookmarkUC),
 		jwtService:          jwtService,
 		userUsecase:         userUsecase,
 	}
@@ -138,9 +141,14 @@ func (r *Router) SetupRoutes(router *gin.Engine) {
 		userProfile.DELETE("/subscriptions/:source_slug", r.subscriptionHandler.RemoveSubscription)
 		userProfile.GET("/topics", r.topicHandler.GetUserSubscribedTopics)
 		userProfile.POST("/topics", r.topicHandler.SubscribeTopic)
-		userProfile.DELETE("/topics/:topic_slug", r.topicHandler.UnsubscribeTopic)
+		userProfile.DELETE("/topics/:topicID", r.topicHandler.UnsubscribeTopic)
+		userProfile.GET("/subscribed-topics", r.topicHandler.GetUserSubscribedTopics)
 		// personalized feed (For You)
 		userProfile.GET("/for-you", r.newsHandler.GetForYou)
+		// bookmarks
+		userProfile.POST("/bookmarks", r.bookmarkHandler.Save)
+		userProfile.DELETE("/bookmarks/:news_id", r.bookmarkHandler.Unsave)
+		userProfile.GET("/bookmarks", r.bookmarkHandler.List)
 	}
 	// public api
 	public := v1.Group("")

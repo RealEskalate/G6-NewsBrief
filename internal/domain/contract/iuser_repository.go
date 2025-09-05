@@ -20,12 +20,16 @@ type IUserRepository interface {
 	// DeleteUser removes a user by ID.
 	DeleteUser(ctx context.Context, id string) error
 	// AddSubscription adds a source key to a user's list of subscriptions.
-	AddSourceSubscription(ctx context.Context, userID string, sourceSlug string) error
-	// RemoveSubscription removes a source slug from a user's list of subscriptions.
-	RemoveSourceSubscription(ctx context.Context, userID string, sourceSlug string) error
-	// GetSubscriptions retrieves the list of subscribed source slugs for a user.
-	GetSourceSubscriptions(ctx context.Context, userID string) ([]string, error)
-	SubscribeTopic(ctx context.Context, userID, topicSlug string) error
+	AddSubscription(ctx context.Context, userID string, sourceKey string) error
+	// RemoveSubscription removes a source key from a user's list of subscriptions.
+	RemoveSubscription(ctx context.Context, userID string, sourceKey string) error
+	// GetSubscriptions retrieves the list of subscribed source keys for a user.
+	GetSubscriptions(ctx context.Context, userID string) ([]string, error)
+	SubscribeTopic(ctx context.Context, userID, topicID string) error
+	// SubscribeTopics adds many topic IDs to preferences.topics using $addToSet with $each
+	SubscribeTopics(ctx context.Context, userID string, topicIDs []string) error
+	// UnsubscribeTopic pulls a topic ID from preferences.topics
+	UnsubscribeTopic(ctx context.Context, userID, topicID string) error
 	GetUserSubscribedTopicsByID(ctx context.Context, userID string) ([]string, error)
 	UnsubscribeTopic(ctx context.Context, userID, topicSlug string) error
 }

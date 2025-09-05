@@ -118,3 +118,26 @@ func (r *NewsRepositoryMongo) FindBySourceIDs(sourceIDs []string, page, limit in
 	}
 	return newsList, total, totalPages, nil
 }
+
+// FindByIDs returns news by IDs (no pagination)
+func (r *NewsRepositoryMongo) FindByIDs(ctx context.Context, ids []string) ([]*entity.News, error) {
+	if len(ids) == 0 {
+		return []*entity.News{}, nil
+	}
+	filter := bson.M{"_id": bson.M{"$in": ids}}
+	opts := options.Find().SetSort(bson.D{{Key: "published_at", Value: -1}})
+	cursor, err := r.collection.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+	var list []*entity.News
+	for cursor.Next(ctx) {
+		var news entity.News
+		if err := cursor.Decode(&news); err != nil {
+			return nil, err
+		}
+		list = append(list, &news)
+	}
+	return list, cursor.Err()
+}

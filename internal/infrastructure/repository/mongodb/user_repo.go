@@ -119,6 +119,10 @@ func (r *UserRepository) DeleteUser(ctx context.Context, id string) error {
 // It uses $addToSet to automatically prevent duplicates.
 func (r *UserRepository) AddSourceSubscription(ctx context.Context, id string, sourceSlug string) error {
 	filter := bson.M{"_id": id}
+	// Ensure the array field exists as an array before $addToSet to avoid "non-array type null"
+	if err := r.ensureArrayField(ctx, id, "preferences.subscribed_sources"); err != nil {
+		return err
+	}
 	update := bson.M{
 		"$addToSet": bson.M{"preferences.subscribed_sources": sourceSlug},
 	}
@@ -137,6 +141,9 @@ func (r *UserRepository) AddSourceSubscription(ctx context.Context, id string, s
 // RemoveSubscription removes a source slug from the user's embedded list of subscriptions.
 func (r *UserRepository) RemoveSourceSubscription(ctx context.Context, id string, sourceSlug string) error {
 	filter := bson.M{"_id": id}
+	if err := r.ensureArrayField(ctx, id, "preferences.subscribed_sources"); err != nil {
+		return err
+	}
 	update := bson.M{
 		"$pull": bson.M{"preferences.subscribed_sources": sourceSlug},
 	}
@@ -177,18 +184,81 @@ func (r *UserRepository) GetSourceSubscriptions(ctx context.Context, id string) 
 	return result.Preferences.SubscribedSources, nil
 }
 
-func (r *UserRepository) SubscribeTopic(ctx context.Context, userID, topicSlug string) error {
+func (r *UserRepository) SubscribeTopic(ctx context.Context, userID, topicID string) error {
 	filter := bson.M{"_id": userID}
-	update := bson.D{{
-		Key:   "$addToSet",
-		Value: bson.M{"preferences.topics": topicSlug},
-	}}
+	if err := r.ensureArrayField(ctx, userID, "preferences.topics"); err != nil {
+		return err
+	}
+	update := bson.M{
+		"$addToSet": bson.M{"preferences.topics": topicID},
+	}
 	count, err := r.collection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return err
 	}
+	if res.MatchedCount == 0 {
+		return errors.New("user not found")
+	}
+	return nil
+}
 
-	if count.MatchedCount == 0 {
+// UnsubscribeTopic pulls a topic from preferences.topics
+func (r *UserRepository) UnsubscribeTopic(ctx context.Context, userID, topicID string) error {
+	filter := bson.M{"_id": userID}
+	if err := r.ensureArrayField(ctx, userID, "preferences.topics"); err != nil {
+		return err
+	}
+	update := bson.M{
+		"$pull": bson.M{"preferences.topics": topicID},
+	}
+	res, err := r.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+	if res.MatchedCount == 0 {
+		return errors.New("user not found")
+	}
+	return nil
+}
+
+// SubscribeTopics adds multiple topics to preferences.topics using $addToSet + $each
+func (r *UserRepository) SubscribeTopics(ctx context.Context, userID string, topicIDs []string) error {
+	if len(topicIDs) == 0 {
+		return nil
+	}
+	filter := bson.M{"_id": userID}
+	if err := r.ensureArrayField(ctx, userID, "preferences.topics"); err != nil {
+		return err
+	}
+	update := bson.M{
+		"$addToSet": bson.M{
+			"preferences.topics": bson.M{"$each": topicIDs},
+		},
+	}
+	res, err := r.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+	if res.MatchedCount == 0 {
+		return errors.New("user not found")
+	}
+	return nil
+}
+
+// UnsubscribeTopic pulls a topic from preferences.topics
+func (r *UserRepository) UnsubscribeTopic(ctx context.Context, userID, topicID string) error {
+	filter := bson.M{"_id": userID}
+	if err := r.ensureArrayField(ctx, userID, "preferences.topics"); err != nil {
+		return err
+	}
+	update := bson.M{
+		"$pull": bson.M{"preferences.topics": topicID},
+	}
+	res, err := r.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+	if res.MatchedCount == 0 {
 		return errors.New("user not found")
 	}
 	return nil
@@ -215,19 +285,19 @@ func (r *UserRepository) GetUserSubscribedTopicsByID(ctx context.Context, userID
 	return result.Preferences.Topics, nil
 }
 
-func (uc *UserRepository) UnsubscribeTopic(ctx context.Context, userID, topicSlug string) error {
-	filter := bson.M{"_id": userID}
-	update := bson.D{{
-		Key:   "$pull",
-		Value: bson.M{"preferences.topics": topicSlug},
-	}}
-	count, err := uc.collection.UpdateOne(ctx, filter, update)
+// ensureArrayField initializes a nested array field to an empty array when it is missing or null.
+func (r *UserRepository) ensureArrayField(ctx context.Context, userID string, field string) error {
+	filter := bson.M{
+		"_id": userID,
+		"$or": bson.A{
+			bson.M{field: bson.M{"$exists": false}},
+			bson.M{field: bson.M{"$type": 10}}, // null
+		},
+	}
+	update := bson.M{"$set": bson.M{field: bson.A{}}}
+	_, err := r.collection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return err
-	}
-
-	if count.MatchedCount == 0 {
-		return errors.New("user not found")
 	}
 	return nil
 }

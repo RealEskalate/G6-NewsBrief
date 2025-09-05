@@ -2,6 +2,7 @@ package mongodb
 
 import (
 	"context"
+
 	"errors"
 
 	"github.com/RealEskalate/G6-NewsBrief/internal/domain/entity"
@@ -38,7 +39,6 @@ func (r *topicRepository) GetTopicByID(ctx context.Context, topicID string) (*en
 	}
 	return &topic, nil
 }
-
 func (r *topicRepository) CheckSlugExists(ctx context.Context, slug string) (bool, error) {
 	count, err := r.collection.CountDocuments(ctx, bson.M{"slug": slug})
 	if err != nil {

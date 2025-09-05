@@ -127,8 +127,9 @@ type NotificationsDTO struct {
 // topics
 // TopicDTO represents a single topic in the API response.
 type TopicDTO struct {
-	Slug       string            `json:"slug"`
-	TopicName  string            `json:"topic_name"`
+	ID   string `json:"id"`
+	Slug string `json:"slug"`
+	// TopicName  string            `json:"topic_name"`
 	Label      BilingualFieldDTO `json:"label"`
 	StoryCount int               `json:"story_count"`
 }
@@ -143,6 +144,7 @@ func MapTopicsToDTOs(topics []entity.Topic) []TopicDTO {
 	topicDTOs := make([]TopicDTO, len(topics))
 	for i, topic := range topics {
 		topicDTOs[i] = TopicDTO{
+			ID:   topic.ID,
 			Slug: topic.Slug,
 			Label: BilingualFieldDTO{
 				EN: topic.Label.EN,
@@ -156,17 +158,18 @@ func MapTopicsToDTOs(topics []entity.Topic) []TopicDTO {
 
 // NewsListItemDTO mirrors entity.News for API responses.
 type NewsListItemDTO struct {
-	ID          string   `json:"id"`
-	Title       string   `json:"title"`
-	Body        string   `json:"body"`
-	SummaryEN   string   `json:"summary_en,omitempty"`
-	SummaryAM   string   `json:"summary_am,omitempty"`
-	Language    string   `json:"language"`
-	SourceID    string   `json:"source_id"`
-	Topics      []string `json:"topics,omitempty"`
-	PublishedAt string   `json:"published_at"`
-	CreatedAt   string   `json:"created_at"`
-	UpdatedAt   string   `json:"updated_at"`
+	ID           string   `json:"id"`
+	Title        string   `json:"title"`
+	Body         string   `json:"body"`
+	SummaryEN    string   `json:"summary_en,omitempty"`
+	SummaryAM    string   `json:"summary_am,omitempty"`
+	Language     string   `json:"language"`
+	SourceID     string   `json:"source_id"`
+	Topics       []string `json:"topics,omitempty"`
+	PublishedAt  string   `json:"published_at"`
+	CreatedAt    string   `json:"created_at"`
+	UpdatedAt    string   `json:"updated_at"`
+	IsBookmarked *bool    `json:"is_bookmarked,omitempty"`
 }
 
 type NewsListResponseDTO struct {
@@ -192,6 +195,33 @@ func MapNewsToDTOs(list []*entity.News) []NewsListItemDTO {
 			PublishedAt: n.PublishedAt.Format(time.RFC3339),
 			CreatedAt:   n.CreatedAt.Format(time.RFC3339),
 			UpdatedAt:   n.UpdatedAt.Format(time.RFC3339),
+		})
+	}
+	return out
+}
+
+// MapNewsToDTOsWithBookmarks maps news list and enriches with per-user bookmark flags
+func MapNewsToDTOsWithBookmarks(list []*entity.News, flags map[string]bool) []NewsListItemDTO {
+	out := make([]NewsListItemDTO, 0, len(list))
+	for _, n := range list {
+		var bm *bool
+		if flags != nil {
+			v := flags[n.ID]
+			bm = &v
+		}
+		out = append(out, NewsListItemDTO{
+			ID:           n.ID,
+			Title:        n.Title,
+			Body:         n.Body,
+			SummaryEN:    n.SummaryEN,
+			SummaryAM:    n.SummaryAM,
+			Language:     n.Language,
+			SourceID:     n.SourceID,
+			Topics:       n.Topics,
+			PublishedAt:  n.PublishedAt.Format(time.RFC3339),
+			CreatedAt:    n.CreatedAt.Format(time.RFC3339),
+			UpdatedAt:    n.UpdatedAt.Format(time.RFC3339),
+			IsBookmarked: bm,
 		})
 	}
 	return out

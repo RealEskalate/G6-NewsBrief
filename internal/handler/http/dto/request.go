@@ -65,6 +65,12 @@ type UpdateTopicsRequest struct {
 	Topics []string `json:"topics" binding:"required,dive,min=1"`
 }
 
+// SubscribeTopicsRequest allows selecting zero or more topics in one request.
+// The topics field must be present (can be empty array if user chooses none).
+type SubscribeTopicsRequest struct {
+	Topics []string `json:"topics" binding:"required"`
+}
+
 // NotificationsRequestDTO defines the nested notifications object for preference updates.
 type NotificationsRequestDTO struct {
 	DailyBrief   *bool `json:"daily_brief"`
@@ -77,4 +83,9 @@ type UpdatePreferencesRequest struct {
 	BriefType     *string                  `json:"brief_type"`
 	DataSaver     *bool                    `json:"data_saver"`
 	Notifications *NotificationsRequestDTO `json:"notifications,omitempty"`
+}
+
+// SaveBookmarkRequest is the DTO to bookmark a news item
+type SaveBookmarkRequest struct {
+	NewsID string `json:"news_id" binding:"required"`
 }

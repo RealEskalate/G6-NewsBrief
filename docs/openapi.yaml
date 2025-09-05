@@ -238,17 +238,50 @@ paths:
         '200': { description: OK }
   /me/topics:
     post:
-      operationId: subscribeTopic
+      operationId: subscribeTopics
       tags: [user]
-      summary: Subscribe to a topic
+      summary: Subscribe to multiple topics (batch)
+      description: |
+        Accepts an array of topic IDs. If the array is empty, the server is a no-op and returns 200.
+        If non-empty, the topics are subscribed idempotently and a success message is returned.
       security: [{ bearerAuth: [] }]
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/SubscribeTopicRequest' }
+            schema: { $ref: '#/components/schemas/SubscribeTopicsRequest' }
+            example:
+              topics: [
+                "f1d3ff84-12ab-4cde-98ef-abcdef123456",
+                "0cc175b9-6a6a-4e2f-bb1d-1234567890ab"
+              ]
       responses:
-        '200': { description: OK }
+        '200':
+          description: Subscribed (or no-op when empty)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MessageResponse' }
+              example: { message: "Subscribed to topic successfully" }
+        '401': { description: Unauthorized }
+  /me/topics/{topicID}:
+    delete:
+      operationId: unsubscribeTopic
+      tags: [user]
+      summary: Unsubscribe from a topic
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: topicID
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Unsubscribed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MessageResponse' }
+              example: { message: "Unsubscribed from topic successfully" }
+        '401': { description: Unauthorized }
   /me/subscribed-topics:
     get:
       operationId: listSubscribedTopics
@@ -294,6 +327,73 @@ paths:
                 total_pages: 5
                 page: 1
                 limit: 10
+  /me/bookmarks:
+    post:
+      operationId: saveBookmark
+      tags: [user, bookmarks]
+      summary: Save a bookmark for the authenticated user
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SaveBookmarkRequest' }
+            example: { news_id: '6c0b1a64-1b0f-4e53-9463-8d5c8bb4c9c1' }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/MessageResponse' } } } }
+        '400': { description: Invalid request }
+        '401': { description: Unauthorized }
+        '409': { description: Already bookmarked }
+    get:
+      operationId: listBookmarks
+      tags: [user, bookmarks]
+      summary: List bookmarks for the authenticated user
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, default: 10 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NewsListResponseDTO' }
+              example:
+                news:
+                  - id: 6c0b1a64-1b0f-4e53-9463-8d5c8bb4c9c1
+                    title: Example headline
+                    body: Example body...
+                    language: en
+                    source_id: 8f3c2a18-5a2b-4d3b-9b8a-7e2f1c0a9d11
+                    topics: ["f1d3ff84-12ab-4cde-98ef-abcdef123456"]
+                    published_at: 2025-09-01T08:30:00Z
+                    created_at: 2025-09-01T08:30:10Z
+                    updated_at: 2025-09-01T08:35:00Z
+                    is_bookmarked: true
+                total: 1
+                total_pages: 1
+                page: 1
+                limit: 10
+        '401': { description: Unauthorized }
+  /me/bookmarks/{news_id}:
+    delete:
+      operationId: unsaveBookmark
+      tags: [user, bookmarks]
+      summary: Remove a bookmark for the authenticated user
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: news_id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/MessageResponse' } } } }
+        '401': { description: Unauthorized }
+        '404': { description: Not Found }
   /topics:
     get:
       operationId: listTopics
@@ -610,6 +710,13 @@ components:
       required: [topicID]
       properties:
         topicID: { type: string }
+    SubscribeTopicsRequest:
+      type: object
+      required: [topics]
+      properties:
+        topics:
+          type: array
+          items: { type: string }
     SourceDTO:
       type: object
       properties:
@@ -705,6 +812,7 @@ components:
         published_at: { type: string, format: date-time }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
+        is_bookmarked: { type: boolean, nullable: true, description: "Present when authenticated; true if current user bookmarked this news" }
     NewsListResponseDTO:
       type: object
       properties:
@@ -715,6 +823,11 @@ components:
         total_pages: { type: integer }
         page: { type: integer }
         limit: { type: integer }
+    SaveBookmarkRequest:
+      type: object
+      required: [news_id]
+      properties:
+        news_id: { type: string }
     ChatRequest:
       type: object
       required: [message]

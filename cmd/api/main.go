@@ -97,6 +97,7 @@ func main() {
 	tokenRepo := mongodb.NewTokenRepository(mongoClient.Client.Database(dbName).Collection("tokens"))
 	topicRepo := mongodb.NewTopicRepository(mongoClient.Client.Database(dbName).Collection("topics"))
 	sourceRepo := mongodb.NewSourceRepository(mongoClient.Client.Database(dbName).Collection("sources"))
+	bookmarkRepo := mongodb.NewBookmarkRepository(mongoClient.Client.Database(dbName))
 	// Dependency Injection: Services
 	hasher := passwordservice.NewHasher()
 	jwtSecret := os.Getenv("JWT_SECRET")
@@ -136,7 +137,7 @@ func main() {
 		userUsecase, emailUsecase,
 		userRepo, tokenRepo, hasher, jwtService, mailService,
 		appLogger, appConfig, appValidator, uuidGenerator, randomGenerator, sourceUsecase, topicUsecase, subscriptionUsecase,
-		sourceRepo, newsRepo, geminiClient,
+		sourceRepo, newsRepo, bookmarkRepo, geminiClient,
 	)
 
 	// Initialize Gin router
