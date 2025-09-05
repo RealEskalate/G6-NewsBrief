@@ -47,7 +47,7 @@ func (h *TopicHandler) CreateTopic(c *gin.Context) {
 	}
 
 	if err := h.topicUsecase.CreateTopic(c.Request.Context(), &topic); err != nil {
-		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: "Failed to create topic"})
+		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: err.Error()})
 		return
 	}
 
