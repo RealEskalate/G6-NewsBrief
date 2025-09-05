@@ -156,6 +156,9 @@ func (r *Router) SetupRoutes(router *gin.Engine) {
 	{
 		// News listing for frontend mockdata
 		public.GET("/news", r.newsHandler.GetNews)
+		public.GET("/news/today", r.newsHandler.GetTodayNews)
+		public.GET("/news/trending", r.newsHandler.GetTrendingNews)
+		public.GET("/topics/:topicID/news", r.newsHandler.GetNewsByTopic)
 		public.GET("/topics", r.topicHandler.GetTopics)
 		public.GET("/sources", r.sourceHandler.GetSources)
 	}

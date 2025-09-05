@@ -154,7 +154,7 @@ func (h *AuthHandler) HandleGoogleCallback(ctx *gin.Context) {
 
 	if frontend != "" {
 		u, _ := url.Parse(frontend)
-		u.Path = "/news"
+		u.Path = "/auth/success"
 		q := u.Query()
 		q.Set("access_token", accessToken)
 		q.Set("refresh_token", refreshToken)
