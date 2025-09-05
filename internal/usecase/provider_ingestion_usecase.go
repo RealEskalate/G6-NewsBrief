@@ -90,11 +90,12 @@ func (uc *providerIngestion) IngestFromProvider(ctx context.Context, query strin
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		}
-		if lang == "en" {
+		switch lang {
+		case "en":
 			n.SummaryEN = summary
-		} else if lang == "am" {
+		case "am":
 			n.SummaryAM = summary
-		} else {
+		default:
 			n.SummaryEN = summary
 		}
 

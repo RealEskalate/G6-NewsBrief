@@ -144,9 +144,9 @@ func main() {
 	// Setup API routes
 	appRouter := handlerHttp.NewRouter(
 		userUsecase, emailUsecase,
-		userRepo, tokenRepo, analyticRepo, hasher, jwtService, mailService,
+		userRepo, tokenRepo, analyticRepo, topicRepo, hasher, jwtService, mailService,
 		appLogger, appConfig, appValidator, uuidGenerator, randomGenerator, sourceUsecase, topicUsecase, subscriptionUsecase,
-		sourceRepo, newsRepo, topicRepo, bookmarkRepo, geminiClient,
+		sourceRepo, newsRepo, bookmarkRepo, geminiClient,
 	)
 
 	// Initialize Gin router
