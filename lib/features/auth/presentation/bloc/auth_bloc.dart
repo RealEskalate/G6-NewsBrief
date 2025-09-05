@@ -60,7 +60,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(AuthFailure(e.toString()));
       }
     });
-    
+
     //google login handler
     on<LoginWithGoogleEvent>((event, emit) async {
       emit(AuthLoading());

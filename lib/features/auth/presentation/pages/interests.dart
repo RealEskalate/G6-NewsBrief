@@ -151,15 +151,15 @@ class _InterestsScreenState extends State<InterestsScreen> {
                         onPressed: canContinue
                             ? () {
 
-                                final selected = selectedInterests.entries
-                                    .where((e) => e.value)
-                                    .map((e) => e.key)
-                                    .toList();
-                                context.read<UserCubit>().saveInterests(
-                                  selected,
-                                );
-                                Navigator.pushNamed(context, '/root');
-                              }
+                          final selected = selectedInterests.entries
+                              .where((e) => e.value)
+                              .map((e) => e.key)
+                              .toList();
+                          context.read<UserCubit>().saveInterests(
+                            selected,
+                          );
+                          Navigator.pushNamed(context, '/root');
+                        }
 
                             : null,
                         style: ElevatedButton.styleFrom(
