@@ -1,3 +1,4 @@
+from app.services.lang_detector import detect_language
 import chromadb
 from typing import List, Dict
 import logging
@@ -23,9 +24,10 @@ class VectorDBService:
                     "source_site": article["source_site"],
                     "source_type": article["source_type"],
                     "published_date": article["published_date"],
-                    "crawl_timestamp": article["crawl_timestamp"]
+                    "crawl_timestamp": article["crawl_timestamp"],
+                    "lang": article.get("lang", detect_language(text))
                 }]
-            )
+            ) 
             logger.info(f"Stored article in ChromaDB: {article['title']} (ID: {article['_id']})")
         except Exception as e:
             logger.error(f"Failed to add article {article['title']}: {e}")
@@ -48,7 +50,8 @@ class VectorDBService:
                     "source_type": results["metadatas"][0][i]["source_type"],
                     "published_date": results["metadatas"][0][i]["published_date"],
                     "crawl_timestamp": results["metadatas"][0][i]["crawl_timestamp"],
-                    "distance": results["distances"][0][i]
+                    "distance": results["distances"][0][i],
+                    "lang": results["metadatas"][0][i].get("lang", detect_language(results["documents"][0][i]))
                 })
             logger.info(f"Retrieved {len(articles)} articles for query: {query}")
             return articles

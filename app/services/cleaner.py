@@ -2,6 +2,8 @@
 from typing import List, Dict
 from datetime import datetime
 from app.models.news import NewsArticle
+from app.services.lang_detector import detect_language
+from app.services.lang_detector import detect_language
 from app.utils.helpers import parse_date
 from app.services.vector_db import VectorDBService
 import logging
@@ -55,7 +57,8 @@ def clean_news_data(raw_data: List[Dict], vector_db: VectorDBService) -> List[Ne
             source_url=item.get("source_url", item.get("source_link")),
             source_type=item["source_type"],
             source_site=item.get("source_site", "unknown"),
-            keyword=item.get("keyword", None)
+            keyword=item.get("keyword", None),
+            lang=item.get("lang", detect_language(clean_body))
         )
         cleaned.append(article)
 

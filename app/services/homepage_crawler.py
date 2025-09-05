@@ -60,7 +60,8 @@ async def crawl_homepages(crawler: AsyncWebCrawler, sources: List[Dict], urls: L
                                     "content": "",
                                     "published_date": "Not available",
                                     "crawl_timestamp": datetime.now(timezone.utc).isoformat(),
-                                    "_id": str(uuid.uuid4())
+                                    "_id": str(uuid.uuid4()),
+                                    "lang": None  # To be filled after content extraction
                                 })
                     break
             except Exception as e:

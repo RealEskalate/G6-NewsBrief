@@ -2,6 +2,7 @@ import requests
 from os import getenv
 from typing import Dict, List
 from app.models.news import NewsAPIRequest
+from app.services.lang_detector import detect_language
 
 async def fetch_news_api(req: NewsAPIRequest) -> List[Dict]:
     """
@@ -34,6 +35,7 @@ async def fetch_news_api(req: NewsAPIRequest) -> List[Dict]:
             "date": art.get("publishedAt"),
             "body": art["description"] if art["description"] else "" + art.get("content", ""),
             "source_url": art["url"],
-            "source_type": "newsapi"
+            "source_type": "newsapi",
+            "lang": art.get("language", detect_language(art["description"] if art["description"] else art.get("content", ""))),
         } for art in articles
     ]

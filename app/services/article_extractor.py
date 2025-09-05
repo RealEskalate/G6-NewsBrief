@@ -1,3 +1,4 @@
+from app.services.lang_detector import detect_language
 from crawl4ai import AsyncWebCrawler
 from app.config import SITE_CONFIGS
 from bs4 import BeautifulSoup
@@ -86,7 +87,8 @@ async def extract_article_content(crawler: AsyncWebCrawler, url: str, title: str
                     "published_date": pub_datetime.isoformat(),
                     "crawl_timestamp": datetime.now(timezone.utc).isoformat(),
                     "_id": str(uuid.uuid4()),
-                    "pub_datetime": pub_datetime  # For sorting
+                    "pub_datetime": pub_datetime,  # For sorting
+                    "lang": detect_language(content),
                 }
             except Exception as e:
                 logger.error(f"Attempt {attempt + 1} failed to crawl article {url}: {e}")

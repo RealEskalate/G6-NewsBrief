@@ -1,4 +1,5 @@
 from app.config import GENRES
+from app.services.lang_detector import detect_language
 import feedparser
 from datetime import datetime, timezone, timedelta
 from bs4 import BeautifulSoup
@@ -72,7 +73,8 @@ async def crawl_rss_feeds(sources: List[Dict], query: str, genre: str | None = N
                             "published_date": pub_datetime.isoformat() if pub_datetime else "Not available",
                             "crawl_timestamp": datetime.now(timezone.utc).isoformat(),
                             "_id": str(uuid.uuid4()),
-                            "pub_datetime": pub_datetime  # For sorting
+                            "pub_datetime": pub_datetime,  # For sorting
+                            "lang": detect_language(content) if content else None
                         })
                 logger.info(f"Extracted {len(rss_articles)} articles from {feed_url}")
             except Exception as e:

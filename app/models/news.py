@@ -25,6 +25,7 @@ class NewsArticle(BaseModel):
     source_type: str = "general"
     source_site: Optional[str] = None
     keyword: Optional[str] = None
+    lang: Optional[str] = "en"
 
 class CleanedNews(BaseModel):
     articles: List[NewsArticle]

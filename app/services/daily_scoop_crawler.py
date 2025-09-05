@@ -1,4 +1,5 @@
 import asyncio
+from app.services.lang_detector import detect_language
 from crawl4ai import AsyncWebCrawler
 from bs4 import BeautifulSoup
 from datetime import datetime, timezone, timedelta
@@ -60,7 +61,8 @@ async def crawl_daily_scoop(crawler: AsyncWebCrawler, semaphore, query: str) -> 
                             "published_date": pub_datetime.isoformat(),
                             "crawl_timestamp": datetime.now(timezone.utc).isoformat(),
                             "_id": str(uuid.uuid4()),
-                            "pub_datetime": pub_datetime  # For sorting
+                            "pub_datetime": pub_datetime,  # For sorting
+                            "lang": detect_language(content),
                         })
                 logger.info(f"Extracted {len(news_items)} Daily Scoop items")
                 news_items.sort(key=lambda x: x["pub_datetime"], reverse=True)
