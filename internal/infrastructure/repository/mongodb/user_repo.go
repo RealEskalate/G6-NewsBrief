@@ -184,7 +184,7 @@ func (r *UserRepository) GetSourceSubscriptions(ctx context.Context, id string) 
 	return result.Preferences.SubscribedSources, nil
 }
 
-func (r *UserRepository) SubscribeTopic(ctx context.Context, userID, topicID string) error {
+/* func (r *UserRepository) SubscribeTopic(ctx context.Context, userID, topicID string) error {
 	filter := bson.M{"_id": userID}
 	if err := r.ensureArrayField(ctx, userID, "preferences.topics"); err != nil {
 		return err
@@ -201,7 +201,7 @@ func (r *UserRepository) SubscribeTopic(ctx context.Context, userID, topicID str
 	}
 	return nil
 }
-
+*/
 // UnsubscribeTopic pulls a topic from preferences.topics
 func (r *UserRepository) UnsubscribeTopic(ctx context.Context, userID, topicID string) error {
 	filter := bson.M{"_id": userID}
@@ -234,25 +234,6 @@ func (r *UserRepository) SubscribeTopics(ctx context.Context, userID string, top
 		"$addToSet": bson.M{
 			"preferences.topics": bson.M{"$each": topicIDs},
 		},
-	}
-	res, err := r.collection.UpdateOne(ctx, filter, update)
-	if err != nil {
-		return err
-	}
-	if res.MatchedCount == 0 {
-		return errors.New("user not found")
-	}
-	return nil
-}
-
-// UnsubscribeTopic pulls a topic from preferences.topics
-func (r *UserRepository) UnsubscribeTopic(ctx context.Context, userID, topicID string) error {
-	filter := bson.M{"_id": userID}
-	if err := r.ensureArrayField(ctx, userID, "preferences.topics"); err != nil {
-		return err
-	}
-	update := bson.M{
-		"$pull": bson.M{"preferences.topics": topicID},
 	}
 	res, err := r.collection.UpdateOne(ctx, filter, update)
 	if err != nil {
