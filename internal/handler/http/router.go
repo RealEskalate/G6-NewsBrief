@@ -122,6 +122,7 @@ func (r *Router) SetupRoutes(router *gin.Engine) {
 	{
 		// admin routes
 		admin.POST("/create-topics", r.topicHandler.CreateTopic)
+		admin.POST("/news", r.newsHandler.AdminCreateNews)
 		// admin.POST("/topics/:id", r.topicHandler.UpdateTopic)
 		// admin.DELETE("/topics/:id", r.topicHandler.DeleteTopic)
 		admin.POST("/create-sources", r.sourceHandler.CreateSource)

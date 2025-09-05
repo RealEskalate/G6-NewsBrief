@@ -22,6 +22,15 @@ func NewNewsRepositoryMongo(collection *mongo.Collection) contract.INewsReposito
 	}
 }
 
+// AdminCreateNews allows admin to create news
+func (r *NewsRepositoryMongo) AdminCreateNews(ctx context.Context, news *entity.News) error {
+	news.CreatedAt = time.Now()
+	news.UpdatedAt = time.Now()
+	news.PublishedAt = time.Now()
+	_, err := r.collection.InsertOne(ctx, news)
+	return err
+}
+
 // save news to mongodb
 func (r *NewsRepositoryMongo) Save(news *entity.News) error {
 	news.CreatedAt = time.Now()

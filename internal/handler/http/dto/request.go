@@ -89,3 +89,10 @@ type UpdatePreferencesRequest struct {
 type SaveBookmarkRequest struct {
 	NewsID string `json:"news_id" binding:"required"`
 }
+type AdminCreateNews struct {
+	Title    string   `json:"title" binding:"required"`
+	Body     string   `json:"body" binding:"required"`
+	Language string   `json:"language" binding:"required,len=2"`
+	SourceID string   `json:"source_id" binding:"required"`
+	TopicsID []string `json:"topics_id" binding:"required,dive,required"`
+}

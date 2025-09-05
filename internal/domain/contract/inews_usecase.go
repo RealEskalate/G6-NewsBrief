@@ -11,4 +11,6 @@ type INewsUsecase interface {
 	ListNews(page, limit int) ([]*entity.News, int64, int, error)
 	// ListForYou returns paginated news for a user based on their subscriptions
 	ListForYou(ctx context.Context, userID string, page, limit int) ([]*entity.News, int64, int, error)
+	// allow admin to create news
+	AdminCreateNews(ctx context.Context, title, body, language, sourceID string, topicIDs []string) (*entity.News, error)
 }
