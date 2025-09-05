@@ -9,13 +9,15 @@ import (
 )
 
 type sourceUsecase struct {
-	sourceRepo contract.ISourceRepository
+	sourceRepo   contract.ISourceRepository
+	analyticRepo contract.IAnalyticRepository
 }
 
 // NewSourceUsecase creates a new instance of sourceUsecase.
-func NewSourceUsecase(sourceRepo contract.ISourceRepository) contract.ISourceUsecase {
+func NewSourceUsecase(sourceRepo contract.ISourceRepository, analyRepo contract.IAnalyticRepository) contract.ISourceUsecase {
 	return &sourceUsecase{
-		sourceRepo: sourceRepo,
+		sourceRepo:   sourceRepo,
+		analyticRepo: analyRepo,
 	}
 }
 func (uc *sourceUsecase) CreateSource(ctx context.Context, source *entity.Source) error {
@@ -41,6 +43,10 @@ func (uc *sourceUsecase) CreateSource(ctx context.Context, source *entity.Source
 	}
 	if urlExists {
 		return errors.New("source with URL already exists")
+	}
+	// inc total source count
+	if err := uc.analyticRepo.IncrementTotalSource(ctx); err != nil {
+		return err
 	}
 	return uc.sourceRepo.CreateSource(ctx, source)
 }

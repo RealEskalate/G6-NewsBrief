@@ -30,9 +30,10 @@ type Router struct {
 	subscriptionHandler *SubscriptionHandler
 	newsHandler         *NewsHandler
 	bookmarkHandler     *BookmarkHandler
+	analyticHandler     *AnalyticHandler
 }
 
-func NewRouter(userUsecase contract.IUserUseCase, emailVerUC contract.IEmailVerificationUC, userRepo contract.IUserRepository, tokenRepo contract.ITokenRepository, hasher contract.IHasher, jwtService contract.IJWTService, mailService contract.IEmailService, logger contract.IAppLogger, config contract.IConfigProvider, validator contract.IValidator, uuidGen contract.IUUIDGenerator, randomGen contract.IRandomGenerator, sourceUC contract.ISourceUsecase, topicUC contract.ITopicUsecase, subscriptionUC contract.ISubscriptionUsecase, sourceRepo contract.ISourceRepository, newsRepo contract.INewsRepository, bookmarkRepo contract.IBookmarkRepository, geminiClient contract.IGeminiClient) *Router {
+func NewRouter(userUsecase contract.IUserUseCase, emailVerUC contract.IEmailVerificationUC, userRepo contract.IUserRepository, tokenRepo contract.ITokenRepository, analyticRepo contract.IAnalyticRepository, hasher contract.IHasher, jwtService contract.IJWTService, mailService contract.IEmailService, logger contract.IAppLogger, config contract.IConfigProvider, validator contract.IValidator, uuidGen contract.IUUIDGenerator, randomGen contract.IRandomGenerator, sourceUC contract.ISourceUsecase, topicUC contract.ITopicUsecase, subscriptionUC contract.ISubscriptionUsecase, sourceRepo contract.ISourceRepository, newsRepo contract.INewsRepository, bookmarkRepo contract.IBookmarkRepository, geminiClient contract.IGeminiClient) *Router {
 
 	baseURL := config.GetAppBaseURL()
 	summarizerUC := usecase.NewsSummarizerUsecase(geminiClient, newsRepo)
@@ -44,7 +45,7 @@ func NewRouter(userUsecase contract.IUserUseCase, emailVerUC contract.IEmailVeri
 	// sourceRepo isn't passed here; build it inside main and expose via usecases. Since router only gets sourceUC, we cannot access repo from here.
 	// Instead, pass sourceRepo to router.NewRouter from main by adding it to params in future if needed.
 	// For now, assume we can obtain it from sourceUC via GetAll + map by slug when necessary, but ListForYou resolves via sourceRepo directly injected in main.
-	newsUC := usecase.NewNewsUsecase(newsRepo, userRepo, sourceRepo, uuidGen, summarizerUC)
+	newsUC := usecase.NewNewsUsecase(newsRepo, userRepo, sourceRepo, analyticRepo, uuidGen, summarizerUC)
 	bookmarkUC := usecase.NewBookmarkUsecase(bookmarkRepo, newsRepo, uuidGen)
 	return &Router{
 		userHandler:         NewUserHandler(userUsecase),
@@ -61,6 +62,7 @@ func NewRouter(userUsecase contract.IUserUseCase, emailVerUC contract.IEmailVeri
 		bookmarkHandler:     NewBookmarkHandler(bookmarkUC),
 		jwtService:          jwtService,
 		userUsecase:         userUsecase,
+		analyticHandler:     NewAnalyticHandler(analyticRepo),
 	}
 }
 
@@ -123,6 +125,7 @@ func (r *Router) SetupRoutes(router *gin.Engine) {
 		// admin routes
 		admin.POST("/create-topics", r.topicHandler.CreateTopic)
 		admin.POST("/news", r.newsHandler.AdminCreateNews)
+		admin.GET("/analytics", r.analyticHandler.GetAnalytics)
 		// admin.POST("/topics/:id", r.topicHandler.UpdateTopic)
 		// admin.DELETE("/topics/:id", r.topicHandler.DeleteTopic)
 		admin.POST("/create-sources", r.sourceHandler.CreateSource)

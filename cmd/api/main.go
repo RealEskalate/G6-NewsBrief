@@ -98,6 +98,15 @@ func main() {
 	topicRepo := mongodb.NewTopicRepository(mongoClient.Client.Database(dbName).Collection("topics"))
 	sourceRepo := mongodb.NewSourceRepository(mongoClient.Client.Database(dbName).Collection("sources"))
 	bookmarkRepo := mongodb.NewBookmarkRepository(mongoClient.Client.Database(dbName))
+	analyticRepo := mongodb.NewAnalyticRepository(mongoClient.Client.Database(dbName).Collection("analytics"))
+
+	// -------------- initialize analytics document if not present --------------
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := analyticRepo.InitializeAnalytics(ctx); err != nil {
+		log.Fatalf("Failed to initialize analytics: %v", err)
+	}
+	// -------------- end of analytics document initialization --------------
 	// Dependency Injection: Services
 	hasher := passwordservice.NewHasher()
 	jwtSecret := os.Getenv("JWT_SECRET")
@@ -122,9 +131,9 @@ func main() {
 
 	// Dependency Injection: Usecases
 	emailUsecase := usecase.NewEmailVerificationUseCase(tokenRepo, userRepo, mailService, randomGenerator, uuidGenerator, appConfig)
-	userUsecase := usecase.NewUserUsecase(userRepo, tokenRepo, topicRepo, emailUsecase, hasher, jwtService, mailService, appLogger, appConfig, appValidator, uuidGenerator, randomGenerator)
-	topicUsecase := usecase.NewTopicUsecase(topicRepo)
-	sourceUsecase := usecase.NewSourceUsecase(sourceRepo)
+	userUsecase := usecase.NewUserUsecase(userRepo, tokenRepo, topicRepo, analyticRepo, emailUsecase, hasher, jwtService, mailService, appLogger, appConfig, appValidator, uuidGenerator, randomGenerator)
+	topicUsecase := usecase.NewTopicUsecase(topicRepo, analyticRepo)
+	sourceUsecase := usecase.NewSourceUsecase(sourceRepo, analyticRepo)
 	subscriptionUsecase := usecase.NewSubscriptionUsecase(userRepo, sourceRepo)
 	// Pass Prometheus metrics to handlers or usecases as needed (import from metrics package)
 
@@ -135,7 +144,7 @@ func main() {
 	// Setup API routes
 	appRouter := handlerHttp.NewRouter(
 		userUsecase, emailUsecase,
-		userRepo, tokenRepo, hasher, jwtService, mailService,
+		userRepo, tokenRepo, analyticRepo, hasher, jwtService, mailService,
 		appLogger, appConfig, appValidator, uuidGenerator, randomGenerator, sourceUsecase, topicUsecase, subscriptionUsecase,
 		sourceRepo, newsRepo, bookmarkRepo, geminiClient,
 	)

@@ -1,8 +1,9 @@
 package dto
 
 import (
-	"github.com/RealEskalate/G6-NewsBrief/internal/domain/entity"
 	"time"
+
+	"github.com/RealEskalate/G6-NewsBrief/internal/domain/entity"
 )
 
 // UserResponse is the DTO for a user.
@@ -85,6 +86,7 @@ type PreferencesDTO struct {
 
 // SourceDTO represents a single source in an API response.
 type SourceDTO struct {
+	ID               string   `json:"id,omitempty"`
 	Slug             string   `json:"slug"`
 	Name             string   `json:"name"`
 	Description      string   `json:"description"`

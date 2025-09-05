@@ -12,12 +12,13 @@ type newsUsecase struct {
 	repo         contract.INewsRepository
 	userRepo     contract.IUserRepository
 	sourceRepo   contract.ISourceRepository
+	analyticRepo contract.IAnalyticRepository
 	uuidGen      contract.IUUIDGenerator
 	SummarizerUC contract.ISummarizerService
 }
 
-func NewNewsUsecase(repo contract.INewsRepository, userRepo contract.IUserRepository, sourceRepo contract.ISourceRepository, uuidGen contract.IUUIDGenerator, summarizerUC contract.ISummarizerService) contract.INewsUsecase {
-	return &newsUsecase{repo: repo, userRepo: userRepo, sourceRepo: sourceRepo, uuidGen: uuidGen, SummarizerUC: summarizerUC}
+func NewNewsUsecase(repo contract.INewsRepository, userRepo contract.IUserRepository, sourceRepo contract.ISourceRepository, analyticRepo contract.IAnalyticRepository, uuidGen contract.IUUIDGenerator, summarizerUC contract.ISummarizerService) contract.INewsUsecase {
+	return &newsUsecase{repo: repo, userRepo: userRepo, sourceRepo: sourceRepo, analyticRepo: analyticRepo, uuidGen: uuidGen, SummarizerUC: summarizerUC}
 }
 
 func (u *newsUsecase) AdminCreateNews(ctx context.Context, title, body, language, sourceID string, topicIDs []string) (*entity.News, error) {
@@ -38,9 +39,14 @@ func (u *newsUsecase) AdminCreateNews(ctx context.Context, title, body, language
 	if err := u.repo.AdminCreateNews(ctx, news); err != nil {
 		return nil, err
 	}
+
 	// summarize the news after creation
 	_, err := u.SummarizerUC.Summarize(news.ID)
 	if err != nil {
+		return nil, err
+	}
+	// update total new count
+	if err := u.analyticRepo.IncrementTotalNews(ctx); err != nil {
 		return nil, err
 	}
 	return news, nil

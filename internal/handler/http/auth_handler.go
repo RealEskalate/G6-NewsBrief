@@ -158,6 +158,10 @@ func (h *AuthHandler) HandleGoogleCallback(ctx *gin.Context) {
 		q := u.Query()
 		q.Set("access_token", accessToken)
 		q.Set("refresh_token", refreshToken)
+		// Add user ID if we can parse the token
+		if claims, err := h.jwtService.ParseAccessToken(accessToken); err == nil {
+			q.Set("user_id", claims.UserID)
+		}
 		u.RawQuery = q.Encode()
 		ctx.Redirect(http.StatusFound, u.String())
 		return
@@ -184,16 +188,16 @@ func (h *AuthHandler) HandleGoogleMobileToken(ctx *gin.Context) {
 		return
 	}
 
-	mobileClientID := os.Getenv("MOBILE_GOOGLE_CLIENT_ID")
-	if mobileClientID == "" {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "MOBILE_GOOGLE_CLIENT_ID not configured"})
+	webClientID := os.Getenv("GOOGLE_CLIENT_ID")
+	if webClientID == "" {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "GOOGLE_CLIENT_ID not configured"})
 		return
 	}
 
 	requestCtx, cancel := context.WithTimeout(ctx.Request.Context(), 10*time.Second)
 	defer cancel()
 
-	payload, err := idtoken.Validate(requestCtx, req.IDToken, mobileClientID)
+	payload, err := idtoken.Validate(requestCtx, req.IDToken, webClientID)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "invalid id_token"})
 		return

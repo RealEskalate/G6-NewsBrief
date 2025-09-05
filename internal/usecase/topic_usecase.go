@@ -9,13 +9,15 @@ import (
 )
 
 type topicUsecase struct {
-	topicRepo contract.ITopicRepository
+	topicRepo    contract.ITopicRepository
+	analyticRepo contract.IAnalyticRepository
 }
 
 // NewTopicUsecase creates a new instance of topicUsecase.
-func NewTopicUsecase(topicRepo contract.ITopicRepository) contract.ITopicUsecase {
+func NewTopicUsecase(topicRepo contract.ITopicRepository, analyRepo contract.IAnalyticRepository) contract.ITopicUsecase {
 	return &topicUsecase{
-		topicRepo: topicRepo,
+		topicRepo:    topicRepo,
+		analyticRepo: analyRepo,
 	}
 }
 func (uc *topicUsecase) CreateTopic(ctx context.Context, topic *entity.Topic) error {
@@ -31,6 +33,10 @@ func (uc *topicUsecase) CreateTopic(ctx context.Context, topic *entity.Topic) er
 	}
 	if exists {
 		return errors.New("topic with slug already exists")
+	}
+	// inc total topic count
+	if err := uc.analyticRepo.IncrementTotalTopic(ctx); err != nil {
+		return err
 	}
 	return uc.topicRepo.CreateTopic(ctx, topic)
 }

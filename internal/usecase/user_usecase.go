@@ -25,6 +25,7 @@ type UserUsecase struct {
 	userRepo        contract.IUserRepository
 	tokenRepo       contract.ITokenRepository
 	topicRepo       contract.ITopicRepository
+	analyticRepo    contract.IAnalyticRepository
 	emailUsecase    contract.IEmailVerificationUC
 	hasher          contract.IHasher
 	jwtService      contract.IJWTService
@@ -41,6 +42,7 @@ func NewUserUsecase(
 	userRepo contract.IUserRepository,
 	tokenRepo contract.ITokenRepository,
 	topicRepo contract.ITopicRepository,
+	analyticRepo contract.IAnalyticRepository,
 	emailUC contract.IEmailVerificationUC,
 	hasher contract.IHasher,
 	jwtService contract.IJWTService,
@@ -55,6 +57,7 @@ func NewUserUsecase(
 		userRepo:        userRepo,
 		tokenRepo:       tokenRepo,
 		topicRepo:       topicRepo,
+		analyticRepo:    analyticRepo,
 		emailUsecase:    emailUC,
 		hasher:          hasher,
 		jwtService:      jwtService,
@@ -113,18 +116,22 @@ func (uc *UserUsecase) Register(ctx context.Context, email, password, fullname s
 			Notifications:     entity.NotificationsPreferences{},
 		},
 	}
-
 	// Save user to database
 	if err := uc.userRepo.CreateUser(ctx, user); err != nil {
 		uc.logger.Errorf("failed to create user: %v", err)
 		return nil, fmt.Errorf("failed to register user")
 	}
 
+	// inc total user count
+	if err := uc.analyticRepo.IncrementTotalUser(ctx); err != nil {
+		return nil, err
+	}
+
 	// Send activation email if required, using config from injected ConfigProvider
 	if uc.config.GetSendActivationEmail() && user.Role != "admin" {
 		// Generate email verification token
 		if err = uc.emailUsecase.RequestVerificationEmail(ctx, user); err != nil {
-			return nil, fmt.Errorf("failed to send verification email: %w", err)
+			fmt.Printf("failed to send verification email: %v", err)
 		}
 	}
 
@@ -567,6 +574,11 @@ func (uc *UserUsecase) LoginWithOAuth(ctx context.Context, fullname, email strin
 			},
 		}
 
+		// inc total users count
+		if err := uc.analyticRepo.IncrementTotalUser(ctx); err != nil {
+			uc.logger.Errorf("failed to increment total users count: %v", err)
+			// Not a critical error, so we don't return here
+		}
 		// Save the new user to the database
 		if err := uc.userRepo.CreateUser(ctx, newUser); err != nil {
 			uc.logger.Errorf("failed to create user from OAuth: %v", err)
