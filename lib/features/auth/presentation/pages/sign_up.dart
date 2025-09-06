@@ -75,7 +75,7 @@ class SignUpPage extends StatelessWidget {
               ),
               TextButton(
                 onPressed: () {
-                  Navigator.pushReplacementNamed(context, '/root');
+                  Navigator.pushReplacementNamed(context, '/following');
                 },
                 child: Text(
                   "sign_up.continue_as_guest".tr(),

@@ -269,7 +269,7 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
 
               OutlinedButton.icon(
                 onPressed: () {
-                  Navigator.pushNamed(context, '/root');
+                  Navigator.pushNamed(context, '/following');
                 },
                 label: Text(
                   'continue_as_guest'.tr(),

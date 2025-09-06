@@ -232,7 +232,7 @@ class _LoginPageState extends State<Login> {
                       context.read<AuthCubit>().continueAsGuest();
 
                       // ✅ Navigate to RootPage
-                      Navigator.pushReplacementNamed(context, '/root');
+                      Navigator.pushReplacementNamed(context, '/following');
                     },
                     label: Text(
                       'Continue as Guest'.tr(),
