@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+/* Responsive navigation styles */
+@media (max-width: 1023px) {
+  /* Ensure content doesn't overlap with mobile hamburger */
+  body {
+    padding-top: 0;
+  }
+}
+
+/* Smooth transitions for mobile menu */
+.mobile-menu-transition {
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Ensure proper z-index stacking */
+.mobile-menu-overlay {
+  z-index: 40;
+}
+
+.mobile-hamburger {
+  z-index: 50;
+}
+
+.mobile-sidebar {
+  z-index: 50;
+}
+
+/* Prevent body scroll when mobile menu is open */
+body.menu-open {
+  overflow: hidden;
+}
+
+/* Responsive text sizing */
+@media (max-width: 640px) {
+  .text-responsive {
+    font-size: 0.875rem;
+  }
+}
+
+/* Ensure proper spacing for mobile content */
+@media (max-width: 1023px) {
+  .mobile-content-spacing {
+    margin-top: 5rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* Line clamp utilities for text truncation */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.line-clamp-none {
+  overflow: visible;
+  display: block;
+  -webkit-box-orient: unset;
+  -webkit-line-clamp: unset;
+}
+
+/* Hide scrollbar while maintaining scroll functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Safari and Chrome */
+}

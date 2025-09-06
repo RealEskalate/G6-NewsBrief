@@ -1,0 +1,108 @@
+{
+  "auth": {
+    "login": "Login",
+    "signup": "Sign Up",
+    
+"selectYourInterests":"Select Your Interests",
+"continue":"Continue",
+    "forgotPassword": "Forgot Password?",
+    "welcomeBack": "Welcome Back",
+    "signingIn": "Signing In...",
+    "signingUp": "Signing Up...",
+    "invalidCredentials": "Invalid Credentials",
+    "somethingWentWrong": "Something went wrong ❌",
+    "continueWithGoogle": "Continue with Google",
+    "dontHaveAccount": "Don't have an account?",
+    "alreadyHaveAccount": "Already have an account?",
+    "fullName": "Full Name",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "passwordRequirements": "Password must include at least 8 characters, an uppercase letter, a lowercase letter, a number, and a special character."
+  },
+  "languages": {
+    "english": "English",
+    "amharic": "Amharic"
+  },
+  "search": {
+    "placeholder": "Search news, topics, or people..."
+  },
+  "categories": {
+    "all": "All",
+    "world": "World",
+    "national": "National",
+    "politics": "Politics",
+    "business": "Business",
+    "economy": "Economy",
+    "finance": "Finance",
+    "technology": "Technology",
+    "science": "Science",
+    "health": "Health",
+    "environment": "Environment",
+    "education": "Education",
+    "law": "Law",
+    "crime": "Crime",
+    "weather": "Weather",
+    "opinion": "Opinion",
+    "sport": "Sport"
+  },
+  "settings": {
+    "title": "Settings",
+    "saveChanges": "Save changes",
+    "tabs": {
+      "customization": "Customization",
+      "account": "Account",
+      "categories": "Categories",
+      "subscriptions": "Subscriptions"
+    },
+    "customization": {
+      "title": "Customization",
+      "theme": "Theme",
+      "showAvatars": "Show Avatars"
+    },
+    "themes": {
+      "system": "System Default",
+      "light": "Light",
+      "dark": "Dark"
+    },
+    "account": {
+      "title": "Account Details",
+      "username": "Username",
+      "placeholders": {
+        "fullName": "Enter full name",
+        "email": "Enter email",
+        "username": "Enter username",
+        "password": "Enter password"
+      },
+      "created": "Account Created",
+      "dangerZone": {
+        "title": "Danger Zone",
+        "delete": "Delete Account",
+        "warning": "This action is irreversible"
+      }
+    },
+    "categories": {
+      "title": "Favorited Tags",
+      "add": "Add New Tags",
+      "placeholder": "Search tags",
+      "addButton": "Add"
+    },
+    "subscriptions": {
+      "title": "Your Subscriptions",
+      "remove": "Remove",
+      "search": "Search New News Media",
+      "placeholder": "Search publications, podcasts, RSS",
+      "addButton": "Add",
+          "addTags": "Add Topics"
+    }
+  },
+  "profile": {
+    "menuTitle": "Profile",
+    "forYou": "For You",
+    "saved": "Saved",
+    "subscriptions": "Subscriptions",
+    "settings": "Settings",
+    "logout": "Logout"
+
+  }
+}

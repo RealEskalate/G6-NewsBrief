@@ -1,0 +1,109 @@
+{
+  "auth": {
+    "login": "ግባ",
+    "signup": "መዝግብ",
+    "forgotPassword": "የይለፍ ቃል ረሳህ?",
+    "welcomeBack": "እንኳን በደህና መጣህ",
+    "signingIn": "መግባት እየተከናወነ...",
+    "signingUp": "መመዝገብ እየተከናወነ...",
+    "invalidCredentials": "የተሳሳተ መረጃ",
+    "somethingWentWrong": "አንዴ ተገጽሞ ❌",
+    "continueWithGoogle": "በGoogle ይቀጥሉ",
+    "dontHaveAccount": "መለያ የለዎትም?",
+"selectYourInterests": "እንደ ምን ትወዳላችሁ ይምረጡ",
+"continue": "ቀጥል",
+    "alreadyHaveAccount": "አስቀድሞ መለያ አሎት?",
+    "fullName": "ሙሉ ስም",
+    "email": "ኢሜይል",
+    "password": "የይለፍ ቃል",
+    "confirmPassword": "የይለፍ ቃል አረጋግጥ",
+    "passwordRequirements": "የይለፍ ቃል ቢያንስ 8 ቁምፊዎችን፣ ከፍተኛ ፊደል፣ ዝቅተኛ ፊደል፣ ቁጥር እና ልዩ ቁምፊ አሳት።"
+  },
+  "languages": {
+    "english": "እንግሊዝኛ",
+    "amharic": "አማርኛ"
+  },
+  "search": {
+    "placeholder": "ዜና፣ ርዕሶች ወይም ሰዎች ይፈልጉ..."
+  },
+  "categories": {
+    "all": "ሁሉ",
+    "world": "ዓለም",
+    "national": "ብሔራዊ",
+    "politics": "ፖለቲካ",
+    "business": "ንግድ",
+    "economy": "ኢኮኖሚ",
+    "finance": "ፋይናንስ",
+    "technology": "ቴክኖሎጂ",
+    "science": "ሳይንስ",
+    "health": "ጤና",
+    "environment": "አካባቢ",
+    "education": "ትምህርት",
+    "law": "ሕግ",
+    "crime": "ወንጀል",
+    "weather": "አየር ንብረት",
+    "opinion": "አስተያየት",
+    "sport": "ስፖርት"
+  },
+  "settings": {
+    "title": "ቅንብሮች",
+    "saveChanges": "ለውጦችን አስቀምጥ",
+    "tabs": {
+      "customization": "ማስተካከያ",
+      "account": "መለያ",
+      "categories": "ርዕሶች",
+      "subscriptions": "እቅዶች"
+    },
+    "customization": {
+      "title": "ማስተካከያ",
+      "theme": "ቅንብር",
+      "showAvatars": "አቫታሮችን አሳይ"
+    },
+    "themes": {
+      "system": "የስርዓት ነገር",
+      "light": "ብርሃን",
+      "dark": "ጨለማ"
+    },
+    "account": {
+      "title": "የመለያ ዝርዝሮች",
+      "username": "የተጠቃሚ ስም",
+      "placeholders": {
+        "fullName": "ሙሉ ስም አስገባ",
+        "email": "ኢሜይል አስገባ",
+        "username": "የተጠቃሚ ስም አስገባ",
+        "password": "የይለፍ ቃል አስገባ"
+      },
+      "created": "መለያ ተፈጥሯል",
+      "dangerZone": {
+        "title": "አደጋ ክልል",
+        "delete": "መለያ አስወግድ",
+        "warning": "ይህ እርምጃ አልተመለሰም"
+      }
+    },
+    "categories": {
+      "title": "ተወዳጆች መለያዎች",
+      "add": "አዲስ መለያዎች ጨምር",
+      "placeholder": "መለያዎችን ፈልግ",
+      "addButton": "ጨምር"
+    },
+    "subscriptions": {
+      "title": "የእርስዎ እቅዶች",
+      "remove": "አስወግድ",
+      "search": "አዲስ ዜና ሚዲያ ፈልግ",
+      "placeholder": "ህትመቶች፣ ፖድካስቶች፣ RSS ፈልግ",
+      "addButton": "ጨምር",
+    "addTags": "ፍላጎት ጨምር"
+    }
+  },
+
+    "profile": {
+    "menuTitle": "መገለጫ",
+    "forYou": "ለእርስዎ",
+    "saved": "ተቀምጧል",
+    "subscriptions": "የተመዘገቡ",
+    "settings": "ማስተካከያ",
+    "logout": "ውጣ"
+  }
+
+
+}
