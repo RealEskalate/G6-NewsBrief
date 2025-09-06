@@ -43,13 +43,7 @@ class _RootPageState extends State<RootPage> {
 
           // Pages list dynamically based on auth state
           final pages = [
-            HomePage(
-              onBookmarkTap: () {
-                setState(() {
-                  currentPage = 3; // Switch to SavedPage tab
-                });
-              },
-            ),
+            const HomePage(),
             const FollowingPage(),
             const SearchPage(),
             const SavedPage(),
