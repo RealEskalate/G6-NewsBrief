@@ -241,7 +241,7 @@ class _FollowingPageState extends State<FollowingPage>
 
               const SizedBox(height: 20),
               Text(
-                "Trending",
+                "Todays",
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -257,10 +257,10 @@ class _FollowingPageState extends State<FollowingPage>
                               onTap: () {},
                               child: NewsCard(
                                 id: news.id,
-                                topicId: news.topics.isNotEmpty ? news.topics[0] : '',
+                                topics: news.topics.isNotEmpty ? news.topics[0] : 'General',
                                 title: news.title,
                                 description: news.body,
-                                sourceId: news.soureceId,
+                                source: news.soureceId.isNotEmpty ? news.soureceId : 'EBC',
                                 imageUrl: 'https://picsum.photos/200/300?random=${1}',
                               ),
                             ),
@@ -369,10 +369,10 @@ class _FollowingPageState extends State<FollowingPage>
                               onTap: () {},
                               child: NewsCard(
                                 id: news.id,
-                                topicId: news.topics.isNotEmpty ? news.topics[0] : '',
+                                topics: news.topics.isNotEmpty ? news.topics[0] : '',
                                 title: news.title,
                                 description: news.body,
-                                sourceId: news.soureceId,
+                                source: news.soureceId,
                                 imageUrl:
                                     'https://picsum.photos/200/300?random=${1}',
                               ),

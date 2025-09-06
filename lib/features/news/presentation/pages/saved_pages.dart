@@ -43,10 +43,10 @@ class SavedPage extends StatelessWidget {
                   },
                   child: NewsCard(
                     id: bookmark.newsId,
-                    topicId: bookmark.topics[0],
+                    topics: bookmark.topics[0],
                     title: bookmark.title,
                     description: bookmark.body,
-                    sourceId: bookmark.soureceId,
+                    source: bookmark.soureceId,
                     imageUrl: 'https://picsum.photos/200/300?random=$index',
                   ),
                 );
