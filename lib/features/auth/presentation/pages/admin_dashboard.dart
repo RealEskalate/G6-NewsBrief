@@ -49,6 +49,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         ),
         backgroundColor: isDark ? Colors.grey[900] : Colors.white,
         iconTheme: IconThemeData(color: isDark ? Colors.white : Colors.black),
+        automaticallyImplyLeading: true,
       ),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomAppBar(

@@ -1,9 +1,11 @@
 class Topic {
+  final String? id;
   final String slug; // required
   final Map<String, String> label; // required, e.g., {"en": "Science", "am": "ሳይንስ"}
   final Map<String, String>? description; // optional, e.g., {"en": "Topic about science"}
 
   Topic({
+    this.id,
     required this.slug,
     required this.label,
     this.description,
@@ -18,6 +20,9 @@ class Topic {
     if (description != null) {
       data["description"] = description as Object; // cast to Object
     }
+    if (id != null) {
+      data["id"] = id as Object;
+    }
     return data;
   }
 
@@ -25,6 +30,7 @@ class Topic {
   // Create Topic instance from JSON
   factory Topic.fromJson(Map<String, dynamic> json) {
     return Topic(
+      id: json['id'],
       slug: json['slug'],
       label: Map<String, String>.from(json['label']),
       description: json['description'] != null

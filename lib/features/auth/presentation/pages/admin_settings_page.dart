@@ -13,7 +13,7 @@ class AdminSettingsPage extends StatefulWidget {
 class _AdminSettingsPageState extends State<AdminSettingsPage> {
   // Replace these with real admin data if available
   final String adminName = "Admin";
-  final String adminEmail = "admin@example.com";
+  final String adminEmail = "admin@newsbrief.local";
 
   @override
   Widget build(BuildContext context) {

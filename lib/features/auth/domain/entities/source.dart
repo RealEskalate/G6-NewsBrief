@@ -1,4 +1,5 @@
 class Source {
+  final String? id; // optional
   final String slug;
   final String name;
   final String description;
@@ -9,6 +10,7 @@ class Source {
   final int reliabilityScore;
 
   Source({
+    this.id,
     required this.slug,
     required this.name,
     required this.description,
@@ -20,7 +22,7 @@ class Source {
   });
 
   Map<String, dynamic> toJson() {
-    return {
+    final data = {
       "slug": slug,
       "name": name,
       "description": description,
@@ -30,18 +32,27 @@ class Source {
       "topics": topics,
       "reliability_score": reliabilityScore,
     };
+    if (id != null) {
+      data["id"] = id as Object;
+    }
+    return data;
   }
 
   factory Source.fromJson(Map<String, dynamic> json) {
     return Source(
+      id: json['id'],
       slug: json['slug'],
       name: json['name'],
       description: json['description'],
       url: json['url'],
       logoUrl: json['logo_url'],
       languages: json['languages'],
-      topics: List<String>.from(json['topics']),
-      reliabilityScore: json['reliability_score'],
+      topics: json['topics'] != null
+          ? List<String>.from(json['topics'])
+          : [],
+      reliabilityScore: json['reliability_score'] is int
+          ? json['reliability_score']
+          : (json['reliability_score'] as num).toInt(),
     );
   }
 }
