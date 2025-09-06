@@ -32,7 +32,14 @@ import 'package:newsbrief/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:newsbrief/features/auth/domain/usecases/subscribe_to_sources.dart';
 import 'package:newsbrief/features/auth/domain/usecases/unsubscribe_from_source.dart';
 import 'package:newsbrief/features/auth/presentation/cubit/user_cubit.dart';
+import 'package:newsbrief/features/news/datasource/datasources/news.local_data_sources.dart';
+import 'package:newsbrief/features/news/datasource/datasources/news_remote_data_sources.dart';
+import 'package:newsbrief/features/news/datasource/repositories/news_repositorty_impl.dart';
+import 'package:newsbrief/features/news/domain/repositories/news_repository.dart';
+import 'package:newsbrief/features/news/presentation/cubit/news_cubit.dart';
 import 'package:newsbrief/features/news/presentation/pages/news_detail_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 import 'core/storage/theme_storage.dart';
 import 'core/theme/theme_cubit.dart';
@@ -66,6 +73,10 @@ void main() async {
   final remote = AuthRemoteDataSources(api);
   final local = AuthLocalDataSource(tokenStorage);
   final repo = AuthRepositoryImpl(remote: remote, local: local);
+  final newsRemote = NewsRemoteDataSources(api);
+  final prefs = await SharedPreferences.getInstance();
+  final newsLocal = NewsLocalDataSourceImpl(prefs);
+  final newsRepo = NewsRepositoryImpl(newsRemote, newsLocal);
 
   runApp(
     EasyLocalization(
@@ -75,7 +86,7 @@ void main() async {
       saveLocale: true,
       child: MultiBlocProvider(
         providers: [
-          
+          BlocProvider(create: (_) => NewsCubit(newsRepo)..fetchForYouNews()),
           BlocProvider(
             create: (_) => AuthCubit(
               loginUser: LoginUser(repo),
@@ -90,7 +101,7 @@ void main() async {
               getInterestsUseCase: GetInterestsUseCase(repo),
             ),
           ),
-          
+
           BlocProvider(create: (_) => ThemeCubit(themeStorage)),
 
           BlocProvider(
@@ -165,7 +176,7 @@ class MyApp extends StatelessWidget {
               case '/news_detail':
                 final args = settings.arguments as Map<String, dynamic>;
                 page = NewsDetailPage(
-                  topic: args['topic'] as String,
+                  topics: args['topic'] as String,
                   title: args['title'] as String,
                   source: args['source'] as String,
                   imageUrl: args['imageUrl'] as String,

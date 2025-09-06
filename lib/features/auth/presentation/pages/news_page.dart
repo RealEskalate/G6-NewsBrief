@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:newsbrief/features/news/domain/entities/news.dart';
 import '../../../news/datasource/models/news_model.dart';
 import '../../datasource/repositories/local_news_repository.dart';
 import '../../datasource/datasources/local_admin_data.dart';
@@ -46,22 +47,22 @@ class _AddNewsPageState extends State<AddNewsPage> {
 
   void _saveNews() async {
     if (_formKey.currentState!.validate()) {
-      final news = News(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        titleEn: _titleEnController.text.trim(),
-        titleAm: _titleAmController.text.trim(),
-        descriptionEn: _descEnController.text.trim(),
-        descriptionAm: _descAmController.text.trim(),
-        source: _selectedSource!,
-        imageUrl: '',
-        topics: _selectedTopics,
-      );
+      // final news = News(
+      //   id: DateTime.now().millisecondsSinceEpoch.toString(),
+      //   titleEn: _titleEnController.text.trim(),
+      //   titleAm: _titleAmController.text.trim(),
+      //   descriptionEn: _descEnController.text.trim(),
+      //   descriptionAm: _descAmController.text.trim(),
+      //   source: _selectedSource!,
+      //   imageUrl: '',
+        // topics: _selectedTopics,
+      // );
 
-      await _localNewsRepo.addNews(news);
+      // await _localNewsRepo.addNews(news);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('News saved locally!')),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   const SnackBar(content: Text('News saved locally!')),
+      // );
 
       _formKey.currentState!.reset();
       setState(() {

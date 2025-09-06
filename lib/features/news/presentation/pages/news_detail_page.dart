@@ -1,12 +1,13 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:newsbrief/features/news/presentation/widgets/animations/bounce_button.dart';
 import 'package:newsbrief/features/news/presentation/widgets/animations/globe_background.dart';
 import 'package:newsbrief/features/news/presentation/widgets/chat_bot_popup.dart';
 import 'dart:math' as math;
 
 class NewsDetailPage extends StatefulWidget {
-  final String topic;
+  final String topics;
   final String title;
   final String source;
   final String imageUrl;
@@ -14,7 +15,7 @@ class NewsDetailPage extends StatefulWidget {
 
   const NewsDetailPage({
     super.key,
-    required this.topic,
+    required this.topics,
     required this.title,
     required this.source,
     required this.imageUrl,
@@ -29,10 +30,11 @@ class _NewsDetailPageState extends State<NewsDetailPage>
     with TickerProviderStateMixin {
   bool _isChatbotVisible = false;
   bool _isPlaying = false;
-  double _audioSpeed = 1.0;
+  double _audioSpeed = 0.5;
   String _language = 'EN';
-  final double _sheetHeight = 180; // same as your sheet height
+  final double _sheetHeight = 180;
 
+  late final FlutterTts _flutterTts;
   late final AnimationController _globeController;
   late final AnimationController _audioSheetController;
   late final AnimationController _progressController;
@@ -42,6 +44,17 @@ class _NewsDetailPageState extends State<NewsDetailPage>
   void initState() {
     super.initState();
 
+    // Initialize TTS
+    _flutterTts = FlutterTts();
+    _flutterTts.setLanguage("en-US");
+    _flutterTts.setSpeechRate(_audioSpeed);
+    _flutterTts.setCompletionHandler(() {
+      setState(() {
+        _isPlaying = false;
+      });
+    });
+
+    // Animations
     _globeController =
         AnimationController(
           vsync: this,
@@ -78,27 +91,39 @@ class _NewsDetailPageState extends State<NewsDetailPage>
     });
   }
 
-  void _togglePlay() {
+  Future<void> _togglePlay() async {
     setState(() {
       _isPlaying = !_isPlaying;
-
-      if (_isPlaying) {
-        _globeController.forward();
-        _audioSheetController.forward();
-        _progressController.forward();
-        _discController.repeat();
-      } else {
-        _globeController.stop();
-        _globeController.value = 1.0;
-        _audioSheetController.reverse();
-        _progressController.stop();
-        _discController.stop();
-      }
     });
+
+    if (_isPlaying) {
+      _globeController.forward();
+      _audioSheetController.forward();
+      _discController.repeat();
+      _progressController.forward();
+
+      // Set TTS language based on toggle
+      if (_language == 'EN') {
+        await _flutterTts.setLanguage("en-US");
+      } else {
+        await _flutterTts.setLanguage("am-ET");
+      }
+
+      await _flutterTts.setSpeechRate(_audioSpeed);
+      await _flutterTts.speak(widget.detail);
+    } else {
+      _globeController.stop();
+      _globeController.value = 1.0;
+      _audioSheetController.reverse();
+      _discController.stop();
+      _progressController.stop();
+      await _flutterTts.stop();
+    }
   }
 
   @override
   void dispose() {
+    _flutterTts.stop();
     _globeController.dispose();
     _audioSheetController.dispose();
     _progressController.dispose();
@@ -126,8 +151,7 @@ class _NewsDetailPageState extends State<NewsDetailPage>
           CustomScrollView(
             slivers: [
               SliverAppBar(
-                expandedHeight:
-                    size.height * 0.25, // 🔹 shorter picture (was 0.35)
+                expandedHeight: size.height * 0.25,
                 pinned: true,
                 backgroundColor: theme.colorScheme.background.withOpacity(0.9),
                 leading: Padding(
@@ -197,8 +221,7 @@ class _NewsDetailPageState extends State<NewsDetailPage>
                       if (_isPlaying)
                         Center(
                           child: RotationTransition(
-                            turns:
-                                _discController, // 🔹 use your disc controller
+                            turns: _discController,
                             child: Container(
                               height: size.height * 0.12,
                               width: size.height * 0.12,
@@ -207,8 +230,7 @@ class _NewsDetailPageState extends State<NewsDetailPage>
                                 color: Colors.black.withOpacity(0.3),
                               ),
                               child: const Icon(
-                                Icons
-                                    .public, // 🔹 rotating disc with public icon
+                                Icons.public,
                                 color: Colors.white,
                                 size: 40,
                               ),
@@ -220,16 +242,14 @@ class _NewsDetailPageState extends State<NewsDetailPage>
                   ),
                 ),
               ),
-
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(height: 20),
                       Text(
-                        widget.topic,
+                        widget.topics,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.secondary,
                           fontWeight: FontWeight.w600,
@@ -266,11 +286,7 @@ class _NewsDetailPageState extends State<NewsDetailPage>
                       ),
                       const SizedBox(height: 20),
                       Text(
-                        widget.detail + 
-                            widget.detail +
-                            widget.detail +
-                            widget.detail +
-                            widget.detail,
+                        widget.detail,
                         style: theme.textTheme.bodyLarge?.copyWith(height: 1.6),
                       ),
                       const SizedBox(height: 16),
@@ -280,8 +296,7 @@ class _NewsDetailPageState extends State<NewsDetailPage>
               ),
             ],
           ),
-
-          if (_isChatbotVisible)
+           if (_isChatbotVisible)
             Align(
               alignment: Alignment.bottomCenter,
               child: Padding(
@@ -421,10 +436,21 @@ class _NewsDetailPageState extends State<NewsDetailPage>
                       const SizedBox(width: 8),
                       ToggleButtons(
                         isSelected: [_language == 'EN', _language == 'AM'],
-                        onPressed: (index) {
+                        onPressed: (index) async {
                           setState(() {
                             _language = index == 0 ? 'EN' : 'AM';
                           });
+
+                          // Change TTS language dynamically if playing
+                          if (_isPlaying) {
+                            await _flutterTts.stop();
+                            if (_language == 'EN') {
+                              await _flutterTts.setLanguage("en-US");
+                            } else {
+                              await _flutterTts.setLanguage("am-ET");
+                            }
+                            await _flutterTts.speak(widget.detail);
+                          }
                         },
                         borderRadius: BorderRadius.circular(12),
                         selectedColor: Colors.white,

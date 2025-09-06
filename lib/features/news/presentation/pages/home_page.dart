@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:newsbrief/features/news/presentation/cubit/news_cubit.dart';
+import 'package:newsbrief/features/news/presentation/cubit/news_state.dart';
 import 'package:newsbrief/features/news/presentation/widgets/animations/globe_background.dart';
 import 'package:newsbrief/features/news/presentation/widgets/chat_bot_popup.dart';
 import 'package:newsbrief/features/news/presentation/widgets/news_card.dart';
@@ -16,8 +19,7 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage>
-    with SingleTickerProviderStateMixin {
+class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
   bool _isChatbotVisible = false;
   bool _isLanguagePressed = false;
   bool _isNotificationPressed = false;
@@ -50,13 +52,13 @@ class _HomePageState extends State<HomePage>
       duration: const Duration(milliseconds: 500),
     );
 
-    _chatbotOffsetAnimation =
-        Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero).animate(
-      CurvedAnimation(
-        parent: _chatbotController,
-        curve: Curves.easeOutCubic,
-      ),
-    );
+    _chatbotOffsetAnimation = Tween<Offset>(
+      begin: const Offset(0, 1),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _chatbotController,
+      curve: Curves.easeOutCubic,
+    ));
   }
 
   @override
@@ -77,47 +79,16 @@ class _HomePageState extends State<HomePage>
     });
   }
 
-  void _showLanguagePicker(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text('select_language'.tr()),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              title: Text('english'.tr()),
-              onTap: () async {
-                await context.setLocale(const Locale('en'));
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              title: Text('amharic'.tr()),
-              onTap: () async {
-                await context.setLocale(const Locale('am'));
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final textColor = theme.colorScheme.onBackground;
-    final background = theme.colorScheme.background;
-
     final size = MediaQuery.of(context).size;
-    final isTablet = size.width > 600;
+    final textColor = theme.colorScheme.onBackground;
 
     return DefaultTabController(
       length: 4,
       child: Scaffold(
-        backgroundColor: background,
+        backgroundColor: theme.colorScheme.background,
         body: Stack(
           children: [
             const GlobeBackground(),
@@ -132,86 +103,28 @@ class _HomePageState extends State<HomePage>
                     // Header
                     Row(
                       children: [
-                        Image.asset(
-                          'assets/images/logo.png',
-                          height: isTablet ? 48 : 36,
-                          fit: BoxFit.contain,
-                        ),
-                        const SizedBox(width: 8),
                         Text(
-                          "NewsBrief",
+                          'app_name'.tr(),
                           style: TextStyle(
-                            fontSize: isTablet ? 22 : 16,
+                            fontSize: size.width > 600 ? 36 : 28,
                             fontWeight: FontWeight.bold,
                             color: textColor,
                           ),
                         ),
                         const Spacer(),
-
-                        // Language Icon with label
-                        GestureDetector(
-                          onTapDown: (_) =>
-                              setState(() => _isLanguagePressed = true),
-                          onTapUp: (_) =>
-                              setState(() => _isLanguagePressed = false),
-                          onTapCancel: () =>
-                              setState(() => _isLanguagePressed = false),
-                          onTap: () => _showLanguagePicker(context),
-                          child: Row(
-                            children: [
-                              Text(
-                                context.locale.languageCode == 'en'
-                                    ? 'EN'
-                                    : 'አማ',
-                                style: TextStyle(
-                                  color: textColor,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: isTablet ? 16 : 14,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              _isLanguagePressed
-                                  ? ShaderMask(
-                                      shaderCallback: (bounds) =>
-                                          activeGradient.createShader(bounds),
-                                      child: const Icon(
-                                        Icons.language_rounded,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : Icon(Icons.language_rounded, color: textColor),
-                            ],
-                          ),
+                        BounceButton(
+                          icon: Icons.language_rounded,
+                          iconColor: textColor,
+                          onTap: () {}, // language picker
                         ),
-                        const SizedBox(width: 8),
-
-                        // Notification Icon
-                        GestureDetector(
-                          onTapDown: (_) =>
-                              setState(() => _isNotificationPressed = true),
-                          onTapUp: (_) =>
-                              setState(() => _isNotificationPressed = false),
-                          onTapCancel: () =>
-                              setState(() => _isNotificationPressed = false),
+                        BounceButton(
+                          icon: Icons.notifications_none,
                           onTap: () {},
-                          child: _isNotificationPressed
-                              ? ShaderMask(
-                                  shaderCallback: (bounds) =>
-                                      activeGradient.createShader(bounds),
-                                  child: const Icon(
-                                    Icons.notifications_none,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : Icon(
-                                  Icons.notifications_none,
-                                  color: textColor,
-                                ),
+                          iconColor: textColor,
                         ),
                       ],
                     ),
-
-                    SizedBox(height: size.height * 0.02),
+                    const SizedBox(height: 16),
 
                     // TabBar
                     TabBar(
@@ -225,10 +138,9 @@ class _HomePageState extends State<HomePage>
                         Tab(text: 'offline'.tr()),
                       ],
                     ),
+                    const SizedBox(height: 16),
 
-                    SizedBox(height: size.height * 0.02),
-
-                    // TabBarView with scrolling animations
+                    // TabBarView
                     Expanded(
                       child: TabBarView(
                         children: [
@@ -260,61 +172,59 @@ class _HomePageState extends State<HomePage>
             ),
           ],
         ),
-
-        // FAB
-        floatingActionButton: _isChatbotVisible
-            ? Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: activeGradient,
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.chat_outlined, color: Colors.white),
-                  onPressed: _toggleChatbot,
-                ),
-              )
-            : BounceButton(
-                icon: Icons.chat_outlined,
-                onTap: _toggleChatbot,
-                isFab: true,
-                iconColor: theme.colorScheme.onPrimary,
-                backgroundColor: theme.colorScheme.primary,
-              ),
+        floatingActionButton: BounceButton(
+          icon: Icons.chat_outlined,
+          onTap: _toggleChatbot,
+          isFab: true,
+          iconColor: theme.colorScheme.onPrimary,
+        ),
       ),
     );
   }
 
-  // News list builder with scrolling animations
+  // Build news list with Bloc integration
   Widget _buildNewsList(Size size) {
-    return ListView.builder(
-      controller: _scrollController,
-      physics: const BouncingScrollPhysics(),
-      itemCount: sampleNews.length,
-      itemBuilder: (context, index) {
-        return MouseRegion(
-          cursor: SystemMouseCursors.click,
-          child: TweenAnimationBuilder(
-            tween: Tween<double>(begin: 0, end: 1),
-            duration: Duration(milliseconds: 600 + (index * 120)),
-            curve: Curves.easeInOut,
-            builder: (context, value, child) {
-              return Transform.translate(
-                offset: Offset(0, 50 * (1 - value)),
-                child: Opacity(opacity: value, child: child),
+    return BlocBuilder<NewsCubit, NewsState>(
+      builder: (context, state) {
+        if (state is NewsLoading) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (state is NewsLoaded) {
+          final newsList = state.news;
+          return ListView.builder(
+            controller: _scrollController,
+            physics: const BouncingScrollPhysics(),
+            itemCount: newsList.length,
+            itemBuilder: (context, index) {
+              final news = newsList[index];
+              return GestureDetector(
+                onTap: () {
+                  Navigator.pushNamed(
+                    context,
+                    '/news_detail',
+                    arguments: {
+                      'topic': news.topics.isNotEmpty ? news.topics[0] : 'for_you'.tr(),
+                      'title': news.title,
+                      'source': news.soureceId,
+                      'imageUrl': "https://picsum.photos/200/300?random=$index",
+                      'detail': news.body,
+                    },
+                  );
+                },
+                child: NewsCard(
+                  topics: news.topics.isNotEmpty ? news.topics[0] : '',
+                  title: news.title,
+                  description: news.body,
+                  source: news.soureceId,
+                  imageUrl: "https://picsum.photos/200/300?random=$index",
+                  onBookmark: widget.onBookmarkTap,
+                ),
               );
             },
-            child: Padding(
-              padding: EdgeInsets.only(bottom: size.height * 0.02),
-              child: NewsCard(
-                title: sampleNews[index].title,
-                description: sampleNews[index].description,
-                source: sampleNews[index].source,
-                imageUrl: sampleNews[index].imageUrl,
-                onBookmark: widget.onBookmarkTap,
-              ),
-            ),
-          ),
-        );
+          );
+        } else if (state is NewsError) {
+          return Center(child: Text(state.message));
+        }
+        return const SizedBox();
       },
     );
   }

@@ -162,7 +162,7 @@ class _ProfilePageState extends State<ProfilePage>
                           Icons.arrow_back,
                           color: theme.colorScheme.onBackground,
                         ),
-
+                      ),
                       Row(
                         children: [
                           CustomDropdownButton(
@@ -401,7 +401,6 @@ class _ProfilePageState extends State<ProfilePage>
                                     ),
                                 ],
                               ),
-                            ),
                         ],
                       );
                     },

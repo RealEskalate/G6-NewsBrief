@@ -21,6 +21,7 @@ class RootPage extends StatefulWidget {
 class _RootPageState extends State<RootPage> {
   int currentPage = 0;
 
+
   late final List<Widget> _pages;
 
   @override
@@ -39,6 +40,7 @@ class _RootPageState extends State<RootPage> {
       const ProfilePage(),
     ];
   }
+
 
   @override
   Widget build(BuildContext context) {
