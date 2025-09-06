@@ -188,6 +188,11 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  Future<void> continueAsGuest() async {
+    emit(AuthGuest());
+  }
+
+
  
   Future<void> changeName({required String newName}) async {
     emit(AuthLoading());
@@ -201,6 +206,7 @@ class AuthCubit extends Cubit<AuthState> {
       emit(AuthError(e.toString()));
     }
   }
+
   String _msg(Object e) => e.toString().replaceFirst('Exception: ', '');
 }
 

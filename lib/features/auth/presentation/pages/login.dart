@@ -228,7 +228,11 @@ class _LoginPageState extends State<Login> {
 
                   OutlinedButton.icon(
                     onPressed: () {
-                      Navigator.pushNamed(context, '/root');
+                      // ✅ Emit guest state
+                      context.read<AuthCubit>().continueAsGuest();
+
+                      // ✅ Navigate to RootPage
+                      Navigator.pushReplacementNamed(context, '/root');
                     },
                     label: Text(
                       'Continue as Guest'.tr(),
@@ -239,6 +243,7 @@ class _LoginPageState extends State<Login> {
                       side: BorderSide(color: theme.colorScheme.onBackground),
                     ),
                   ),
+
 
                   // Sign Up Navigation
                   if (state is! AuthLoading)

@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:http/http.dart' as http;
 import 'package:newsbrief/core/storage/token_secure_storage.dart';
+import 'package:easy_localization/easy_localization.dart';
 
-
-import 'login.dart'; // make sure this path is correct
+import 'login.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -73,11 +73,10 @@ class _DashboardPageState extends State<DashboardPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Admin Dashboard"),
+        title: Text("admin_dashboard".tr()),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            // Navigate back to LoginPage
             Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (_) => const Login()),
@@ -94,10 +93,10 @@ class _DashboardPageState extends State<DashboardPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _StatCard(title: "News", value: totalNews.toString()),
-                _StatCard(title: "Topics", value: totalTopics.toString()),
-                _StatCard(title: "Sources", value: totalSources.toString()),
-                _StatCard(title: "Users", value: totalUsers.toString()),
+                _StatCard(title: "news".tr(), value: totalNews.toString()),
+                _StatCard(title: "topics".tr(), value: totalTopics.toString()),
+                _StatCard(title: "sources".tr(), value: totalSources.toString()),
+                _StatCard(title: "users".tr(), value: totalUsers.toString()),
               ],
             ),
             const SizedBox(height: 24),
@@ -112,7 +111,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
-                      const Text("Platform Composition"),
+                      Text("platform_composition".tr()),
                       const SizedBox(height: 16),
                       Expanded(
                         child: PieChart(
@@ -120,25 +119,25 @@ class _DashboardPageState extends State<DashboardPage> {
                             sections: [
                               PieChartSectionData(
                                 value: totalNews.toDouble(),
-                                title: "News",
+                                title: "news".tr(),
                                 color: Colors.blue,
                                 radius: 50,
                               ),
                               PieChartSectionData(
                                 value: totalTopics.toDouble(),
-                                title: "Topics",
+                                title: "topics".tr(),
                                 color: Colors.green,
                                 radius: 50,
                               ),
                               PieChartSectionData(
                                 value: totalSources.toDouble(),
-                                title: "Sources",
+                                title: "sources".tr(),
                                 color: Colors.orange,
                                 radius: 50,
                               ),
                               PieChartSectionData(
                                 value: totalUsers.toDouble(),
-                                title: "Users",
+                                title: "users".tr(),
                                 color: Colors.purple,
                                 radius: 50,
                               ),
@@ -169,7 +168,12 @@ class _DashboardPageState extends State<DashboardPage> {
                           sideTitles: SideTitles(
                             showTitles: true,
                             getTitlesWidget: (value, meta) {
-                              const labels = ["News", "Topics", "Sources", "Users"];
+                              final labels = [
+                                "news".tr(),
+                                "topics".tr(),
+                                "sources".tr(),
+                                "users".tr()
+                              ];
                               if (value.toInt() < labels.length) {
                                 return Text(labels[value.toInt()]);
                               }

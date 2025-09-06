@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
+
 import 'dashboard_page.dart';
-import 'sources_page.dart'; // New API-integrated SourcesPage
-import 'topics_page.dart';  // New API-integrated TopicsPage
+import 'sources_page.dart';
+import 'topics_page.dart';
 import 'news_page.dart';
 import 'admin_settings_page.dart';
 
@@ -15,19 +17,18 @@ class AdminDashboardPage extends StatefulWidget {
 class _AdminDashboardPageState extends State<AdminDashboardPage> {
   int _selectedIndex = 0;
 
-  // Updated pages with new API-integrated versions
   final List<Widget> _pages = [
     const DashboardPage(),
-    const SourcesPage(), // Use API-integrated SourcesPage
-    const TopicsPage(),  // Use API-integrated TopicsPage
+    const SourcesPage(),
+    const TopicsPage(),
     const AddNewsPage(),
   ];
 
   final List<String> _titles = [
-    "Dashboard",
-    "Sources",
-    "Topics",
-    "News",
+    "dashboard".tr(),
+    "sources".tr(),
+    "topics".tr(),
+    "news".tr(),
   ];
 
   void _onItemTapped(int index) {
@@ -56,56 +57,72 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            IconButton(
-              icon: Icon(
-                Icons.dashboard,
-                color: _selectedIndex == 0 ? const Color(0xFF2563EB) : (isDark ? Colors.white70 : Colors.black54),
-              ),
-              onPressed: () => _onItemTapped(0),
-            ),
-            IconButton(
-              icon: Icon(
-                Icons.source,
-                color: _selectedIndex == 1 ? const Color(0xFF2563EB) : (isDark ? Colors.white70 : Colors.black54),
-              ),
-              onPressed: () => _onItemTapped(1),
-            ),
-            IconButton(
-              icon: Icon(
-                Icons.topic,
-                color: _selectedIndex == 2 ? const Color(0xFF2563EB) : (isDark ? Colors.white70 : Colors.black54),
-              ),
-              onPressed: () => _onItemTapped(2),
-            ),
-            IconButton(
-              icon: Icon(
-                Icons.article,
-                color: _selectedIndex == 3 ? const Color(0xFF2563EB) : (isDark ? Colors.white70 : Colors.black54),
-              ),
-              onPressed: () => _onItemTapped(3),
-            ),
+            _buildNavItem(Icons.dashboard, "dashboard", 0, isDark),
+            _buildNavItem(Icons.source, "sources", 1, isDark),
+            _buildNavItem(Icons.topic, "topics", 2, isDark),
+            _buildNavItem(Icons.article, "news", 3, isDark),
             GestureDetector(
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const AdminSettingsPage()),
+                  MaterialPageRoute(
+                    builder: (context) => const AdminSettingsPage(),
+                  ),
                 );
               },
-              child: CircleAvatar(
-                radius: 15,
-                backgroundColor: const Color(0xFF2563EB),
-                child: const Text(
-                  "A",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircleAvatar(
+                    radius: 16,
+                    backgroundColor: const Color(0xFF2563EB),
+                    child: const Text(
+                      "A",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 6),
+                  Text(
+                    "admin".tr(),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white70 : Colors.black54,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(IconData icon, String labelKey, int index, bool isDark) {
+    final bool selected = _selectedIndex == index;
+    final color = selected ? const Color(0xFF2563EB) : (isDark ? Colors.white70 : Colors.black54);
+
+    return GestureDetector(
+      onTap: () => _onItemTapped(index),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 28),
+          const SizedBox(height: 6),
+          Text(
+            labelKey.tr(),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }
