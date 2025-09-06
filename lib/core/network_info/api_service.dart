@@ -2,25 +2,32 @@ import 'package:dio/dio.dart';
 import 'package:newsbrief/core/storage/token_secure_storage.dart';
 import 'package:newsbrief/core/storage/token_storage.dart';
 
+// Custom exception for already registered email
+class EmailAlreadyRegisteredException implements Exception {
+  final String message;
+  EmailAlreadyRegisteredException([this.message = "Email already registered."]);
+  @override
+  String toString() => message;
+}
+
 class ApiService {
   final Dio dio;
   final TokenStorage tokenStorage;
 
   ApiService({required String baseUrl, required this.tokenStorage})
-    : dio = Dio(
-        BaseOptions(
-          baseUrl: baseUrl,
-          connectTimeout: const Duration(seconds: 20),
-          receiveTimeout: const Duration(seconds: 20),
-          headers: {'content-Type': 'application/json'},
-        ),
-      ) {
+      : dio = Dio(
+    BaseOptions(
+      baseUrl: baseUrl,
+      connectTimeout: const Duration(seconds: 20),
+      receiveTimeout: const Duration(seconds: 20),
+      headers: {'content-Type': 'application/json'},
+    ),
+  ) {
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
           final access = await tokenStorage.readAccessToken();
           if (access != null && access.isNotEmpty) {
-            // print(access);
             options.headers['Authorization'] = 'Bearer $access';
           }
           handler.next(options);
@@ -112,13 +119,29 @@ class ApiService {
           error.type == DioExceptionType.receiveTimeout) {
         return Exception("Connection timed out. Please try again.");
       }
+
       if (error.type == DioExceptionType.badResponse) {
         final status = error.response?.statusCode;
-        final message = error.response?.data?['message'] ?? "Server error";
+        final data = error.response?.data;
+
+        // Handle already registered email from server
+        if (data is Map<String, dynamic> &&
+            data['message']?.toString().toLowerCase().contains('already registered') == true) {
+          return EmailAlreadyRegisteredException();
+        }
+
+        String message = "Server error";
+        if (data is Map<String, dynamic>) {
+          message = data['message']?.toString() ?? message;
+        }
         return Exception("[$status] $message");
       }
-      return Exception("Please check your connection or Incorrect credential.");
+
+      return Exception("Please check your connection or incorrect credential.");
     }
+
+    // Wrap anything else into Exception
+    if (error is Exception) return error;
     return Exception("Unexpected error occurred.");
   }
 

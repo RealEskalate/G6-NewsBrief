@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:newsbrief/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:newsbrief/features/auth/presentation/cubit/auth_state.dart';
-import 'package:newsbrief/features/auth/presentation/cubit/user_cubit.dart';
 import 'interests.dart';
 
 class SignupEmailPage extends StatefulWidget {
@@ -17,9 +16,77 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
   final TextEditingController fullNameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController =
-      TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
   bool agreeToTerms = false;
+
+  bool _isPasswordVisible = false;
+  bool _isConfirmPasswordVisible = false;
+
+  String? fullNameError;
+  String? emailError;
+  String? passwordError;
+  String? confirmPasswordError;
+
+  @override
+  void initState() {
+    super.initState();
+
+    fullNameController.addListener(() {
+      final name = fullNameController.text.trim();
+      setState(() {
+        fullNameError = name.length >= 3 ? null : "Full name must be at least 3 characters";
+      });
+    });
+
+    emailController.addListener(() {
+      final email = emailController.text.trim();
+      final emailRegex = RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$");
+      setState(() {
+        emailError = emailRegex.hasMatch(email) ? null : "Enter a valid email";
+      });
+    });
+
+    passwordController.addListener(() {
+      final password = passwordController.text;
+      final passwordRegex = RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#\$&*~]).{8,}$');
+      setState(() {
+        passwordError = passwordRegex.hasMatch(password)
+            ? null
+            : "Password must be 8+ chars, include uppercase, lowercase, number & special char";
+      });
+
+      final confirm = confirmPasswordController.text;
+      confirmPasswordError = (confirm == password) ? null : "Passwords do not match";
+    });
+
+    confirmPasswordController.addListener(() {
+      final password = passwordController.text;
+      final confirm = confirmPasswordController.text;
+      setState(() {
+        confirmPasswordError = (confirm == password) ? null : "Passwords do not match";
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    fullNameController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  bool get isFormValid =>
+      fullNameError == null &&
+          emailError == null &&
+          passwordError == null &&
+          confirmPasswordError == null &&
+          agreeToTerms &&
+          fullNameController.text.isNotEmpty &&
+          emailController.text.isNotEmpty &&
+          passwordController.text.isNotEmpty &&
+          confirmPasswordController.text.isNotEmpty;
 
   @override
   Widget build(BuildContext context) {
@@ -61,44 +128,69 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
                 ),
               ),
               const SizedBox(height: 32),
+
               TextField(
                 controller: fullNameController,
                 decoration: InputDecoration(
                   hintText: 'full_name'.tr(),
                   border: const OutlineInputBorder(),
-                  hintStyle: theme.textTheme.bodyMedium,
+                  errorText: fullNameError,
                 ),
               ),
               const SizedBox(height: 16),
+
               TextField(
                 controller: emailController,
                 decoration: InputDecoration(
                   hintText: 'email'.tr(),
                   border: const OutlineInputBorder(),
-                  hintStyle: theme.textTheme.bodyMedium,
+                  errorText: emailError,
                 ),
               ),
               const SizedBox(height: 16),
+
               TextField(
                 controller: passwordController,
-                obscureText: true,
+                obscureText: !_isPasswordVisible,
                 decoration: InputDecoration(
                   hintText: 'password'.tr(),
                   border: const OutlineInputBorder(),
-                  hintStyle: theme.textTheme.bodyMedium,
+                  errorText: passwordError,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isPasswordVisible = !_isPasswordVisible;
+                      });
+                    },
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
+
               TextField(
                 controller: confirmPasswordController,
-                obscureText: true,
+                obscureText: !_isConfirmPasswordVisible,
                 decoration: InputDecoration(
                   hintText: 'confirm_password'.tr(),
                   border: const OutlineInputBorder(),
-                  hintStyle: theme.textTheme.bodyMedium,
+                  errorText: confirmPasswordError,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                      });
+                    },
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
+
               Row(
                 children: [
                   Checkbox(
@@ -121,20 +213,19 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
                 ],
               ),
               const SizedBox(height: 16),
+
               BlocConsumer<AuthCubit, AuthState>(
                 listener: (context, state) {
                   if (state is AuthAuthenticated) {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => BlocProvider.value(
-                            value: context.read<UserCubit>(),
-                            child: const InterestsScreen(),
-                          ),
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => BlocProvider.value(
+                          value: context.read<AuthCubit>(),
+                          child: const InterestsScreen(),
                         ),
-                      );
-                    });
+                      ),
+                    );
                   } else if (state is AuthEmailActionSuccess) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -143,9 +234,14 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
                       ),
                     );
                   } else if (state is AuthError) {
+                    // ✅ Check if error contains "already registered"
+                    final msg = state.message.contains("already registered")
+                        ? "This email is already registered."
+                        : state.message;
+
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(state.message),
+                        content: Text(msg),
                         backgroundColor: Colors.red,
                       ),
                     );
@@ -153,42 +249,28 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
                 },
                 builder: (context, state) {
                   return CustomHoverButton(
-                    iconWidget: Icon(
-                      Icons.email,
-                      color: theme.colorScheme.onPrimary,
-                    ),
-                    text: state is AuthLoading
-                        ? 'signing_up'.tr()
-                        : 'sign_up'.tr(),
+                    iconWidget: Icon(Icons.email, color: theme.colorScheme.onPrimary),
+                    text: state is AuthLoading ? 'signing_up'.tr() : 'sign_up'.tr(),
                     color: theme.colorScheme.primary,
                     textColor: theme.colorScheme.onPrimary,
-                    onTap: (state is! AuthLoading && agreeToTerms)
+                    onTap: (state is! AuthLoading && isFormValid)
                         ? () {
-                            if (passwordController.text !=
-                                confirmPasswordController.text) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('passwords_not_match'.tr()),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                              return;
-                            }
-
-                            // Trigger registration
-                            context.read<AuthCubit>().register(
-                              emailController.text,
-                              passwordController.text,
-                              fullNameController.text,
-                            );
-                          }
+                      context.read<AuthCubit>().register(
+                        emailController.text,
+                        passwordController.text,
+                        fullNameController.text,
+                      );
+                    }
                         : null,
                   );
                 },
               ),
               const SizedBox(height: 16),
+
               OutlinedButton.icon(
-                onPressed: () => Navigator.pushNamed(context, '/root'),
+                onPressed: () {
+                  Navigator.pushNamed(context, '/root');
+                },
                 label: Text(
                   'continue_as_guest'.tr(),
                   style: TextStyle(color: theme.colorScheme.onBackground),
@@ -206,6 +288,7 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
   }
 }
 
+// Custom Hover Button
 class CustomHoverButton extends StatefulWidget {
   final Widget iconWidget;
   final String text;
@@ -270,19 +353,19 @@ class _CustomHoverButtonState extends State<CustomHoverButton>
                   borderRadius: BorderRadius.circular(30),
                   boxShadow: _hovering
                       ? [
-                          BoxShadow(
-                            color: Colors.black26,
-                            offset: const Offset(0, 4),
-                            blurRadius: 8,
-                          ),
-                        ]
+                    BoxShadow(
+                      color: Colors.black26,
+                      offset: const Offset(0, 4),
+                      blurRadius: 8,
+                    ),
+                  ]
                       : [
-                          BoxShadow(
-                            color: Colors.black12,
-                            offset: const Offset(0, 2),
-                            blurRadius: 4,
-                          ),
-                        ],
+                    BoxShadow(
+                      color: Colors.black12,
+                      offset: const Offset(0, 2),
+                      blurRadius: 4,
+                    ),
+                  ],
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,

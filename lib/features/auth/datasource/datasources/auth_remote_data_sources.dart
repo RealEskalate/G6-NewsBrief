@@ -33,11 +33,20 @@ class AuthRemoteDataSources {
         data: {'email': email, 'password': password, 'fullname': name},
       );
       print('Register Response: ${res.data}');
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.statusCode == 409) {
+        throw Exception("This email is already registered.");
+      } else if (e.response != null && e.response?.statusCode == 400) {
+        throw Exception("Invalid data. Please check your inputs.");
+      } else {
+        throw Exception("Registration failed. Please try again.");
+      }
     } catch (e) {
       print('Register Error: $e');
       rethrow;
     }
   }
+
 
   Future<void> logout(String refreshToken) async {
     try {
