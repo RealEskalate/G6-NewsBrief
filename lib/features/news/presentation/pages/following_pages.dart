@@ -266,7 +266,7 @@ class _FollowingPageState extends State<FollowingPage>
                             (news) => GestureDetector(
                               onTap: () => _openNewsDetail(news),
                               child: NewsCard(
-                                topics: news.topics[0],
+                                topics: news.topics.isNotEmpty ? news.topics[0] : '',
                                 title: news.title,
                                 description: news.body,
                                 source: news.soureceId,
@@ -377,7 +377,7 @@ class _FollowingPageState extends State<FollowingPage>
                             (news) => GestureDetector(
                               onTap: () => _openNewsDetail(news),
                               child: NewsCard(
-                                topics: news.topics[0],
+                                topics: news.topics.isNotEmpty ? news.topics[0] : '',
                                 title: news.title,
                                 description: news.body,
                                 source: news.soureceId,

@@ -340,14 +340,14 @@ class _ProfilePageState extends State<ProfilePage>
                                                 ),
                                               ),
                                           child: TopicChip(
-                                            title: topic['slug'],
+                                            title: topic['label']['en'],
                                             onDeleted: () => context
                                                 .read<UserCubit>()
                                                 .unsubscribe(topic['id']),
                                           ),
                                         )
                                       : TopicChip(
-                                          title: topic['slug'],
+                                          title: topic['label']['en'],
                                           onDeleted: null,
                                         ),
                                 ),
@@ -381,24 +381,6 @@ class _ProfilePageState extends State<ProfilePage>
                                     ),
 
                                   ),
-                                  if (isManagingTopics)
-                                    ActionChip(
-                                      label: Text("Add".tr(),
-                                          style: TextStyle(
-                                              color: theme.colorScheme.onPrimary)),
-                                      avatar: Icon(Icons.add,
-                                          color: theme.colorScheme.onPrimary),
-                                      backgroundColor: theme.colorScheme.primary,
-                                      onPressed: _showAddTopicDialog,
-                                    ),
-                                  if (isManagingTopics)
-                                    ActionChip(
-                                      label: Text("done".tr(),
-                                          style: TextStyle(
-                                              color: theme.colorScheme.onBackground)),
-                                      backgroundColor: theme.colorScheme.surfaceVariant,
-                                      onPressed: () => setState(() => isManagingTopics = false),
-                                    ),
                                 ],
                               ),
                         ],

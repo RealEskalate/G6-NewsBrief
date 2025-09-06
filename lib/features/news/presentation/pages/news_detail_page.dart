@@ -39,6 +39,14 @@ class _NewsDetailPageState extends State<NewsDetailPage>
   late final AnimationController _audioSheetController;
   late final AnimationController _progressController;
   late final AnimationController _discController;
+  late final AnimationController _chatbotController;
+  late final Animation<Offset> _chatbotOffsetAnimation;
+
+  final LinearGradient activeGradient = const LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF111827), Colors.black],
+  );
 
   @override
   void initState() {
@@ -83,6 +91,19 @@ class _NewsDetailPageState extends State<NewsDetailPage>
       vsync: this,
       duration: const Duration(seconds: 5),
     )..repeat();
+
+    _chatbotController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+
+    _chatbotOffsetAnimation =
+        Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _chatbotController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
   }
 
   void _toggleChatbot() {
@@ -296,11 +317,11 @@ class _NewsDetailPageState extends State<NewsDetailPage>
               ),
             ],
           ),
-           if (_isChatbotVisible)
+          if (_isChatbotVisible)
             Align(
               alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: EdgeInsets.all(size.width * 0.04),
+              child: Transform.translate(
+                offset: Offset(0, -150), // move 50 pixels up
                 child: ConstrainedBox(
                   constraints: BoxConstraints(maxHeight: size.height * 0.6),
                   child: ChatbotPopup(onClose: _toggleChatbot),
@@ -491,12 +512,27 @@ class _NewsDetailPageState extends State<NewsDetailPage>
                 child: FractionalTranslation(translation: offset, child: child),
               );
             },
-            child: BounceButton(
-              icon: Icons.chat_outlined,
-              onTap: _toggleChatbot,
-              isFab: true,
-              iconColor: Theme.of(context).colorScheme.onPrimary,
-            ),
+            child: _isChatbotVisible
+                ? Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: activeGradient,
+                    ),
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.chat_outlined,
+                        color: Colors.white,
+                      ),
+                      onPressed: _toggleChatbot,
+                    ),
+                  )
+                : BounceButton(
+                    icon: Icons.chat_outlined,
+                    onTap: _toggleChatbot,
+                    isFab: true,
+                    iconColor: theme.colorScheme.onPrimary,
+                    backgroundColor: theme.colorScheme.primary,
+                  ),
           ),
         ],
       ),

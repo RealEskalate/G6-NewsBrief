@@ -70,6 +70,7 @@ class _SearchPageState extends State<SearchPage>
         backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
         title: Text('search'.tr(), style: theme.textTheme.titleLarge),
+        
       ),
       body: Scrollbar(
         controller: _verticalScrollController,
@@ -187,7 +188,7 @@ class _SearchPageState extends State<SearchPage>
                                 child: GestureDetector(
                                   onTap: () => _openNewsDetail(news),
                                   child: NewsCard(
-                                    topics: news.topics[0],
+                                    topics: news.topics.isNotEmpty ? news.topics[0] : '',
                                     title: news.title,
                                     description: news.body,
                                     source: news.soureceId,

@@ -13,17 +13,23 @@ class NewsModel extends News {
 
   factory NewsModel.fromJson(Map<String, dynamic> json) {
     return NewsModel(
-      id: json['id'],
-      title: json['title'],
-      body: json['body'],
-      language: json['language'],
-      soureceId: json['source_id'],
-      topics: List<String>.from(json['topics']),
-      publishedAt: DateTime.parse(json['published_at']),
+      id: json['id'] ?? '',
+      title: json['title'] ?? '',
+      body: json['body'] ?? '',
+      language: json['language'] ?? '',
+      soureceId: json['source_id'] ?? '',
+      topics:
+          (json['topics'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
+      publishedAt: json['published_at'] != null
+          ? DateTime.tryParse(json['published_at']) ?? DateTime.now()
+          : DateTime.now(),
     );
   }
 
-   Map<String, dynamic> toJson() {
+  Map<String, dynamic> toJson() {
     return {
       "id": id,
       "title": title,
