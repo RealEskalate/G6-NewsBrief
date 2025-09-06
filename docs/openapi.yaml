@@ -775,6 +775,52 @@ paths:
                 created_at: 2025-09-01T08:30:10Z
                 updated_at: 2025-09-01T08:35:00Z
         "404": { description: Not Found }
+  /admin/news:
+    post:
+      operationId: adminCreateNews
+      tags: [admin, news]
+      summary: Admin create news (summarize, translate, classify topics, localize date)
+      description: |
+        Creates a news article as an administrator. The server will (1) sanitize title/body, (2) generate an English summary,
+        (3) translate title, body, and summary to the opposite language ensuring bilingual storage (title_en/title_am, body_en/body_am, summary_en/summary_am),
+        (4) classify topics (whitelisted), and (5) compute the Ethiopian localized date string.
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AdminCreateNewsRequest" }
+            example:
+              title: Ethiopia launches new satellite
+              body: |
+                Ethiopia has successfully launched its third earth observation satellite focusing on agriculture and climate monitoring...
+              language: en
+              source_id: 8f3c2a18-5a2b-4d3b-9b8a-7e2f1c0a9d11
+              topics_id: ["f1d3ff84-12ab-4cde-98ef-abcdef123456"]
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/News" }
+        "400": { description: Invalid request }
+        "401": { description: Unauthorized }
+        "403": { description: Forbidden }
+  /admin/analytics:
+    get:
+      operationId: getAnalytics
+      tags: [admin, analytics]
+      summary: Get aggregate application analytics
+      description: Returns global aggregate counters (users, news, sources, topics).
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Analytic" }
+        "401": { description: Unauthorized }
+        "403": { description: Forbidden }
 components:
   securitySchemes:
     bearerAuth:
@@ -958,6 +1004,10 @@ components:
         id: { type: string }
         title: { type: string }
         body: { type: string }
+        title_en: { type: string, description: "English title" }
+        title_am: { type: string, description: "Amharic title" }
+        body_en: { type: string }
+        body_am: { type: string }
         summary_en: { type: string }
         summary_am: { type: string }
         language: { type: string }
@@ -969,6 +1019,7 @@ components:
             description: "List of topic IDs",
           }
         published_at: { type: string, format: date-time }
+        published_date_localized: { type: string, description: "Ethiopian calendar YYYY-MM-DD" }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
     NewsIngestRequest:
@@ -995,12 +1046,15 @@ components:
       properties:
         id: { type: string }
         title: { type: string }
+        title_en: { type: string }
+        title_am: { type: string }
         language: { type: string }
         source_id: { type: string }
         topics: { type: array, items: { type: string } }
         summary_en: { type: string }
         summary_am: { type: string }
         published_at: { type: string, format: date-time }
+        published_date_localized: { type: string }
         created_at: { type: string, format: date-time }
     NewsListItemDTO:
       type: object
@@ -1008,12 +1062,17 @@ components:
         id: { type: string }
         title: { type: string }
         body: { type: string }
+        title_en: { type: string }
+        title_am: { type: string }
+        body_en: { type: string }
+        body_am: { type: string }
         summary_en: { type: string }
         summary_am: { type: string }
         language: { type: string }
         source_id: { type: string }
         topics: { type: array, items: { type: string } }
         published_at: { type: string, format: date-time }
+        published_date_localized: { type: string }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
         is_bookmarked:
@@ -1081,3 +1140,23 @@ components:
           properties:
             en: { type: string }
             am: { type: string }
+    AdminCreateNewsRequest:
+      type: object
+      required: [title, body, language, source_id, topics_id]
+      properties:
+        title: { type: string }
+        body: { type: string }
+        language: { type: string, enum: [en, am], description: Primary language of provided content; system auto-stores bilingual variants }
+        source_id: { type: string }
+        topics_id:
+          type: array
+          items: { type: string }
+          description: List of topic IDs (will be validated/normalized against whitelist)
+    Analytic:
+      type: object
+      properties:
+        id: { type: string }
+        total_users: { type: integer }
+        total_news: { type: integer }
+        total_sources: { type: integer }
+        total_topics: { type: integer }

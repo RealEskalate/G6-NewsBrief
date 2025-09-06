@@ -5,6 +5,7 @@ import (
 	"flag"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/RealEskalate/G6-NewsBrief/internal/domain/contract"
@@ -128,6 +129,8 @@ func main() {
 		log.Fatal("GEMINI_API_URL environment variable not set")
 	}
 	geminiClient := external_services.NewGeminiClient(GeminiAPIKey, summarizerAPI)
+	translatorClient := external_services.NewTranslatorClient()
+	providerClient := external_services.NewNewsProviderClient()
 
 	// Dependency Injection: Usecases
 	emailUsecase := usecase.NewEmailVerificationUseCase(tokenRepo, userRepo, mailService, randomGenerator, uuidGenerator, appConfig)
@@ -135,6 +138,7 @@ func main() {
 	topicUsecase := usecase.NewTopicUsecase(topicRepo, analyticRepo)
 	sourceUsecase := usecase.NewSourceUsecase(sourceRepo, analyticRepo)
 	subscriptionUsecase := usecase.NewSubscriptionUsecase(userRepo, sourceRepo)
+	providerIngestionUC := usecase.NewProviderIngestionUsecase(providerClient, geminiClient, translatorClient, topicRepo, newsRepo, uuidGenerator)
 	// Pass Prometheus metrics to handlers or usecases as needed (import from metrics package)
 
 	//---------------------- Admin seeder-------------------------------------
@@ -154,6 +158,10 @@ func main() {
 
 	appRouter.SetupRoutes(router)
 
+	if enabled := strings.ToLower(os.Getenv("PROVIDER_INGEST_SCHEDULED")); enabled == "" || enabled == "true" {
+		go runDailyIngestion(providerIngestionUC, appLogger)
+	}
+
 	// Start the server
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -164,4 +172,34 @@ func main() {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 
+}
+
+// runDailyIngestion schedules provider ingestion at fixed local times (07:00, 13:00, 19:00).
+func runDailyIngestion(uc contract.IProviderIngestionUsecase, logger contract.IAppLogger) {
+	times := []struct{ hour, min int }{{7, 0}, {13, 0}, {19, 0}}
+	scheduleNext := func(target time.Time) time.Duration { return time.Until(target) }
+	// Launch one goroutine per scheduled time
+	for _, t := range times {
+		go func(hour, minute int) {
+			for {
+				now := time.Now()
+				next := time.Date(now.Year(), now.Month(), now.Day(), hour, minute, 0, 0, now.Location())
+				if !next.After(now) { // passed -> tomorrow
+					next = next.Add(24 * time.Hour)
+				}
+				d := scheduleNext(next)
+				timer := time.NewTimer(d)
+				<-timer.C
+				ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+				start := time.Now()
+				ids, skipped, err := uc.IngestFromProvider(ctx, "general", 20)
+				cancel()
+				if err != nil {
+					logger.Errorf("scheduled provider ingestion failed: %v", err)
+				} else {
+					logger.Infof("scheduled provider ingestion at %02d:%02d done: ingested=%d skipped=%d duration=%s", hour, minute, len(ids), skipped, time.Since(start))
+				}
+			}
+		}(t.hour, t.min)
+	}
 }

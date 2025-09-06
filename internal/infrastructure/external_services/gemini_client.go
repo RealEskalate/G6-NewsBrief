@@ -61,7 +61,7 @@ func (c *GeminiClient) buildURLWithKey() string {
 	if strings.Contains(c.APIURL, "?") {
 		sep = "&"
 	}
-	fmt.Println("API URL:", c.APIURL) // Debug print
+	// fmt.Println("API URL:", c.APIURL) // Debug print
 	return fmt.Sprintf("%s%vkey=%s", c.APIURL, sep, c.APIKey)
 }
 
@@ -113,7 +113,7 @@ func (c *GeminiClient) Summarize(text, lang string) (string, error) {
 // ClassifyTopics asks the model to output a JSON array of concise topic labels
 func (c *GeminiClient) ClassifyTopics(text, lang string, topK int) ([]string, error) {
 	if topK <= 0 {
-		topK = 3
+		topK = 2
 	}
 	prompt := fmt.Sprintf("Return a JSON array (no prose) of up to %d high-level topic labels in %s for the following text. Keep labels concise, 1-3 words. If uncertain, still return best guesses. Text:\n\n%s", topK, lang, text)
 	reqBody := genReq{Contents: []content{{Parts: []part{{Text: prompt}}}}}

@@ -86,7 +86,6 @@ type PreferencesDTO struct {
 
 // SourceDTO represents a single source in an API response.
 type SourceDTO struct {
-	ID               string   `json:"id,omitempty"`
 	Slug             string   `json:"slug"`
 	Name             string   `json:"name"`
 	Description      string   `json:"description"`
@@ -160,18 +159,23 @@ func MapTopicsToDTOs(topics []entity.Topic) []TopicDTO {
 
 // NewsListItemDTO mirrors entity.News for API responses.
 type NewsListItemDTO struct {
-	ID           string   `json:"id"`
-	Title        string   `json:"title"`
-	Body         string   `json:"body"`
-	SummaryEN    string   `json:"summary_en,omitempty"`
-	SummaryAM    string   `json:"summary_am,omitempty"`
-	Language     string   `json:"language"`
-	SourceID     string   `json:"source_id"`
-	Topics       []string `json:"topics,omitempty"`
-	PublishedAt  string   `json:"published_at"`
-	CreatedAt    string   `json:"created_at"`
-	UpdatedAt    string   `json:"updated_at"`
-	IsBookmarked *bool    `json:"is_bookmarked,omitempty"`
+	ID                     string   `json:"id"`
+	Title                  string   `json:"title"`
+	Body                   string   `json:"body"`
+	TitleEN                string   `json:"title_en,omitempty"`
+	TitleAM                string   `json:"title_am,omitempty"`
+	BodyEN                 string   `json:"body_en,omitempty"`
+	BodyAM                 string   `json:"body_am,omitempty"`
+	SummaryEN              string   `json:"summary_en,omitempty"`
+	SummaryAM              string   `json:"summary_am,omitempty"`
+	Language               string   `json:"language"`
+	SourceID               string   `json:"source_id"`
+	Topics                 []string `json:"topics,omitempty"`
+	PublishedAt            string   `json:"published_at"`
+	PublishedDateLocalized string   `json:"published_date_localized,omitempty"`
+	CreatedAt              string   `json:"created_at"`
+	UpdatedAt              string   `json:"updated_at"`
+	IsBookmarked           *bool    `json:"is_bookmarked,omitempty"`
 }
 
 type NewsListResponseDTO struct {
@@ -186,17 +190,22 @@ func MapNewsToDTOs(list []*entity.News) []NewsListItemDTO {
 	out := make([]NewsListItemDTO, 0, len(list))
 	for _, n := range list {
 		out = append(out, NewsListItemDTO{
-			ID:          n.ID,
-			Title:       n.Title,
-			Body:        n.Body,
-			SummaryEN:   n.SummaryEN,
-			SummaryAM:   n.SummaryAM,
-			Language:    n.Language,
-			SourceID:    n.SourceID,
-			Topics:      n.Topics,
-			PublishedAt: n.PublishedAt.Format(time.RFC3339),
-			CreatedAt:   n.CreatedAt.Format(time.RFC3339),
-			UpdatedAt:   n.UpdatedAt.Format(time.RFC3339),
+			ID:                     n.ID,
+			Title:                  n.Title,
+			Body:                   n.Body,
+			TitleEN:                n.TitleEN,
+			TitleAM:                n.TitleAM,
+			BodyEN:                 n.BodyEN,
+			BodyAM:                 n.BodyAM,
+			SummaryEN:              n.SummaryEN,
+			SummaryAM:              n.SummaryAM,
+			Language:               n.Language,
+			SourceID:               n.SourceID,
+			Topics:                 n.Topics,
+			PublishedAt:            n.PublishedAt.Format(time.RFC3339),
+			PublishedDateLocalized: n.PublishedDateLocalized,
+			CreatedAt:              n.CreatedAt.Format(time.RFC3339),
+			UpdatedAt:              n.UpdatedAt.Format(time.RFC3339),
 		})
 	}
 	return out
@@ -212,18 +221,23 @@ func MapNewsToDTOsWithBookmarks(list []*entity.News, flags map[string]bool) []Ne
 			bm = &v
 		}
 		out = append(out, NewsListItemDTO{
-			ID:           n.ID,
-			Title:        n.Title,
-			Body:         n.Body,
-			SummaryEN:    n.SummaryEN,
-			SummaryAM:    n.SummaryAM,
-			Language:     n.Language,
-			SourceID:     n.SourceID,
-			Topics:       n.Topics,
-			PublishedAt:  n.PublishedAt.Format(time.RFC3339),
-			CreatedAt:    n.CreatedAt.Format(time.RFC3339),
-			UpdatedAt:    n.UpdatedAt.Format(time.RFC3339),
-			IsBookmarked: bm,
+			ID:                     n.ID,
+			Title:                  n.Title,
+			Body:                   n.Body,
+			TitleEN:                n.TitleEN,
+			TitleAM:                n.TitleAM,
+			BodyEN:                 n.BodyEN,
+			BodyAM:                 n.BodyAM,
+			SummaryEN:              n.SummaryEN,
+			SummaryAM:              n.SummaryAM,
+			Language:               n.Language,
+			SourceID:               n.SourceID,
+			Topics:                 n.Topics,
+			PublishedAt:            n.PublishedAt.Format(time.RFC3339),
+			PublishedDateLocalized: n.PublishedDateLocalized,
+			CreatedAt:              n.CreatedAt.Format(time.RFC3339),
+			UpdatedAt:              n.UpdatedAt.Format(time.RFC3339),
+			IsBookmarked:           bm,
 		})
 	}
 	return out
