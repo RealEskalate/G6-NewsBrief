@@ -37,7 +37,6 @@ class _SearchPageState extends State<SearchPage>
     context.read<NewsCubit>().fetchTrendingNews();
   }
 
-  
   @override
   void dispose() {
     _searchController.dispose();
@@ -64,7 +63,6 @@ class _SearchPageState extends State<SearchPage>
           },
         ),
         title: Text('search'.tr(), style: theme.textTheme.titleLarge),
-        
       ),
       body: Scrollbar(
         controller: _verticalScrollController,
@@ -162,36 +160,38 @@ class _SearchPageState extends State<SearchPage>
                 builder: (context, state) {
                   if (state is NewsLoaded) {
                     return Column(
-                      children: state.news
-                          .asMap()
-                          .entries
-                          .map((entry) {
-                            final index = entry.key;
-                            final news = entry.value;
-                            final cardPosition = index * 250.0;
-                            final scrollOffset = _verticalScrollController.hasClients
-                                ? _verticalScrollController.offset
-                                : 0.0;
-                            final isVisible = scrollOffset + 600 > cardPosition;
+                      children: state.news.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final news = entry.value;
+                        final cardPosition = index * 250.0;
+                        final scrollOffset =
+                            _verticalScrollController.hasClients
+                            ? _verticalScrollController.offset
+                            : 0.0;
+                        final isVisible = scrollOffset + 600 > cardPosition;
 
-                            return AnimatedOpacity(
-                              duration: const Duration(milliseconds: 500),
-                              opacity: isVisible ? 1.0 : 0.0,
-                              child: Transform.translate(
-                                offset: Offset(0, isVisible ? 0 : 30),
-                                
-                                  child: NewsCard(
-                                    id: news.id,
-                                    topics: news.topics.isNotEmpty ? news.topics[0] : 'General',
-                                    title: news.title,
-                                    description: news.body,
-                                    source: news.soureceId.isNotEmpty ? news.soureceId : 'EBC',
-                                    imageUrl: 'https://picsum.photos/200/300?random=$index',
-                                  ),
-                                ),
-                            );
-                          })
-                          .toList(),
+                        return AnimatedOpacity(
+                          duration: const Duration(milliseconds: 500),
+                          opacity: isVisible ? 1.0 : 0.0,
+                          child: Transform.translate(
+                            offset: Offset(0, isVisible ? 0 : 30),
+
+                            child: NewsCard(
+                              id: news.id,
+                              topics: news.topics.isNotEmpty
+                                  ? news.topics[0]
+                                  : 'General',
+                              title: news.title,
+                              description: news.body,
+                              source: news.sourecId.isNotEmpty
+                                  ? news.sourecId
+                                  : 'EBC',
+                              imageUrl:
+                                  'https://picsum.photos/200/300?random=$index',
+                            ),
+                          ),
+                        );
+                      }).toList(),
                     );
                   } else if (state is NewsLoading) {
                     return const Center(child: CircularProgressIndicator());

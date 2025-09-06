@@ -3,7 +3,7 @@ class News {
   final String title;
   final String body;
   final String language;
-  final String soureceId;
+  final String sourecId;
   final List<String> topics;
   final DateTime publishedAt;
 
@@ -12,7 +12,7 @@ class News {
     required this.title,
     required this.body,
     required this.language,
-    required this.soureceId,
+    required this.sourecId,
     required this.topics,
     required this.publishedAt,
   });

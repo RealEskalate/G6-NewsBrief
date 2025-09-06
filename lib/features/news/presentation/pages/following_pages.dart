@@ -267,8 +267,8 @@ class _FollowingPageState extends State<FollowingPage>
                                     : 'General',
                                 title: news.title,
                                 description: news.body,
-                                source: news.soureceId.isNotEmpty
-                                    ? news.soureceId
+                                source: news.sourecId.isNotEmpty
+                                    ? news.sourecId
                                     : 'EBC',
                                 imageUrl:
                                     'https://picsum.photos/200/300?random=${1}',
@@ -384,7 +384,7 @@ class _FollowingPageState extends State<FollowingPage>
                                     : '',
                                 title: news.title,
                                 description: news.body,
-                                source: news.soureceId,
+                                source: news.sourecId,
                                 imageUrl:
                                     'https://picsum.photos/200/300?random=${1}',
                               ),

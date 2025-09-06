@@ -6,7 +6,7 @@ class NewsModel extends News {
     required super.title,
     required super.body,
     required super.language,
-    required super.soureceId,
+    required super.sourecId,
     required super.topics,
     required super.publishedAt,
   });
@@ -17,7 +17,7 @@ class NewsModel extends News {
       title: json['title'] ?? '',
       body: json['body'] ?? '',
       language: json['language'] ?? '',
-      soureceId: json['source_id'] ?? '',
+      sourecId: json['source_id'] ?? '',
       topics:
           (json['topics'] as List<dynamic>?)
               ?.map((e) => e.toString())
@@ -35,7 +35,7 @@ class NewsModel extends News {
       "title": title,
       "body": body,
       "language": language,
-      "source_id": soureceId,
+      "source_id": sourecId,
       "topics": topics,
       "published_at": publishedAt.toIso8601String(),
     };

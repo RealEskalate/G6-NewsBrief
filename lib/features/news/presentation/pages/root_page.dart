@@ -29,11 +29,7 @@ class _RootPageState extends State<RootPage> {
     super.initState();
 
     _pages = [
-      HomePage(onBookmarkTap: () {
-        setState(() {
-          currentPage = 3; // Switch to SavedPage tab
-        });
-      }),
+      const HomePage(),
       const FollowingPage(),
       const SearchPage(),
       const SavedPage(),
