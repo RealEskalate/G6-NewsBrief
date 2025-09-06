@@ -14,7 +14,7 @@ abstract class AuthRepository {
   });
   Future<void> logout({required String refreshToken});
   Future<UserEntity> getMe();
-  Future<void> updateMe({required String name, required String email});
+  Future<UserEntity> updateMe({required String name});
 
   Future<void> requestVerificationEmail({required String email});
   Future<Tokens> verifyEmail({required String token});

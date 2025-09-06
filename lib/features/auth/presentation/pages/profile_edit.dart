@@ -50,21 +50,30 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return BlocBuilder<AuthCubit, AuthState>(
-      builder: (context, state) {
-        String? fullName;
-        String? firstLetter;
-        if (state is AuthAuthenticated) {
-          fullName = state.user.fullName;
-          _nameController.text = state.user.fullName;
-          firstLetter = fullName.isNotEmpty ? fullName[0].toUpperCase() : "J";
-        }
+    return BlocListener<AuthCubit, AuthState>(
+  listener: (context, state) {
+    if (state is AuthAuthenticated) {
+      _nameController.text = state.user.fullName;
+    }
+  },
+  child: BlocBuilder<AuthCubit, AuthState>(
+    builder: (context, state) {
+      String? fullName;
+      String? firstLetter;
+
+      if (state is AuthAuthenticated) {
+        fullName = state.user.fullName;
+        firstLetter = fullName.isNotEmpty ? fullName[0].toUpperCase() : "J";
+      }
 
         return Scaffold(
           backgroundColor: theme.scaffoldBackgroundColor,
           appBar: AppBar(
             leading: IconButton(
-              icon: Icon(Icons.arrow_back, color: theme.colorScheme.onBackground),
+              icon: Icon(
+                Icons.arrow_back,
+                color: theme.colorScheme.onBackground,
+              ),
               onPressed: () => Navigator.pop(context),
             ),
             title: Text(
@@ -124,13 +133,20 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
                 // Change Name Section
                 ListTile(
-                  leading: Icon(Icons.person_outline, color: theme.colorScheme.onBackground),
-                  title: Text("Change Name".tr(), style: TextStyle(color: theme.colorScheme.onBackground)),
+                  leading: Icon(
+                    Icons.person_outline,
+                    color: theme.colorScheme.onBackground,
+                  ),
+                  title: Text(
+                    "Change Name".tr(),
+                    style: TextStyle(color: theme.colorScheme.onBackground),
+                  ),
                   trailing: Icon(
                     _showChangeName ? Icons.expand_less : Icons.expand_more,
                     color: theme.colorScheme.onBackground.withOpacity(0.6),
                   ),
-                  onTap: () => setState(() => _showChangeName = !_showChangeName),
+                  onTap: () =>
+                      setState(() => _showChangeName = !_showChangeName),
                 ),
                 if (_showChangeName) ...[
                   const SizedBox(height: 12),
@@ -145,19 +161,26 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     child: ElevatedButton(
                       onPressed: _isChangeNameEnabled
                           ? () {
-                        // Your existing change name logic
-                      }
+                              context.read<AuthCubit>().changeName(newName: 
+                                _nameController.text.trim(),
+                              );
+                            }
                           : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: theme.colorScheme.primary,
                         foregroundColor: theme.colorScheme.onPrimary,
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         elevation: 2,
                       ),
                       child: Text(
                         'Change'.tr(),
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
@@ -166,13 +189,20 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
                 // Reset Password Section
                 ListTile(
-                  leading: Icon(Icons.key, color: theme.colorScheme.onBackground),
-                  title: Text("Reset Password".tr(), style: TextStyle(color: theme.colorScheme.onBackground)),
+                  leading: Icon(
+                    Icons.key,
+                    color: theme.colorScheme.onBackground,
+                  ),
+                  title: Text(
+                    "Reset Password".tr(),
+                    style: TextStyle(color: theme.colorScheme.onBackground),
+                  ),
                   trailing: Icon(
                     _showResetPassword ? Icons.expand_less : Icons.expand_more,
                     color: theme.colorScheme.onBackground.withOpacity(0.6),
                   ),
-                  onTap: () => setState(() => _showResetPassword = !_showResetPassword),
+                  onTap: () =>
+                      setState(() => _showResetPassword = !_showResetPassword),
                 ),
                 if (_showResetPassword) ...[
                   const SizedBox(height: 12),
@@ -197,12 +227,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     opacity: _showSamePasswordWarning ? 1.0 : 0.0,
                     child: _showSamePasswordWarning
                         ? Text(
-                      "New password must be different from old password".tr(),
-                      style: TextStyle(
-                        color: Colors.redAccent,
-                        fontSize: 12,
-                      ),
-                    )
+                            "New password must be different from old password"
+                                .tr(),
+                            style: TextStyle(
+                              color: Colors.redAccent,
+                              fontSize: 12,
+                            ),
+                          )
                         : const SizedBox.shrink(),
                   ),
                   const SizedBox(height: 16),
@@ -212,29 +243,36 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     child: ElevatedButton(
                       onPressed: _isResetPasswordEnabled
                           ? () async {
-                        final token = await storage.readAccessToken();
-                        if (token != null) {
-                          context.read<AuthCubit>().resetPassword(
-                            password: _oldPasswordController.text,
-                            token: token,
-                          );
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("No valid token found".tr())),
-                          );
-                        }
-                      }
+                              final token = await storage.readAccessToken();
+                              if (token != null) {
+                                context.read<AuthCubit>().resetPassword(
+                                  password: _oldPasswordController.text,
+                                  token: token,
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text("No valid token found".tr()),
+                                  ),
+                                );
+                              }
+                            }
                           : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: theme.colorScheme.primary,
                         foregroundColor: theme.colorScheme.onPrimary,
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         elevation: 2,
                       ),
                       child: Text(
                         'Change'.tr(),
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
@@ -244,6 +282,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ),
         );
       },
+    ),
     );
   }
 

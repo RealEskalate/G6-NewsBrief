@@ -89,6 +89,18 @@ class UserCubit extends Cubit<UserState> {
     }
   }
 
+  Future<void> loadAllData() async {
+  emit(UserLoading());
+  try {
+    final sources = await getAllSources(); // List<Map>
+    final topics = await getAllTopic();     // List<Map>
+    emit(UserLoaded(sources: sources, topics: topics));
+  } catch (e) {
+    emit(UserError(_msg(e)));
+  }
+}
+
+
 
   Future<void> loadAllSources() async {
     emit(UserLoading());

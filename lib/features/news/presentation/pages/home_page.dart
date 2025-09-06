@@ -383,31 +383,15 @@ class _HomePageState extends State<HomePage>
             itemCount: newsList.length,
             itemBuilder: (context, index) {
               final news = newsList[index];
-              return GestureDetector(
-                onTap: () {
-                  Navigator.pushNamed(
-                    context,
-                    '/news_detail',
-                    arguments: {
-                      'topic': news.topics.isNotEmpty
-                          ? news.topics[0]
-                          : 'for_you'.tr(),
-                      'title': news.title,
-                      'source': news.soureceId,
-                      'imageUrl': "https://picsum.photos/200/300?random=$index",
-                      'detail': news.body,
-                    },
-                  );
-                },
-                child: NewsCard(
-                  topics: news.topics.isNotEmpty ? news.topics[0] : '',
+               return NewsCard(
+                  id: news.id,
+                  topics: news.topics.isNotEmpty ? news.topics[0] : 'General',
                   title: news.title,
                   description: news.body,
-                  source: news.soureceId,
-                  imageUrl: "https://picsum.photos/200/300?random=$index",
-                  onBookmark: widget.onBookmarkTap,
-                ),
-              );
+                  source: news.soureceId.isNotEmpty ? news.soureceId : 'EBC',
+                  imageUrl: "https://picsum.photos/200/300?random=$index"
+                );
+
             },
           );
         } else if (state is NewsError) {

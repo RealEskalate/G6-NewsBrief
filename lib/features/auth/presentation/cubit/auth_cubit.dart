@@ -10,6 +10,7 @@ import 'package:newsbrief/features/auth/domain/usecases/logout.dart';
 import 'package:newsbrief/features/auth/domain/usecases/register_user.dart';
 import 'package:newsbrief/features/auth/domain/usecases/request_verification_email.dart';
 import 'package:newsbrief/features/auth/domain/usecases/reset_password.dart';
+import 'package:newsbrief/features/auth/domain/usecases/update_me.dart';
 import 'package:newsbrief/features/auth/domain/usecases/verify_email.dart';
 import 'package:newsbrief/features/auth/presentation/cubit/auth_state.dart';
 
@@ -24,6 +25,7 @@ class AuthCubit extends Cubit<AuthState> {
   final RequestVerificationEmail requestVerificationEmail;
   final LoginWithGoogleUseCase loginWithGoogleUseCase;
   final GetInterestsUseCase getInterestsUseCase;
+  final UpdateMe updateMe;
 
   // ✅ Token storage
   final TokenSecureStorage tokenStorage = TokenSecureStorage();
@@ -39,6 +41,7 @@ class AuthCubit extends Cubit<AuthState> {
     required this.requestVerificationEmail,
     required this.loginWithGoogleUseCase,
     required this.getInterestsUseCase,
+    required this.updateMe,
   }) : super(AuthInitial());
 
   Future<void> login({required String email, required String password}) async {
@@ -185,5 +188,21 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+ 
+  Future<void> changeName({required String newName}) async {
+    emit(AuthLoading());
+    try {
+      // Call the use case instance, not the class
+      final updatedUser = await updateMe(name: newName);
+
+      // Emit success with updated user
+      emit(AuthAuthenticated(updatedUser));
+    } catch (e) {
+      emit(AuthError(e.toString()));
+    }
+  }
   String _msg(Object e) => e.toString().replaceFirst('Exception: ', '');
 }
+
+
+
