@@ -11,6 +11,29 @@ class VectorDBService:
         self.client = client
         self.collection = client.get_or_create_collection("news_articles")
 
+    def get_articles(self, limit: int = 10) -> List[Dict]:
+        """Retrieve articles from ChromaDB."""
+        try:
+            results = self.collection.get(limit=limit)
+            articles = []
+            for i in range(len(results["ids"])):
+                articles.append({
+                    "id": results["ids"][i],
+                    "title": results["metadatas"][i]["title"],
+                    "text": results["documents"][i],
+                    "source_url": results["metadatas"][i]["source_url"],
+                    "source_site": results["metadatas"][i]["source_site"],
+                    "source_type": results["metadatas"][i]["source_type"],
+                    "published_date": results["metadatas"][i]["published_date"],
+                    "crawl_timestamp": results["metadatas"][i]["crawl_timestamp"],
+                    "lang": results["metadatas"][i].get("lang", detect_language(results["documents"][i]))
+                })
+            logger.info(f"Retrieved {len(articles)} articles from ChromaDB")
+            return articles
+        except Exception as e:
+            logger.error(f"Failed to retrieve articles: {e}")
+            return []
+        
     def add_article(self, article: Dict):
         """Add a single article to ChromaDB."""
         try:

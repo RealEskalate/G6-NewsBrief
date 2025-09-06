@@ -20,4 +20,8 @@ COPY . /app
 EXPOSE 8000
 
 # Start Gunicorn with Uvicorn workers using Render's injected $PORT
-CMD gunicorn -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:$PORT
+CMD gunicorn -k uvicorn.workers.UvicornWorker app.main:app \
+    --bind 0.0.0.0:$PORT \
+    --timeout 120 \
+    --workers 2 \
+    --threads 4

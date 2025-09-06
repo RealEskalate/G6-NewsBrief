@@ -25,7 +25,7 @@ async def gather_news(
         if crawl_req:
             raw_data.extend(await crawl_news(crawl_req.urls, crawl_req.query, vector_db))
         if api_req:
-            raw_data.extend(await fetch_news_api(api_req))
+            raw_data.extend(await fetch_news_api(api_req, vector_db))
         if tg_req:
             raw_data.extend(await fetch_telegram(tg_req.channels, tg_req.limit))
         if raw_data:
@@ -60,5 +60,14 @@ async def get_brief(query: str, top_k: int = 5, vector_db: chromadb.Client = Dep
         texts = [f"{art['title']}: {art['text']}" for art in articles]
         brief = await generate_brief("\n".join(texts))
         return brief
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/stored", response_model=List[Dict])
+async def get_stored_articles(limit: int = 10, vector_db: chromadb.Client = Depends(get_vector_db)):
+    """Retrieve stored articles from ChromaDB."""
+    try:
+        articles = VectorDBService(vector_db).get_articles(limit)
+        return articles
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

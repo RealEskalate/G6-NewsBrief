@@ -19,15 +19,19 @@ def trigger_crawler():
 
     print("Triggering scheduled crawl...")  
     asyncio.run(news.gather_news(
-        crawl_req=None,
-        api_req=None,
-        tg_req=None,
+        crawl_req = {
+            urls: [], # type: ignore
+            query: "" # type: ignore
+        },
+        api_req = {
+            query: "Ethiopia, Africa" # type: ignore
+        },
     ))
 
 @app.on_event("startup")
 def start_scheduler():
-    # Run every 6 hours
-    scheduler.add_job(trigger_crawler, "interval", hours=6)
+    # Run every 2 hours
+    scheduler.add_job(trigger_crawler, "interval", hours=2)
     scheduler.start()
 
     print("Scheduler started")
