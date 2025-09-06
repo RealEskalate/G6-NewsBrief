@@ -25,6 +25,7 @@ import 'package:newsbrief/features/auth/domain/usecases/forgot_password.dart';
 import 'package:newsbrief/features/auth/domain/usecases/reset_password.dart';
 import 'package:newsbrief/features/auth/domain/usecases/subscrible_to_topics.dart';
 import 'package:newsbrief/features/auth/domain/usecases/unsubscrible_to_topic.dart';
+import 'package:newsbrief/features/auth/domain/usecases/update_me.dart';
 import 'package:newsbrief/features/auth/domain/usecases/verify_email.dart';
 import 'package:newsbrief/features/auth/domain/usecases/request_verification_email.dart';
 import 'package:newsbrief/features/auth/presentation/cubit/auth_cubit.dart';
@@ -35,7 +36,8 @@ import 'package:newsbrief/features/auth/presentation/cubit/user_cubit.dart';
 import 'package:newsbrief/features/news/datasource/datasources/news.local_data_sources.dart';
 import 'package:newsbrief/features/news/datasource/datasources/news_remote_data_sources.dart';
 import 'package:newsbrief/features/news/datasource/repositories/news_repositorty_impl.dart';
-import 'package:newsbrief/features/news/domain/repositories/news_repository.dart';
+import 'package:newsbrief/features/news/presentation/cubit/bookmark_cubit.dart';
+import 'package:newsbrief/features/news/presentation/cubit/chat_cubit.dart';
 import 'package:newsbrief/features/news/presentation/cubit/news_cubit.dart';
 import 'package:newsbrief/features/news/presentation/pages/news_detail_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -45,7 +47,6 @@ import 'core/storage/theme_storage.dart';
 import 'core/theme/theme_cubit.dart';
 
 import 'features/auth/presentation/pages/admin_dashboard.dart';
-import 'features/auth/presentation/pages/dashboard_page.dart';
 import 'features/auth/presentation/pages/signup_landing.dart';
 
 import 'package:newsbrief/features/auth/presentation/pages/login.dart';
@@ -86,6 +87,9 @@ void main() async {
       saveLocale: true,
       child: MultiBlocProvider(
         providers: [
+          
+          BlocProvider(create: (_) => ChatCubit(newsRepo)),
+          BlocProvider(create: (_) => BookmarkCubit(newsRepo)),
           BlocProvider(create: (_) => NewsCubit(newsRepo)..fetchForYouNews()),
           BlocProvider(
             create: (_) => AuthCubit(
@@ -99,6 +103,7 @@ void main() async {
               requestVerificationEmail: RequestVerificationEmail(repo),
               loginWithGoogleUseCase: LoginWithGoogleUseCase(repo),
               getInterestsUseCase: GetInterestsUseCase(repo),
+              updateMe: UpdateMe(repo),
             ),
           ),
 
@@ -176,6 +181,7 @@ class MyApp extends StatelessWidget {
               case '/news_detail':
                 final args = settings.arguments as Map<String, dynamic>;
                 page = NewsDetailPage(
+                  id: args['id'] as String,
                   topics: args['topic'] as String,
                   title: args['title'] as String,
                   source: args['source'] as String,

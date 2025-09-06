@@ -48,3 +48,10 @@ class AllSourcesLoaded extends UserState {
   final List<Map<String, dynamic>> sources;
   AllSourcesLoaded(this.sources);
 }
+
+class UserLoaded extends UserState {
+  final List<Map<String, dynamic>> sources;
+  final List<Map<String, dynamic>> topics;
+
+  UserLoaded({required this.sources, required this.topics});
+}

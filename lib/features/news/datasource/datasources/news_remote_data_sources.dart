@@ -1,5 +1,7 @@
 import 'package:newsbrief/core/network_info/api_service.dart';
+import 'package:newsbrief/features/news/datasource/models/models.dart';
 import 'package:newsbrief/features/news/datasource/models/news_model.dart';
+import 'package:newsbrief/features/news/presentation/widgets/chat_bot_popup.dart';
 
 class NewsRemoteDataSources {
   final ApiService api;
@@ -70,4 +72,39 @@ class NewsRemoteDataSources {
       rethrow;
     }
   }
+
+  Future<void> addBookmark(String newsId) async {
+    await api.post('/me/bookmarks', data: {'news_id': newsId});
+  }
+
+  Future<void> removeBookmark(String newsId) async {
+    await api.delete('/me/bookmarks/$newsId');
+  }
+
+  Future<List<BookmarkModel>> getBookmarks() async {
+    final res = await api.get('/me/bookmarks');
+    final List<dynamic> data = (res.data['news'] as List<dynamic>?) ?? [];
+    return data.map((e) => BookmarkModel.fromJson(e)).toList();
+  }
+
+   Future<ChatMessage> generalChat(String message) async {
+  final res = await api.post('/chat/general', data: {'message': message});
+  final replyText = res.data['reply']; // This is already a String
+  return ChatMessage(
+    message: replyText,
+    isUser: false,
+    newsId: '',
+  );
+}
+
+Future<ChatMessage> newsChat(String newsId, String message) async {
+  final res = await api.post('/chat/news/$newsId', data: {'message': message});
+  final replyText = res.data['reply']; // Already a String
+  return ChatMessage(
+    message: replyText,
+    isUser: false,
+    newsId: newsId,
+  );
+}
+
 }
