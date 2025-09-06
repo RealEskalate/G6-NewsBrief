@@ -192,7 +192,44 @@
   "Enable Notifications": "ማሳወቂያዎችን አቅርብ",
   "select_language": "ቋንቋ ይምረጡ",
   "manage_topic": "ርዕስ አስተዳደር",
-  "manage_subscription": "አተላለፊያ አስተዳደር"
+  "manage_subscription": "አተላለፊያ አስተዳደር",
+  "dashboard": "ዳሽቦርድ",
+  "sources": "ምንጮች",
+  "topics": "ርዕሶች",
+  "news": "ዜና",
+  "admin": "አስተዳዳሪ",
+  "admin_dashboard": "አስተዳደር ዳሽቦርድ",
+  "users": "ተጠቃሚዎች",
+  "platform_composition": "የመድረክ ዋና አካላት",
+  "slug": "ስለአይነት",
+  "enter_slug": "ስለአይነት አስገባ",
+  "enter_name": "ስም አስገባ",
+  "description": "መግለጫ",
+  "url": "ድህረገፅ አድራሻ",
+  "logo_url": "የሎጎ አድራሻ",
+  "languages": "ቋንቋዎች (በኮማ ተከፋፈል)",
+  "reliability_score": "የታማኝነት ነጥብ",
+  "create_source": "ምንጭ ፍጠር",
+  "authorization_token_missing": "የማውጫ ቶክን አልተገኘም።",
+  "source_created_successfully": "ምንጭ በተሳካ ሁኔታ ተፈጥሯል!",
+  "forbidden_create_sources": "እንደማይፈቀድዎት ምንጭ ማፍጠር ከተከለከለዎት።",
+  "error": "እብድ",
+  "network_error": "የኔትወርክ ስህተት",
+  "label_en": "ምልክት (EN)",
+  "enter_label_en": "በእንግሊዝኛ ምልክት አስገባ",
+  "label_am": "ምልክት (AM)",
+  "enter_label_am": "በአማርኛ ምልክት አስገባ",
+  "create_topic": "ርዕስ ፍጠር",
+  "topic_created_successfully": "ርዕስ በተሳካ ሁኔታ ተፈጥሯል!",
+  "forbidden_create_topics": "እንደማይፈቀድዎት ርዕስ ማፍጠር ከተከለከለዎት።"
+
+
+
+
+
+
+
+
 
 
 

@@ -194,7 +194,44 @@
   "Entertainment": "Entertainment",
   "Health": "Health",
   "search_for_sources": "Search for sources...",
-  "following_sources": "Following Sources"
+  "following_sources": "Following Sources",
+  "dashboard": "Dashboard",
+  "sources": "Sources",
+  "topics": "Topics",
+  "news": "News",
+  "admin": "Admin",
+  "admin_dashboard": "Admin Dashboard",
+  "users": "Users",
+  "platform_composition": "Platform Composition",
+  "slug": "Slug",
+  "enter_slug": "Enter slug",
+  "enter_name": "Enter name",
+  "description": "Description",
+  "url": "URL",
+  "logo_url": "Logo URL",
+  "languages": "Languages (comma-separated)",
+  "reliability_score": "Reliability Score",
+  "create_source": "Create Source",
+  "authorization_token_missing": "Authorization token missing.",
+  "source_created_successfully": "Source created successfully!",
+  "forbidden_create_sources": "Forbidden: You cannot create sources.",
+  "error": "Error",
+  "network_error": "Network error",
+  "label_en": "Label (EN)",
+  "enter_label_en": "Enter label in English",
+  "label_am": "Label (AM)",
+  "enter_label_am": "Enter label in Amharic",
+  "create_topic": "Create Topic",
+  "topic_created_successfully": "Topic created successfully!",
+  "forbidden_create_topics": "Forbidden: You cannot create topics."
+
+
+
+
+
+
+
+
 }
 
 

@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/storage/token_secure_storage.dart';
-
 
 class TopicsPage extends StatefulWidget {
   const TopicsPage({super.key});
@@ -28,7 +28,7 @@ class _TopicsPageState extends State<TopicsPage> {
     final token = await TokenSecureStorage().readAccessToken();
     if (token == null || token.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Authorization token missing.')),
+        SnackBar(content: Text('authorization_token_missing'.tr())),
       );
       setState(() => _isLoading = false);
       return;
@@ -54,21 +54,21 @@ class _TopicsPageState extends State<TopicsPage> {
 
       if (response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Topic created successfully!')),
+          SnackBar(content: Text('topic_created_successfully'.tr())),
         );
         _formKey.currentState!.reset();
       } else if (response.statusCode == 403) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Forbidden: You cannot create topics.')),
+          SnackBar(content: Text('forbidden_create_topics'.tr())),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${response.body}')),
+          SnackBar(content: Text('${'error'.tr()}: ${response.body}')),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Network error: $e')),
+        SnackBar(content: Text('${'network_error'.tr()}: $e')),
       );
     } finally {
       setState(() => _isLoading = false);
@@ -93,27 +93,27 @@ class _TopicsPageState extends State<TopicsPage> {
           children: [
             TextFormField(
               controller: _slugController,
-              decoration: const InputDecoration(labelText: 'Slug'),
-              validator: (val) => val == null || val.isEmpty ? 'Enter slug' : null,
+              decoration: InputDecoration(labelText: 'slug'.tr()),
+              validator: (val) => val == null || val.isEmpty ? 'enter_slug'.tr() : null,
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _labelEnController,
-              decoration: const InputDecoration(labelText: 'Label (EN)'),
-              validator: (val) => val == null || val.isEmpty ? 'Enter label in English' : null,
+              decoration: InputDecoration(labelText: 'label_en'.tr()),
+              validator: (val) => val == null || val.isEmpty ? 'enter_label_en'.tr() : null,
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _labelAmController,
-              decoration: const InputDecoration(labelText: 'Label (AM)'),
-              validator: (val) => val == null || val.isEmpty ? 'Enter label in Amharic' : null,
+              decoration: InputDecoration(labelText: 'label_am'.tr()),
+              validator: (val) => val == null || val.isEmpty ? 'enter_label_am'.tr() : null,
             ),
             const SizedBox(height: 32),
             ElevatedButton(
               onPressed: _isLoading ? null : _createTopic,
               child: _isLoading
                   ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text('Create Topic'),
+                  : Text('create_topic'.tr()),
               style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(50)),
             ),
           ],

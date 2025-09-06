@@ -11,7 +11,7 @@ class AdminSettingsPage extends StatefulWidget {
 }
 
 class _AdminSettingsPageState extends State<AdminSettingsPage> {
-  // Replace these with real admin data if available
+  // Keep these as-is, no localization
   final String adminName = "Admin";
   final String adminEmail = "admin@newsbrief.local";
 
@@ -30,7 +30,7 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "Admin Settings".tr(),
+          "admin_settings".tr(),
           style: TextStyle(
             color: theme.colorScheme.onBackground,
             fontWeight: FontWeight.bold,
@@ -70,7 +70,7 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
           // Appearance Toggle
           ListTile(
             title: Text(
-              "Appearance".tr(),
+              "appearance".tr(),
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
             trailing: SizedBox(
@@ -87,8 +87,8 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
                   }
                 },
                 children: [
-                  Center(child: Text("Light".tr())),
-                  Center(child: Text("Dark".tr())),
+                  Center(child: Text("light".tr())),
+                  Center(child: Text("dark".tr())),
                 ],
               ),
             ),
@@ -98,7 +98,7 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
 
           // Language Toggle
           ListTile(
-            title: Text("Language".tr(), style: const TextStyle(fontSize: 16)),
+            title: Text("language".tr(), style: const TextStyle(fontSize: 16)),
             trailing: SizedBox(
               width: 100,
               child: ToggleButtons(

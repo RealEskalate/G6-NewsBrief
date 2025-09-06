@@ -169,7 +169,11 @@ class SignupLandingPage extends StatelessWidget {
                   const SizedBox(height: 12),
                   OutlinedButton.icon(
                     onPressed: () {
-                      Navigator.pushNamed(context, '/root');
+                      // ✅ Emit guest state
+                      context.read<AuthCubit>().continueAsGuest();
+
+                      // ✅ Navigate to RootPage
+                      Navigator.pushReplacementNamed(context, '/root');
                     },
                     label: Text(
                       'continue_as_guest'.tr(),
@@ -182,6 +186,7 @@ class SignupLandingPage extends StatelessWidget {
                       side: BorderSide(color: theme.colorScheme.onSurface),
                     ),
                   ),
+
                   const SizedBox(height: 20),
                   GestureDetector(
                     onTap: () {
