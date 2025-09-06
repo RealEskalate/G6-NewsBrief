@@ -8,19 +8,23 @@ class SavedPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'saved'.tr(),
-          style: textTheme.titleLarge,
+    return Column(
+      children: [
+        AppBar(
+          title: Text(
+            'saved'.tr(),
+            style: textTheme.titleLarge,
+          ),
         ),
-      ),
-      body: Center(
-        child: Text(
-          'welcome_saved'.tr(),
-          style: textTheme.bodyLarge,
+        Expanded(
+          child: Center(
+            child: Text(
+              'welcome_saved'.tr(),
+              style: textTheme.bodyLarge,
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
 }

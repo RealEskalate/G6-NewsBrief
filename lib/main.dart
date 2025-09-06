@@ -23,14 +23,23 @@ import 'package:newsbrief/features/auth/domain/usecases/get_me.dart';
 import 'package:newsbrief/features/auth/domain/usecases/logout.dart';
 import 'package:newsbrief/features/auth/domain/usecases/forgot_password.dart';
 import 'package:newsbrief/features/auth/domain/usecases/reset_password.dart';
+import 'package:newsbrief/features/auth/domain/usecases/subscrible_to_topics.dart';
+import 'package:newsbrief/features/auth/domain/usecases/unsubscrible_to_topic.dart';
 import 'package:newsbrief/features/auth/domain/usecases/verify_email.dart';
 import 'package:newsbrief/features/auth/domain/usecases/request_verification_email.dart';
 import 'package:newsbrief/features/auth/presentation/cubit/auth_cubit.dart';
 
-
 import 'package:newsbrief/features/auth/domain/usecases/subscribe_to_sources.dart';
 import 'package:newsbrief/features/auth/domain/usecases/unsubscribe_from_source.dart';
 import 'package:newsbrief/features/auth/presentation/cubit/user_cubit.dart';
+import 'package:newsbrief/features/news/datasource/datasources/news.local_data_sources.dart';
+import 'package:newsbrief/features/news/datasource/datasources/news_remote_data_sources.dart';
+import 'package:newsbrief/features/news/datasource/repositories/news_repositorty_impl.dart';
+import 'package:newsbrief/features/news/domain/repositories/news_repository.dart';
+import 'package:newsbrief/features/news/presentation/cubit/news_cubit.dart';
+import 'package:newsbrief/features/news/presentation/pages/news_detail_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 import 'core/storage/theme_storage.dart';
 import 'core/theme/theme_cubit.dart';
@@ -40,7 +49,6 @@ import 'features/auth/presentation/pages/dashboard_page.dart';
 import 'features/auth/presentation/pages/signup_landing.dart';
 
 import 'package:newsbrief/features/auth/presentation/pages/login.dart';
-import 'package:newsbrief/features/auth/presentation/pages/signup_landing.dart';
 import 'package:newsbrief/features/auth/presentation/pages/profile_edit.dart';
 import 'package:newsbrief/features/auth/presentation/pages/profile_page.dart';
 import 'package:newsbrief/features/auth/presentation/pages/setting.dart';
@@ -53,13 +61,11 @@ import 'package:newsbrief/features/onboarding/presentation/onboarding.dart';
 import 'package:newsbrief/features/onboarding/datasources/local_storage.dart';
 import 'package:newsbrief/features/onboarding/domain/check_first_run.dart';
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized(); // <-- initialize EasyLocalization
 
   const baseUrl = 'https://news-brief-core-api.onrender.com/api/v1';
-
 
   final themeStorage = ThemeStorage();
   final tokenStorage = TokenSecureStorage();
@@ -67,6 +73,10 @@ void main() async {
   final remote = AuthRemoteDataSources(api);
   final local = AuthLocalDataSource(tokenStorage);
   final repo = AuthRepositoryImpl(remote: remote, local: local);
+  final newsRemote = NewsRemoteDataSources(api);
+  final prefs = await SharedPreferences.getInstance();
+  final newsLocal = NewsLocalDataSourceImpl(prefs);
+  final newsRepo = NewsRepositoryImpl(newsRemote, newsLocal);
 
   runApp(
     EasyLocalization(
@@ -76,6 +86,7 @@ void main() async {
       saveLocale: true,
       child: MultiBlocProvider(
         providers: [
+          BlocProvider(create: (_) => NewsCubit(newsRepo)..fetchForYouNews()),
           BlocProvider(
             create: (_) => AuthCubit(
               loginUser: LoginUser(repo),
@@ -90,29 +101,28 @@ void main() async {
               getInterestsUseCase: GetInterestsUseCase(repo),
             ),
           ),
+
+          BlocProvider(create: (_) => ThemeCubit(themeStorage)),
+
           BlocProvider(
-            create: (_) => ThemeCubit(themeStorage),
+            create: (_) => UserCubit(
+              getAllSources: GetAllSources(repo),
+              getAllTopic: GetAllTopic(repo),
+              getSubscribedSources: GetSubscribedSources(repo),
+              getSubscribedTopics: GetSubscribedTopics(repo),
+              unsubscribeFromSource: UnsubscribeFromSource(repo),
+              subscribeToSources: SubscribeToSources(repo),
+              subscribeUseCase: SubscribeToTopics(repo),
+              unsubscribeUseCase: UnsubscribeFromTopic(repo),
+            ),
           ),
-
-        BlocProvider(
-          create: (_) => UserCubit(
-            getAllSources: GetAllSources(repo),
-            getAllTopic: GetAllTopic(repo),
-            getSubscribedSources: GetSubscribedSources(repo),
-            getSubscribedTopics: GetSubscribedTopics(repo),
-            unsubscribeFromSource: UnsubscribeFromSource(repo),
-            subscribeToSources: SubscribeToSources(repo),
-          ),
-        ),
-      ],
-      child: MyApp(),
-
-       
+        ],
+        child: MyApp(),
       ),
-
     ),
   );
 }
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -162,8 +172,19 @@ class MyApp extends StatelessWidget {
               case '/profile':
                 page = const ProfilePage();
                 break;
+
+              case '/news_detail':
+                final args = settings.arguments as Map<String, dynamic>;
+                page = NewsDetailPage(
+                  topics: args['topic'] as String,
+                  title: args['title'] as String,
+                  source: args['source'] as String,
+                  imageUrl: args['imageUrl'] as String,
+                  detail: args['detail'] as String,
+                );
               case '/admin_dashboard': // <-- add this case
                 page = const AdminDashboardPage();
+
                 break;
               default:
                 page = const Login();
@@ -198,7 +219,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-
 class OnboardingScreenWrapper extends StatelessWidget {
   final CheckFirstRun checkFirstRun;
 
@@ -212,7 +232,6 @@ class OnboardingScreenWrapper extends StatelessWidget {
 
         // Use AppNavigator for consistent slide transition
         AppNavigator.pushReplacement(context, const Login());
-
       },
     );
   }

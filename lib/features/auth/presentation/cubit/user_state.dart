@@ -6,6 +6,19 @@ class UserInitial extends UserState {}
 
 class UserLoading extends UserState {}
 
+
+class TopicLoading extends UserState {}
+
+class TopicActionSuccess extends UserState {
+  final String message;
+  TopicActionSuccess(this.message);
+}
+
+class TopicError extends UserState {
+  final String message;
+  TopicError(this.message);
+}
+
 class UserError extends UserState {
   final String message;
   UserError(this.message);
@@ -22,16 +35,16 @@ class SubscribedSourcesLoaded extends UserState {
 }
 
 class SubscribedTopicsLoaded extends UserState {
-  final List<String> topics;
+  final List<Map<String, dynamic>> topics;
   SubscribedTopicsLoaded(this.topics);
 }
 
 class AllTopicsLoaded extends UserState {
-  final List<String> topics;
+  final List<Map<String, dynamic>> topics;
   AllTopicsLoaded(this.topics);
 }
 
 class AllSourcesLoaded extends UserState {
-  final List<String> sources;
+  final List<Map<String, dynamic>> sources;
   AllSourcesLoaded(this.sources);
 }
