@@ -1,7 +1,8 @@
 "use client";
 import React, { useContext, useState, useEffect } from "react";
 import { Edit2, Eye, EyeOff } from "lucide-react";
-import TopBar from "@/components/reusable_components/topBar";
+import TopBar from "@/components/reusable_components/search_topbar";
+import ChatBot from "@/components/reusable_components/Generalchatbot";
 import { useTranslation } from "react-i18next";
 import { ThemeContext } from "@/app/contexts/ThemeContext";
 import { apiClient, User, Source, Topic } from "../../../lib/api";
@@ -29,24 +30,15 @@ const SettingsPage = () => {
   const [sources, setSources] = useState<Source[]>([]);
   const [subscriptions, setSubscriptions] = useState<Source[]>([]);
   const [selectedSource, setSelectedSource] = useState("");
-  const [error, setError] = useState<boolean | null | string>(null);
-  const [loading, setLoading] = useState<boolean | null | string>(null);
+
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const [tags, setTags] = useState<string[]>([]);
-  const [newTag, setNewTag] = useState("");
-
-  // Topics state
-  const [allTopics, setAllTopics] = useState<Topic[]>([]);
-  const [subscribedTopics, setSubscribedTopics] = useState<
-    {
-      slug: string;
-      topic_name: string;
-      label: { en: string; am: string };
-      story_count: number;
-    }[]
-  >([]);
+  const [userTopics, setUserTopics] = useState<Topic[]>([]);
+  const [availableTopics, setAvailableTopics] = useState<Topic[]>([]);
   const [selectedTopic, setSelectedTopic] = useState("");
+  const [topicsLoading, setTopicsLoading] = useState(false);
 
   const tabs: { id: TabId; label: string }[] = [
     { id: "customization", label: t("settings.tabs.customization") },
@@ -54,61 +46,50 @@ const SettingsPage = () => {
     { id: "categories", label: t("settings.tabs.categories") },
     { id: "subscriptions", label: t("settings.tabs.subscriptions") },
   ];
-  const [hasChanges, setHasChanges] = useState(false);
+   const [hasChanges, setHasChanges] = useState(false);
 
-  // Watch for profile edits and any changes in subscriptions to enable save button
-  useEffect(() => {
-    if (editingFullName || editingEmail || editingPassword || selectedSource) {
-      setHasChanges(true);
-    } else {
-      setHasChanges(false);
-    }
-  }, [editingFullName, editingEmail, editingPassword, selectedSource]);
+   // Watch for profile edits and any changes in subscriptions to enable save button
+   useEffect(() => {
+     if (editingFullName || editingEmail || editingPassword || selectedSource) {
+       setHasChanges(true);
+     } else {
+       setHasChanges(false);
+     }
+   }, [editingFullName, editingEmail, editingPassword, selectedSource]);
 
   // Load sources + subscriptions + topics from API
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [allSources, mySubs, topics, subscribedTopicsData] =
-          await Promise.all([
-            apiClient.getSources(),
-            apiClient.getSubscriptions(),
-            apiClient.getTopics(),
-            apiClient.getSubscribedTopics(),
-          ]);
-
+        const allSources = await apiClient.getSources();
+        const mySubs = await apiClient.getSubscriptions();
+        
+        // Get all available topics (for the dropdown)
+        const allTopics = await apiClient.getTopics();
         console.log("from source", allSources);
+        console.log("from all topics", allTopics);
         setSources(allSources);
         setSubscriptions(mySubs);
-        setAllTopics(topics);
-        setSubscribedTopics(subscribedTopicsData);
+        setAvailableTopics(allTopics);
 
-        // Load tags from localStorage (keep for backward compatibility)
-        const savedTags = localStorage.getItem("userTags");
-        if (savedTags) {
-          try {
-            const parsedTags = JSON.parse(savedTags);
-            setTags(parsedTags);
-          } catch (e) {
-            console.error("Error parsing saved tags:", e);
-            setTags([]);
-          }
-        } else {
-          setTags([]);
-        }
+        // Get user's current topic interests
+        const userTopics = await apiClient.getUserTopics();
+        console.log("from user topics", userTopics);
+        console.log("userTopics length:", userTopics.length);
+        console.log("Setting userTopics state with:", userTopics);
+        setUserTopics(userTopics);
       } catch (err) {
-        console.error("Error fetching data:", err);
+        console.error("Error fetching sources/subs/topics:", err);
       }
     };
     fetchData();
   }, []);
 
-  // Save tags to localStorage whenever tags change
+  // Debug: Monitor userTopics state changes
   useEffect(() => {
-    if (tags.length > 0) {
-      localStorage.setItem("userTags", JSON.stringify(tags));
-    }
-  }, [tags]);
+    console.log("userTopics state changed:", userTopics);
+    console.log("userTopics state length:", userTopics.length);
+  }, [userTopics]);
 
   // Add subscription
   const handleAddSubscription = async () => {
@@ -129,7 +110,9 @@ const SettingsPage = () => {
   };
   const saveBtnClass = `px-4 py-2 rounded-lg transition-colors ${
     hasChanges
-      ? "bg-black text-white hover:bg-gray-800"
+      ? theme === "dark"
+        ? "bg-white text-black hover:bg-gray-200"
+        : "bg-black text-white hover:bg-gray-800"
       : theme === "dark"
       ? "bg-gray-700 text-gray-100 hover:bg-gray-600"
       : "bg-gray-300 text-gray-900 hover:bg-gray-400"
@@ -143,32 +126,6 @@ const SettingsPage = () => {
       setSubscriptions(subscriptions.filter((s) => s.slug !== slug));
     } catch (err) {
       console.error("Failed to remove subscription:", err);
-    }
-  };
-
-  // Add topic subscription
-  const handleAddTopicSubscription = async () => {
-    if (!selectedTopic) return;
-    try {
-      await apiClient.subscribeToTopic(selectedTopic);
-      // Refresh subscribed topics
-      const updatedSubscribedTopics = await apiClient.getSubscribedTopics();
-      setSubscribedTopics(updatedSubscribedTopics);
-      setSelectedTopic("");
-    } catch (err) {
-      console.error("Error adding topic subscription:", err);
-    }
-  };
-
-  // Remove topic subscription
-  const handleRemoveTopicSubscription = async (topicId: string) => {
-    try {
-      await apiClient.unsubscribeFromTopic(topicId);
-      // Refresh subscribed topics
-      const updatedSubscribedTopics = await apiClient.getSubscribedTopics();
-      setSubscribedTopics(updatedSubscribedTopics);
-    } catch (err) {
-      console.error("Error removing topic subscription:", err);
     }
   };
 
@@ -247,31 +204,79 @@ const SettingsPage = () => {
     }
   };
 
+  // Topic functions
+  const addTopic = async () => {
+    if (!selectedTopic) return;
+    setTopicsLoading(true);
+    try {
+      await apiClient.addTopic(selectedTopic);
+      const updatedUserTopics = await apiClient.getUserTopics();
+      setUserTopics(updatedUserTopics);
+      setSelectedTopic("");
+    } catch (err) {
+      console.error("Failed to add topic:", err);
+      alert(
+        `Failed to add topic: ${
+          err instanceof Error ? err.message : "Unknown error"
+        }`
+      );
+    } finally {
+      setTopicsLoading(false);
+    }
+  };
+
+  const removeTopic = async (topicSlug: string) => {
+    setTopicsLoading(true);
+    try {
+      // Find the topic by slug to get the ID for the API call
+      const topic = userTopics.find(t => t.slug === topicSlug);
+      if (!topic) {
+        throw new Error("Topic not found");
+      }
+      await apiClient.removeTopic(topic.id);
+      // Refresh user topics directly
+      const updatedUserTopics = await apiClient.getUserTopics();
+      setUserTopics(updatedUserTopics);
+    } catch (err) {
+      console.error("Failed to remove topic:", err);
+      alert(
+        `Failed to remove topic: ${
+          err instanceof Error ? err.message : "Unknown error"
+        }`
+      );
+    } finally {
+      setTopicsLoading(false);
+    }
+  };
+
   // Dynamic classes for theme
   const inputClass = `w-full border rounded-lg px-3 py-2 ${
     theme === "dark"
-      ? "bg-gray-800 border-gray-600 focus:ring-gray-500 text-gray-100"
-      : "bg-gray-100 border-gray-300 focus:ring-gray-300 text-gray-900"
+      ? "bg-gray-700 border-gray-600 focus:ring-gray-500 text-gray-100"
+      : "bg-white border-gray-300 focus:ring-gray-300 text-gray-900"
   } focus:outline-none focus:ring-2`;
 
   const sectionClass = `border rounded-2xl p-5 sm:p-6 shadow-sm transition-colors duration-300 ${
     theme === "dark"
-      ? "border-gray-700 bg-gray-900"
-      : "border-gray-200 bg-gray-50"
+      ? "border-gray-700 bg-gray-800"
+      : "border-gray-200 bg-white"
   }`;
+
+  
 
   return (
     <>
-      <TopBar />
+      <ChatBot />
       <div
-        className={`flex flex-col md:flex-row min-h-screen transition-colors duration-300 ${
-          theme === "dark"
-            ? "bg-[#1A1A1A] text-gray-100"
-            : "bg-gray-50 text-gray-900"
+        className={`flex flex-col lg:flex-row gap-5 min-h-screen w-full transition-colors ${
+          theme === "light" ? "bg-white text-black" : "bg-gray-900 text-white"
         }`}
       >
-        <div className="flex-1 pt-6 md:pt-10 px-4 sm:px-6 lg:px-8 flex justify-center">
-          <div className="w-full max-w-4xl">
+        <div className="flex-1 lg:ml-0 lg:mt-1 px-4 lg:px-6 lg:mr-10 w-full overflow-hidden">
+          <div className="flex justify-between w-full mb-4">
+            <TopBar />
+          </div>
+          <div className="w-full max-w-7xl mx-auto space-y-12 px-4">
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4 md:gap-0">
               <h1 className="text-2xl sm:text-3xl font-semibold">
@@ -289,7 +294,7 @@ const SettingsPage = () => {
             {/* Tabs */}
             <div
               className={`flex overflow-x-auto space-x-3 mb-6 p-2 rounded-xl transition-colors ${
-                theme === "dark" ? "bg-gray-800" : "bg-gray-200"
+                theme === "dark" ? "bg-gray-700" : "bg-gray-100"
               }`}
             >
               {tabs.map((tab) => (
@@ -299,8 +304,8 @@ const SettingsPage = () => {
                   className={`px-4 py-2 text-sm font-medium rounded-lg transition flex-shrink-0 ${
                     activeTab === tab.id
                       ? theme === "dark"
-                        ? "bg-gray-700 text-gray-100 shadow-sm"
-                        : "bg-gray-300 text-gray-900 shadow-sm"
+                        ? "bg-gray-600 text-gray-100 shadow-sm"
+                        : "bg-white text-gray-900 shadow-sm"
                       : theme === "dark"
                       ? "text-gray-300 hover:text-gray-100"
                       : "text-gray-700 hover:text-gray-900"
@@ -465,46 +470,43 @@ const SettingsPage = () => {
                   <h2 className="text-lg font-medium mb-4">
                     {t("settings.tabs.categories")}
                   </h2>
-                  <p className="text-sm text-gray-600 mb-4">
+                  <p className={`text-sm mb-4 ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-600"
+                  }`}>
                     Manage your topic interests to personalize your news feed.
                   </p>
 
-                  {/* Current subscribed topics */}
-                  <div className="mb-6">
-                    <h3 className="text-md font-medium mb-3">
-                      Subscribed Topics
-                    </h3>
-                    {subscribedTopics.length > 0 ? (
-                      <div className="flex flex-wrap gap-2">
-                        {subscribedTopics.map((topic) => (
-                          <span
-                            key={topic.slug}
-                            className="flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1.5 rounded-full text-sm font-medium"
+                  {userTopics.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {userTopics.map((topic) => (
+                        <span
+                          key={topic.slug}
+                          className="flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1.5 rounded-full text-sm font-medium"
+                        >
+                          {topic.label.en}
+                          <button
+                            onClick={() => removeTopic(topic.slug)}
+                            disabled={topicsLoading}
+                            className="text-blue-500 hover:text-blue-800 ml-1 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            {topic.label?.en || topic.topic_name}
-                            <button
-                              onClick={() =>
-                                handleRemoveTopicSubscription(topic.slug)
-                              }
-                              className="text-blue-500 hover:text-blue-800 ml-1"
-                            >
-                              ✕
-                            </button>
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
+                            ✕
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <div>
                       <p className="text-gray-500 text-sm">
-                        No topics subscribed yet. Subscribe to topics to
-                        personalize your news feed.
+                        No topics selected yet. Add some topics to personalize
+                        your news feed.
                       </p>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </section>
 
                 <section className={sectionClass}>
                   <h3 className="text-md font-medium mb-3">
-                    Subscribe to Topics
+                    Add Topic Interest
                   </h3>
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                     <select
@@ -513,25 +515,23 @@ const SettingsPage = () => {
                       className={`${inputClass} flex-1`}
                     >
                       <option value="">Select a topic...</option>
-                      {allTopics
+                      {availableTopics
                         .filter(
                           (topic) =>
-                            !subscribedTopics.some(
-                              (sub) => sub.slug === topic.id
-                            )
+                            !userTopics.some((userTopic) => userTopic.slug === topic.slug)
                         )
                         .map((topic) => (
-                          <option key={topic.id} value={topic.id}>
-                            {topic.label?.en || topic.id}
+                          <option key={topic.slug} value={topic.id}>
+                            {topic.label.en}
                           </option>
                         ))}
                     </select>
                     <button
-                      onClick={handleAddTopicSubscription}
-                      disabled={!selectedTopic}
+                      onClick={addTopic}
+                      disabled={!selectedTopic || topicsLoading}
                       className="bg-[#0B66FF] text-white px-4 py-2 rounded-lg hover:bg-[#EAF2FF] hover:text-black transition w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      + Subscribe
+                      {topicsLoading ? "Adding..." : "+ Add Topic"}
                     </button>
                   </div>
                 </section>
@@ -566,7 +566,11 @@ const SettingsPage = () => {
                       </div>
                       <button
                         onClick={() => handleRemoveSubscription(sub.slug)}
-                        className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 hover:bg-[#EAF2FF] hover:border-[#0B66FF] hover:text-[#0B66FF] transition"
+                        className={`text-sm border rounded-lg px-3 py-1.5 transition ${
+                          theme === "dark"
+                            ? "border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500 hover:text-white"
+                            : "border-gray-300 text-gray-700 hover:bg-gray-100 hover:border-gray-400 hover:text-gray-900"
+                        }`}
                       >
                         Remove
                       </button>
@@ -600,7 +604,11 @@ const SettingsPage = () => {
                   </select>
                   <button
                     onClick={handleAddSubscription}
-                    className="bg-[#0B66FF] text-white px-4 py-2 rounded-lg hover:bg-[#EAF2FF] hover:text-black transition w-full sm:w-auto"
+                    className={`px-4 py-2 rounded-lg transition w-full sm:w-auto ${
+                      theme === "dark"
+                        ? "bg-white text-black hover:bg-gray-200"
+                        : "bg-black text-white hover:bg-gray-800"
+                    }`}
                   >
                     + Add
                   </button>

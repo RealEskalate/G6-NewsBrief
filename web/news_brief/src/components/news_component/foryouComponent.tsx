@@ -126,7 +126,7 @@ export default function ForyouComponent() {
     };
 
     const imageFolder = topicImageMap[primaryTopic] || 'other';
-    const randomImage = Math.floor(Math.random() * 10) + 1;
+    const randomImage = Math.floor(Math.random() * 6) + 1;
     const imagePath = `/images/${imageFolder}/${randomImage}.jpg`;
     
     return imagePath;
@@ -178,8 +178,29 @@ export default function ForyouComponent() {
   };
 
   if (loading) return (
-    <div className={`${theme === "light" ? "bg-white text-black" : "bg-gray-900 text-white"} w-full p-4`}>
-      <p className="text-center">Loading news ...</p>
+    <div className="w-full max-w-7xl mx-auto space-y-12 px-4">
+      <div className="space-y-4">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <div key={index} className="animate-pulse">
+            <div className="flex flex-col lg:flex-row gap-5 rounded-lg border shadow-sm my-2 border-[#E6E6E6] w-full overflow-hidden">
+              <div className={`w-full lg:w-[20%] h-48 lg:h-auto rounded-t-lg lg:rounded-tl-lg lg:rounded-bl-lg lg:rounded-t-none ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"}`}></div>
+              <div className="p-4 flex-1 min-w-0 space-y-3">
+                <div className="flex gap-2">
+                  <div className={`h-6 w-16 rounded-full ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"}`}></div>
+                  <div className={`h-4 w-24 rounded ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"}`}></div>
+                </div>
+                <div className={`h-6 w-3/4 rounded ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"}`}></div>
+                <div className={`h-4 w-full rounded ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"}`}></div>
+                <div className={`h-4 w-2/3 rounded ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"}`}></div>
+                <div className="flex justify-between items-center">
+                  <div className={`h-4 w-20 rounded ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"}`}></div>
+                  <div className={`h-8 w-8 rounded-full ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"}`}></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
   
@@ -190,7 +211,7 @@ export default function ForyouComponent() {
   );
 
   return (
-    <div className={`${theme === "light" ? "bg-white text-black" : "bg-gray-900 text-white"} w-full`}>
+    <div className="w-full max-w-7xl mx-auto space-y-12 px-4">
       <h1 className="my-5 font-bold text-xl">
         {isFallback 
           ? (i18n.language === 'am' ? 'ዛሬ የተወደዱ ዜናዎች' : 'Trending & Today\'s News')

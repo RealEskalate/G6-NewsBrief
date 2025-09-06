@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { apiClient } from "@/lib/api"; 
- // 👈 make sure you import your API client
+import { apiClient } from "@/lib/api";
 import Button from "@/components/reusable_components/Button";
 
 export default function AddSourcePage() {
@@ -13,7 +12,7 @@ export default function AddSourcePage() {
     url: "",
     logoUrl: "",
     language: "En",
-    topics: [] as string[], // topics as array
+    topics: [] as string[],
     reliability: 5.7,
   });
 
@@ -22,6 +21,7 @@ export default function AddSourcePage() {
   const [loading, setLoading] = useState(true);
   const [apiLoading, setApiLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1000);
@@ -35,50 +35,90 @@ export default function AddSourcePage() {
     setForm({ ...form, [name]: value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setShowConfirm(true);
-  };
+  
 
-  const confirmSubmit = async () => {
-    setApiLoading(true);
-    try {
-      const payload = {
-        slug: form.slug,
-        name: form.name,
-        description: form.description,
-        url: form.url,
-        logo_url: form.logoUrl,
-        languages: form.language,
-        topics: form.topics,
-        reliability_score: form.reliability,
+
+
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  const newErrors: { [key: string]: string } = {};
+  if (!form.slug.trim()) newErrors.slug = "Slug is required.";
+  if (!form.name.trim()) newErrors.name = "Name is required.";
+  if (form.description.split(/[.!?]/).filter(s => s.trim()).length < 2)
+    newErrors.description = "Description must be at least two sentences.";
+
+  setErrors(newErrors);
+
+  if (Object.keys(newErrors).length === 0) {
+    setShowConfirm(true); // show confirm modal only if client validation passes
+  }
+};
+
+const confirmSubmit = async () => {
+  setApiLoading(true);
+  try {
+    const payload = {
+      slug: form.slug,
+      name: form.name,
+      description: form.description,
+      url: form.url,
+      logo_url: form.logoUrl,
+      languages: form.language,
+      topics: form.topics,
+      reliability_score: form.reliability,
+    };
+
+    const res = await apiClient.createSource(payload);
+    setMessage(res.message || "✅ Source created successfully");
+    setSubmitted(true);
+
+    setForm({
+      slug: "",
+      name: "",
+      description: "",
+      url: "",
+      logoUrl: "",
+      language: "En",
+      topics: [],
+      reliability: 5.7,
+    });
+
+    setTimeout(() => setSubmitted(false), 3000);
+ } catch (err: unknown) {
+  let friendlyMessage = "❌ Something went wrong.";
+  let fieldErrors: { [key: string]: string } = {};
+
+  // ✅ If your API client throws a normal Error with this message
+  if (err instanceof Error && err.message.includes("Failed to create source")) {
+    friendlyMessage = "❌ Slug, name, or URL already exists.";
+    
+  } 
+  // ✅ Generic error handling
+  else if (err instanceof Error) {
+    if (err.message.includes("Failed to create source")) {
+      friendlyMessage = "❌ Slug, name, or URL already exists.";
+      fieldErrors = {
+        slug: "Slug already exists.",
+        name: "Name already exists.",
+        url: "URL already exists.",
       };
-
-      const res = await apiClient.createSource(payload);
-      setMessage(res.message || "Source created successfully ✅");
-      setSubmitted(true);
-
-      // reset form
-      setForm({
-        slug: "",
-        name: "",
-        description: "",
-        url: "",
-        logoUrl: "",
-        language: "En",
-        topics: [],
-        reliability: 5.7,
-      });
-
-      setTimeout(() => setSubmitted(false), 3000);
-    } catch (err: unknown) {
-      if (err instanceof Error){
-      setMessage(err.message || "Failed to create source ❌");}
-    } finally {
-      setApiLoading(false);
-      setShowConfirm(false);
+    } else {
+      friendlyMessage = `❌ ${err.message}`;
     }
-  };
+  }
+
+  setErrors(fieldErrors);
+  setMessage(friendlyMessage);
+  setSubmitted(true);
+} finally {
+  setApiLoading(false);
+  setShowConfirm(false);
+}
+
+
+};
+
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-start justify-center p-4 relative">
@@ -88,7 +128,6 @@ export default function AddSourcePage() {
         </h2>
 
         {loading ? (
-          // Skeleton loader
           <div className="animate-pulse space-y-6">
             <div className="h-10 bg-gray-200 rounded w-1/3"></div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -107,10 +146,9 @@ export default function AddSourcePage() {
                 name="slug"
                 value={form.slug}
                 onChange={handleChange}
-                required
-                placeholder="Enter slug"
                 className="w-full border border-gray-300 rounded-lg px-4 py-2"
               />
+              {errors.slug && <p className="text-red-500 text-sm">{errors.slug}</p>}
             </div>
 
             {/* Name */}
@@ -121,10 +159,9 @@ export default function AddSourcePage() {
                 name="name"
                 value={form.name}
                 onChange={handleChange}
-                required
-                placeholder="Enter source name"
                 className="w-full border border-gray-300 rounded-lg px-4 py-2"
               />
+              {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
             </div>
 
             {/* Description */}
@@ -134,10 +171,9 @@ export default function AddSourcePage() {
                 name="description"
                 value={form.description}
                 onChange={handleChange}
-                required
-                placeholder="Enter description"
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 h-28 resize-none"
               />
+              {errors.description && <p className="text-red-500 text-sm">{errors.description}</p>}
             </div>
 
             {/* URL */}
@@ -148,10 +184,9 @@ export default function AddSourcePage() {
                 name="url"
                 value={form.url}
                 onChange={handleChange}
-                required
-                placeholder="https://example.com"
                 className="w-full border border-gray-300 rounded-lg px-4 py-2"
               />
+              {errors.url && <p className="text-red-500 text-sm">{errors.url}</p>}
             </div>
 
             {/* Logo URL */}
@@ -162,10 +197,9 @@ export default function AddSourcePage() {
                 name="logoUrl"
                 value={form.logoUrl}
                 onChange={handleChange}
-                required
-                placeholder="https://logo.png"
                 className="w-full border border-gray-300 rounded-lg px-4 py-2"
               />
+              {errors.logoUrl && <p className="text-red-500 text-sm">{errors.logoUrl}</p>}
             </div>
 
             {/* Language */}
@@ -175,10 +209,8 @@ export default function AddSourcePage() {
                 name="language"
                 value={form.language}
                 onChange={handleChange}
-                required
                 className="w-full border border-gray-300 rounded-lg px-4 py-2"
               >
-                <option value="">Select Language</option>
                 <option value="En">English</option>
                 <option value="Am">Amharic</option>
               </select>
@@ -195,7 +227,6 @@ export default function AddSourcePage() {
                 name="reliability"
                 value={form.reliability}
                 onChange={handleChange}
-                required
                 className="border border-gray-300 rounded-lg px-4 py-2 w-28"
               />
             </div>
@@ -203,7 +234,6 @@ export default function AddSourcePage() {
             {/* Submit */}
             <div className="md:col-span-2 flex justify-end mt-4">
               <Button
-                
                 type="submit"
                 className="bg-gray-900 hover:bg-gray-800 text-white font-semibold px-6 py-2 rounded-lg shadow-md transition"
                 disabled={apiLoading}
@@ -220,7 +250,7 @@ export default function AddSourcePage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-96 shadow-lg text-center">
             <h3 className="text-lg font-semibold mb-4">Confirm Submission</h3>
-            <p className="mb-6"> you want to submit this source?</p>
+            <p className="mb-6">Are you sure you want to submit this source?</p>
             <div className="flex justify-center gap-4">
               <button
                 className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
@@ -244,7 +274,7 @@ export default function AddSourcePage() {
         <div className="absolute top-8 right-8 bg-black text-white px-5 py-3 rounded-lg shadow-lg">
           {message}
         </div>
-      )}..
+      )}
     </div>
   );
 }

@@ -157,7 +157,7 @@ export default function TopicNewsPage() {
   const getTopicImage = (topics: string[]) => {
     if (!topics || topics.length === 0) {
       // Use random image from 'other' folder (1-10)
-      const randomImage = Math.floor(Math.random() * 10) + 1;
+      const randomImage = Math.floor(Math.random() * 6) + 1;
       return `/images/other/${randomImage}.jpg`;
     }
 
@@ -192,7 +192,7 @@ export default function TopicNewsPage() {
     };
 
     const imageFolder = topicImageMap[primaryTopic] || 'other';
-    const randomImage = Math.floor(Math.random() * 10) + 1;
+    const randomImage = Math.floor(Math.random() * 6) + 1;
     const imagePath = `/images/${imageFolder}/${randomImage}.jpg`;
     
     console.log("getTopicImage: Using image from", imageFolder, "folder:", imagePath);
@@ -201,89 +201,119 @@ export default function TopicNewsPage() {
 
   if (loading) {
     return (
-      <div className={`min-h-screen ${theme === "dark" ? "bg-gray-900" : "bg-gray-50"}`}>
-        <TopBar />
-        <div className="container mx-auto px-4 py-8">
-          <div className="space-y-8">
-            {/* Shimmer for news grid */}
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Array.from({ length: 6 }).map((_, index) => (
-                <div key={index} className="animate-pulse">
-                  <div className={`h-48 rounded-lg ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"}`}></div>
-                  <div className="mt-4 space-y-2">
-                    <div className={`h-4 rounded ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"}`}></div>
-                    <div className={`h-4 rounded w-3/4 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"}`}></div>
-                  </div>
+      <>
+        <ChatBot />
+        <div
+          className={`flex flex-col lg:flex-row gap-5 min-h-screen w-full transition-colors ${
+            theme === "light" ? "bg-white text-black" : "bg-gray-900 text-white"
+          }`}
+        >
+          <div className="flex-1 lg:ml-0 lg:mt-1 px-4 lg:px-6 lg:mr-10 w-full overflow-hidden">
+            <div className="flex justify-between w-full mb-4">
+              <TopBar />
+            </div>
+            <div className="w-full max-w-7xl mx-auto space-y-12 px-4">
+              <div className="space-y-8">
+                {/* Shimmer for news grid */}
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {Array.from({ length: 6 }).map((_, index) => (
+                    <div key={index} className="animate-pulse">
+                      <div className={`h-48 rounded-lg ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"}`}></div>
+                      <div className="mt-4 space-y-2">
+                        <div className={`h-4 rounded ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"}`}></div>
+                        <div className={`h-4 rounded w-3/4 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"}`}></div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
             </div>
           </div>
         </div>
-        <ChatBot />
-      </div>
+      </>
     );
   }
 
   if (errorMessage) {
     return (
-      <div className={`min-h-screen ${theme === "dark" ? "bg-gray-900" : "bg-gray-50"}`}>
-        <TopBar />
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center py-10">
-            <p className={`text-lg ${
-              theme === "dark" ? "text-gray-400" : "text-gray-600"
-            }`}>
-              {i18n.language === 'am' ? 'ርዕስ አልተገኘም።' : 'Topic not found.'}
-            </p>
+      <>
+        <ChatBot />
+        <div
+          className={`flex flex-col lg:flex-row gap-5 min-h-screen w-full transition-colors ${
+            theme === "light" ? "bg-white text-black" : "bg-gray-900 text-white"
+          }`}
+        >
+          <div className="flex-1 lg:ml-0 lg:mt-1 px-4 lg:px-6 lg:mr-10 w-full overflow-hidden">
+            <div className="flex justify-between w-full mb-4">
+              <TopBar />
+            </div>
+            <div className="w-full max-w-7xl mx-auto space-y-12 px-4">
+              <div className="text-center py-10">
+                <p className={`text-lg ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-600"
+                }`}>
+                  {i18n.language === 'am' ? 'ርዕስ አልተገኘም።' : 'Topic not found.'}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
-        <ChatBot />
-      </div>
+      </>
     );
   }
 
   return (
-    <div className={`min-h-screen ${theme === "dark" ? "bg-gray-900" : "bg-gray-50"}`}>
-      <TopBar />
-      <div className="container mx-auto px-4 py-8">
-        {topicLoading ? (
-          <div className="space-y-8">
-            {/* Shimmer for news grid */}
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Array.from({ length: 6 }).map((_, index) => (
-                <div key={index} className="animate-pulse">
-                  <div className={`h-48 rounded-lg ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"}`}></div>
-                  <div className="mt-4 space-y-2">
-                    <div className={`h-4 rounded ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"}`}></div>
-                    <div className={`h-4 rounded w-3/4 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"}`}></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : topicNews && topicNews.length > 0 && topic ? (
-          <NewsGridNew
-            title={i18n.language === 'am' ? topic.label.am : topic.label.en}
-            data={topicNews}
-            onClick={handleNewsClick}
-            onBookmark={handleBookmark}
-            bookmarkedNews={bookmarkedNews}
-            theme={theme}
-            getTopicNames={getTopicNames}
-            getTopicImage={getTopicImage}
-            currentLanguage={i18n.language}
-          />
-        ) : (
-          <div className="text-center py-10">
-            <p className={`text-lg ${
-              theme === "dark" ? "text-gray-400" : "text-gray-600"
-            }`}>
-              {i18n.language === 'am' ? 'ለዚህ ርዕስ ዜና ማግኛ አልተገኘም።' : 'No news articles found for this topic.'}
-            </p>
-          </div>
-        )}
-      </div>
+    <>
       <ChatBot />
-    </div>
+      <div
+        className={`flex flex-col lg:flex-row gap-5 min-h-screen w-full transition-colors ${
+          theme === "light" ? "bg-white text-black" : "bg-gray-900 text-white"
+        }`}
+      >
+        <div className="flex-1 lg:ml-0 lg:mt-1 px-4 lg:px-6 lg:mr-10 w-full overflow-hidden">
+          <div className="flex justify-between w-full mb-4">
+            <TopBar />
+          </div>
+          <div className="w-full max-w-7xl mx-auto space-y-12 px-4">
+            {topicLoading ? (
+              <div className="space-y-8">
+                {/* Shimmer for news grid */}
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {Array.from({ length: 6 }).map((_, index) => (
+                    <div key={index} className="animate-pulse">
+                      <div className={`h-48 rounded-lg ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"}`}></div>
+                      <div className="mt-4 space-y-2">
+                        <div className={`h-4 rounded ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"}`}></div>
+                        <div className={`h-4 rounded w-3/4 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"}`}></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : topicNews && topicNews.length > 0 && topic ? (
+              <NewsGridNew
+                title={i18n.language === 'am' ? topic.label.am : topic.label.en}
+                data={topicNews}
+                onClick={handleNewsClick}
+                onBookmark={handleBookmark}
+                bookmarkedNews={bookmarkedNews}
+                theme={theme}
+                getTopicNames={getTopicNames}
+                getTopicImage={getTopicImage}
+                currentLanguage={i18n.language}
+              />
+            ) : (
+              <div className="text-center py-10">
+                <p className={`text-lg ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-600"
+                }`}>
+                  {i18n.language === 'am' ? 'ለዚህ ርዕስ ዜና ማግኛ አልተገኘም።' : 'No news articles found for this topic.'}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </>
   );
 }

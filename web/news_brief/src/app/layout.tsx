@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import ThemeProvider from "./contexts/ThemeContext";
 import { I18nProvider } from "@/components/I18nProvider";
+import Footer from "@/components/Footer/Footer";
 // adjust path if needed
 
 export const metadata: Metadata = {
@@ -16,10 +17,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>
+      <body className="flex flex-col min-h-screen">
         <I18nProvider>
           <ThemeProvider>
-            {children}
+            <main className="flex-1 w-full">{children}</main>
+            <Footer/>
           </ThemeProvider>
         </I18nProvider>
       </body>

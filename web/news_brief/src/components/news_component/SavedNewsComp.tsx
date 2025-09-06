@@ -61,7 +61,7 @@ export default function SavedNewsComp() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="w-full max-w-7xl mx-auto space-y-12 px-4">
       <h1
         className={`text-2xl font-bold mb-6 ${
           theme === "dark" ? "text-white" : "text-gray-900"
@@ -71,7 +71,24 @@ export default function SavedNewsComp() {
       </h1>
 
       {loading ? (
-        <p className="text-center text-gray-500">Loading...</p>
+        <div className="space-y-6">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <div key={index} className="animate-pulse">
+              <div className="flex flex-col sm:flex-row gap-4 p-4 rounded-lg border">
+                <div className={`w-full sm:w-1/3 h-48 rounded-lg ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"}`}></div>
+                <div className="flex-1 space-y-3">
+                  <div className="flex gap-2">
+                    <div className={`h-6 w-16 rounded-full ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"}`}></div>
+                    <div className={`h-4 w-24 rounded ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"}`}></div>
+                  </div>
+                  <div className={`h-6 w-3/4 rounded ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"}`}></div>
+                  <div className={`h-4 w-full rounded ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"}`}></div>
+                  <div className={`h-4 w-2/3 rounded ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"}`}></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       ) : savedNews.length === 0 ? (
         <p className="text-center text-gray-400 text-lg">
           {i18n.language === 'am' ? 'ምንም የተቀመጡ ዜናዎች የሉም' : 'No Saved News'}

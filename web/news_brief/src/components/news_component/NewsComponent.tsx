@@ -268,15 +268,15 @@ export default function NewsComponent() {
       'tech': 'technology',
       'health': 'health',
       'sports': 'sports',
-      'environment': 'enviroment',
-      'climate': 'enviroment',
-      'science': 'enviroment',
+      'environment': 'environment',
+      'climate': 'environment',
+      'science': 'environment',
       'business': 'technology', // Use technology folder for business
       'politics': 'other',
       'arts': 'other',
       'entertainment': 'other',
       'education': 'health', // Use health folder for education
-      'agriculture': 'enviroment', // Use environment folder for agriculture
+      'agriculture': 'environment', // Use environment folder for agriculture
       'travel': 'other',
       'general': 'other',
       'news': 'other'
