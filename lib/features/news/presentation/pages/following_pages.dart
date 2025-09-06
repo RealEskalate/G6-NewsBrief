@@ -134,6 +134,15 @@ class _FollowingPageState extends State<FollowingPage>
     );
   }
 
+  // void _toggleSubscription(String slug) {
+  //   final userCubit = context.read<UserCubit>();
+  //   if (subscribedSources.contains(slug)) {
+  //     userCubit.removeSources(slug); // unsubscribe
+  //   } else {
+  //     userCubit.addSources(slug); // subscribe
+  //   }
+  // }
+
   @override
   void dispose() {
     _scrollController.dispose();
@@ -328,9 +337,7 @@ class _FollowingPageState extends State<FollowingPage>
                                       source["slug"],
                                     );
                                   },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: theme.colorScheme.primary,
-                                  ),
+                                  
                                   child: Text(
                                     'subscribe'.tr(),
                                     style: TextStyle(
