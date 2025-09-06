@@ -8,14 +8,13 @@ import (
 
 // UserResponse is the DTO for a user.
 type UserResponse struct {
-	ID        string  `json:"id"`
-	Username  string  `json:"username"`
-	Email     string  `json:"email"`
-	Role      string  `json:"role"`
-	FirstName *string `json:"first_name"`
-	LastName  *string `json:"last_name"`
-	AvatarURL *string `json:"avatar_url"`
-	CreatedAt string  `json:"created_at"`
+	ID          string         `json:"id"`
+	Fullname    string         `json:"fullname"`
+	Email       string         `json:"email"`
+	Role        string         `json:"role"`
+	AvatarURL   *string        `json:"avatar_url"`
+	CreatedAt   string         `json:"created_at"`
+	Preferences PreferencesDTO `json:"preferences"`
 }
 
 // LoginResponse is the DTO for a successful login.
@@ -29,13 +28,18 @@ type LoginResponse struct {
 func ToUserResponse(user entity.User) UserResponse {
 	return UserResponse{
 		ID:        user.ID,
-		Username:  user.Username,
+		Fullname:  user.Fullname,
 		Email:     user.Email,
 		Role:      string(user.Role),
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		AvatarURL: user.AvatarURL,
 		CreatedAt: user.CreatedAt.Format(time.RFC3339),
+		Preferences: PreferencesDTO{
+			Topics:            user.Preferences.Topics,
+			SubscribedSources: user.Preferences.SubscribedSources,
+			Notifications: NotificationsDTO{ // This assumes your entity.Preferences has this nested struct
+				DailyBrief:   user.Preferences.Notifications.DailyBrief,
+				BreakingNews: user.Preferences.Notifications.BreakingNews,
+			},
+		},
 	}
 }
 
@@ -47,4 +51,196 @@ type MessageResponse struct {
 // ErrorResponse is a response for errors.
 type ErrorResponse struct {
 	Error string `json:"error"`
+}
+
+// BilingualFieldDTO for API responses.
+type BilingualFieldDTO struct {
+	EN string `json:"en"`
+	AM string `json:"am"`
+}
+
+// SubscriptionDetailDTO now matches the API spec.
+type SubscriptionDetailDTO struct {
+	SourceSlug   string    `json:"source_slug"`
+	SourceName   string    `json:"source_name"`
+	SubscribedAt time.Time `json:"subscribed_at"`
+	Topics       []string  `json:"topics"` // Per-subscription topics can be a future enhancement
+}
+
+// SubscriptionsResponseDTO now matches the API spec.
+type SubscriptionsResponseDTO struct {
+	Subscriptions      []SubscriptionDetailDTO `json:"subscriptions"`
+	TotalSubscriptions int                     `json:"total_subscriptions"`
+	SubscriptionLimit  int                     `json:"subscription_limit"`
+}
+
+// PreferencesDTO matches the nested preferences object in the API spec responses.
+type PreferencesDTO struct {
+	Lang              string           `json:"lang"`
+	Topics            []string         `json:"topics"`             // This field is now correctly included
+	SubscribedSources []string         `json:"subscribed_sources"` // This field is now correctly included
+	BriefType         string           `json:"brief_type"`
+	DataSaver         bool             `json:"data_saver"`
+	Notifications     NotificationsDTO `json:"notifications"`
+}
+
+// SourceDTO represents a single source in an API response.
+type SourceDTO struct {
+	ID               string   `json:"id,omitempty"`
+	Slug             string   `json:"slug"`
+	Name             string   `json:"name"`
+	Description      string   `json:"description"`
+	URL              string   `json:"url"`
+	LogoURL          string   `json:"logo_url"`
+	Languages        string   `json:"languages"`
+	Topics           []string `json:"topics"`
+	ReliabilityScore float64  `json:"reliability_score"`
+}
+
+// SourcesResponseDTO is the response for the GET /v1/sources endpoint.
+type SourcesResponseDTO struct {
+	Sources      []SourceDTO `json:"sources"`
+	TotalSources int         `json:"total_sources"`
+}
+
+// MapSourcesToDTOs converts a slice of source entities to a slice of DTOs.
+func MapSourcesToDTOs(sources []entity.Source) []SourceDTO {
+	sourceDTOs := make([]SourceDTO, len(sources))
+	for i, source := range sources {
+		sourceDTOs[i] = SourceDTO{
+			ID:               source.ID,
+			Slug:             source.Slug,
+			Name:             source.Name,
+			Description:      source.Description,
+			URL:              source.URL,
+			LogoURL:          source.LogoURL,
+			Languages:        string(source.Languages),
+			ReliabilityScore: source.ReliabilityScore,
+		}
+	}
+	return sourceDTOs
+}
+
+// NotificationsDTO defines the nested notifications object in API responses.
+type NotificationsDTO struct {
+	DailyBrief   bool `json:"daily_brief"`
+	BreakingNews bool `json:"breaking_news"`
+}
+
+// topics
+// TopicDTO represents a single topic in the API response.
+type TopicDTO struct {
+	ID   string `json:"id"`
+	Slug string `json:"slug"`
+	// TopicName  string            `json:"topic_name"`
+	Label      BilingualFieldDTO `json:"label"`
+	StoryCount int               `json:"story_count"`
+}
+
+// TopicsResponseDTO is the response for the GET /v1/topics endpoint.
+type TopicsResponseDTO struct {
+	Topics      []TopicDTO `json:"topics"`
+	TotalTopics int        `json:"total_topics"`
+}
+
+func MapTopicsToDTOs(topics []entity.Topic) []TopicDTO {
+	topicDTOs := make([]TopicDTO, len(topics))
+	for i, topic := range topics {
+		topicDTOs[i] = TopicDTO{
+			ID:   topic.ID,
+			Slug: topic.Slug,
+			Label: BilingualFieldDTO{
+				EN: topic.Label.EN,
+				AM: topic.Label.AM,
+			},
+			StoryCount: topic.StoryCount,
+		}
+	}
+	return topicDTOs
+}
+
+// NewsListItemDTO mirrors entity.News for API responses.
+type NewsListItemDTO struct {
+	ID                     string   `json:"id"`
+	Title                  string   `json:"title"`
+	Body                   string   `json:"body"`
+	TitleEN                string   `json:"title_en,omitempty"`
+	TitleAM                string   `json:"title_am,omitempty"`
+	BodyEN                 string   `json:"body_en,omitempty"`
+	BodyAM                 string   `json:"body_am,omitempty"`
+	SummaryEN              string   `json:"summary_en,omitempty"`
+	SummaryAM              string   `json:"summary_am,omitempty"`
+	Language               string   `json:"language"`
+	SourceID               string   `json:"source_id"`
+	Topics                 []string `json:"topics,omitempty"`
+	PublishedAt            string   `json:"published_at"`
+	PublishedDateLocalized string   `json:"published_date_localized,omitempty"`
+	CreatedAt              string   `json:"created_at"`
+	UpdatedAt              string   `json:"updated_at"`
+	IsBookmarked           *bool    `json:"is_bookmarked,omitempty"`
+}
+
+type NewsListResponseDTO struct {
+	News       []NewsListItemDTO `json:"news"`
+	Total      int64             `json:"total"`
+	TotalPages int               `json:"total_pages"`
+	Page       int               `json:"page"`
+	Limit      int               `json:"limit"`
+}
+
+func MapNewsToDTOs(list []*entity.News) []NewsListItemDTO {
+	out := make([]NewsListItemDTO, 0, len(list))
+	for _, n := range list {
+		out = append(out, NewsListItemDTO{
+			ID:                     n.ID,
+			Title:                  n.Title,
+			Body:                   n.Body,
+			TitleEN:                n.TitleEN,
+			TitleAM:                n.TitleAM,
+			BodyEN:                 n.BodyEN,
+			BodyAM:                 n.BodyAM,
+			SummaryEN:              n.SummaryEN,
+			SummaryAM:              n.SummaryAM,
+			Language:               n.Language,
+			SourceID:               n.SourceID,
+			Topics:                 n.Topics,
+			PublishedAt:            n.PublishedAt.Format(time.RFC3339),
+			PublishedDateLocalized: n.PublishedDateLocalized,
+			CreatedAt:              n.CreatedAt.Format(time.RFC3339),
+			UpdatedAt:              n.UpdatedAt.Format(time.RFC3339),
+		})
+	}
+	return out
+}
+
+// MapNewsToDTOsWithBookmarks maps news list and enriches with per-user bookmark flags
+func MapNewsToDTOsWithBookmarks(list []*entity.News, flags map[string]bool) []NewsListItemDTO {
+	out := make([]NewsListItemDTO, 0, len(list))
+	for _, n := range list {
+		var bm *bool
+		if flags != nil {
+			v := flags[n.ID]
+			bm = &v
+		}
+		out = append(out, NewsListItemDTO{
+			ID:                     n.ID,
+			Title:                  n.Title,
+			Body:                   n.Body,
+			TitleEN:                n.TitleEN,
+			TitleAM:                n.TitleAM,
+			BodyEN:                 n.BodyEN,
+			BodyAM:                 n.BodyAM,
+			SummaryEN:              n.SummaryEN,
+			SummaryAM:              n.SummaryAM,
+			Language:               n.Language,
+			SourceID:               n.SourceID,
+			Topics:                 n.Topics,
+			PublishedAt:            n.PublishedAt.Format(time.RFC3339),
+			PublishedDateLocalized: n.PublishedDateLocalized,
+			CreatedAt:              n.CreatedAt.Format(time.RFC3339),
+			UpdatedAt:              n.UpdatedAt.Format(time.RFC3339),
+			IsBookmarked:           bm,
+		})
+	}
+	return out
 }

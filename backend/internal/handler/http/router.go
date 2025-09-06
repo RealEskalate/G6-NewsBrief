@@ -5,7 +5,10 @@ import (
 
 	"github.com/RealEskalate/G6-NewsBrief/internal/domain/contract"
 	"github.com/RealEskalate/G6-NewsBrief/internal/handler/http/middleware"
+
+	"github.com/RealEskalate/G6-NewsBrief/internal/infrastructure/external_services"
 	"github.com/RealEskalate/G6-NewsBrief/internal/usecase"
+
 	"github.com/didip/tollbooth/v7"
 	"github.com/didip/tollbooth/v7/limiter"
 	"github.com/gin-contrib/cors"
@@ -13,29 +16,62 @@ import (
 )
 
 type Router struct {
-	userHandler  *UserHandler
-	emailHandler *EmailHandler
-	userUsecase  *usecase.UserUsecase
-	jwtService   contract.IJWTService
-	authHandler  *AuthHandler
+	userHandler         *UserHandler
+	emailHandler        *EmailHandler
+	userUsecase         contract.IUserUseCase
+	jwtService          contract.IJWTService
+	authHandler         *AuthHandler
+	summarizerHandler   *SummarizeHandler
+	ingestionHandler    *IngestionHandler
+	chatHandler         *ChatHandler
+	translatorHandler   *TranslatorHandler
+	topicHandler        *TopicHandler
+	sourceHandler       *SourceHandler
+	subscriptionHandler *SubscriptionHandler
+	newsHandler         *NewsHandler
+	bookmarkHandler     *BookmarkHandler
+	analyticHandler     *AnalyticHandler
 }
 
-func NewRouter(userUsecase contract.IUserUseCase, emailVerUC contract.IEmailVerificationUC, userRepo contract.IUserRepository, tokenRepo contract.ITokenRepository, hasher contract.IHasher, jwtService contract.IJWTService, mailService contract.IEmailService, logger contract.IAppLogger, config contract.IConfigProvider, validator contract.IValidator, uuidGen contract.IUUIDGenerator, randomGen contract.IRandomGenerator) *Router {
-	baseURL := config.GetAppBaseURL()
-	return &Router{
-		userHandler: NewUserHandler(userUsecase),
+func NewRouter(userUsecase contract.IUserUseCase, emailVerUC contract.IEmailVerificationUC, userRepo contract.IUserRepository, tokenRepo contract.ITokenRepository, analyticRepo contract.IAnalyticRepository, topicRepo contract.ITopicRepository, hasher contract.IHasher, jwtService contract.IJWTService, mailService contract.IEmailService, logger contract.IAppLogger, config contract.IConfigProvider, validator contract.IValidator, uuidGen contract.IUUIDGenerator, randomGen contract.IRandomGenerator, sourceUC contract.ISourceUsecase, topicUC contract.ITopicUsecase, subscriptionUC contract.ISubscriptionUsecase, sourceRepo contract.ISourceRepository, newsRepo contract.INewsRepository, bookmarkRepo contract.IBookmarkRepository, geminiClient contract.IGeminiClient) *Router {
 
-		emailHandler: NewEmailHandler(emailVerUC, userRepo),
-		userUsecase:  usecase.NewUserUsecase(userRepo, tokenRepo, emailVerUC, hasher, jwtService, mailService, logger, config, validator, uuidGen, randomGen),
-		jwtService:   jwtService,
-		authHandler:  NewAuthHandler(userUsecase, baseURL),
+	baseURL := config.GetAppBaseURL()
+	summarizerUC := usecase.NewsSummarizerUsecase(geminiClient, newsRepo)
+	ingestionUC := usecase.NewNewsIngestionUsecase(geminiClient, newsRepo, uuidGen)
+	providerClient := external_services.NewNewsProviderClient()
+	translatorClient := external_services.NewTranslatorClient()
+	providerIngestionUC := usecase.NewProviderIngestionUsecase(providerClient, geminiClient, translatorClient, topicRepo, newsRepo, uuidGen, sourceRepo)
+	chatbotUC := usecase.NewChatbotUsecase(geminiClient, translatorClient, newsRepo)
+	translatorUC := usecase.NewsTranslatorUsecase(translatorClient, newsRepo)
+	// news usecase needs userRepo and sourceRepo for For-You feed
+	// sourceRepo isn't passed here; build it inside main and expose via usecases. Since router only gets sourceUC, we cannot access repo from here.
+	// Instead, pass sourceRepo to router.NewRouter from main by adding it to params in future if needed.
+	// For now, assume we can obtain it from sourceUC via GetAll + map by slug when necessary, but ListForYou resolves via sourceRepo directly injected in main.
+	newsUC := usecase.NewNewsUsecase(newsRepo, userRepo, sourceRepo, analyticRepo, uuidGen, summarizerUC, translatorClient)
+	bookmarkUC := usecase.NewBookmarkUsecase(bookmarkRepo, newsRepo, uuidGen)
+	return &Router{
+		userHandler:         NewUserHandler(userUsecase),
+		emailHandler:        NewEmailHandler(emailVerUC, userRepo, jwtService, tokenRepo, hasher, config, uuidGen),
+		authHandler:         NewAuthHandler(userUsecase, baseURL, config, jwtService),
+		summarizerHandler:   NewsSummarizeHandler(summarizerUC),
+		ingestionHandler:    NewIngestionHandler(ingestionUC, providerIngestionUC),
+		chatHandler:         NewChatHandler(chatbotUC),
+		translatorHandler:   NewTranslatorHandler(translatorUC, newsRepo),
+		topicHandler:        NewTopicHandler(topicUC, userUsecase, uuidGen),
+		sourceHandler:       NewSourceHandler(sourceUC, uuidGen),
+		subscriptionHandler: NewSubscriptionHandler(subscriptionUC),
+		newsHandler:         NewNewsHandler(newsUC),
+		bookmarkHandler:     NewBookmarkHandler(bookmarkUC),
+		jwtService:          jwtService,
+		userUsecase:         userUsecase,
+		analyticHandler:     NewAnalyticHandler(analyticRepo),
 	}
 }
 
 func (r *Router) SetupRoutes(router *gin.Engine) {
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Accept"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
@@ -47,8 +83,23 @@ func (r *Router) SetupRoutes(router *gin.Engine) {
 	lmt.SetMessage("Too many requests, please try again later.")
 	router.Use(middleware.RateLimiter(lmt))
 
+	// Swagger & OpenAPI documentation
+	// Serve YAML-based docs and a simple Swagger UI page at /api/docs
+	RegisterDocsRoutes(router)
+
+	// Ask browsers to send Client Hints and vary on hints/UA
+	router.Use(func(c *gin.Context) {
+		c.Header("Accept-CH", "Sec-CH-UA, Sec-CH-UA-Mobile, Sec-CH-UA-Platform, Sec-CH-UA-Model")
+		c.Header("Vary", "Sec-CH-UA, Sec-CH-UA-Mobile, Sec-CH-UA-Platform, Sec-CH-UA-Model, User-Agent")
+		c.Next()
+	})
+
+	// Attach device detector for downstream handlers
+	router.Use(middleware.DeviceDetector())
+
 	// router.GET("/metrics", gin.WrapH(promhttp.Handler()))
 	// router.GET("/api/v1/metrics", gin.WrapH(promhttp.Handler()))
+
 	// API v1 routes
 	v1 := router.Group("/api/v1")
 
@@ -57,34 +108,80 @@ func (r *Router) SetupRoutes(router *gin.Engine) {
 	{
 		auth.POST("/register", r.userHandler.CreateUser)
 		auth.POST("/login", r.userHandler.Login)
+		auth.POST("/refresh-token", r.userHandler.RefreshToken)
 		auth.GET("/verify-email", r.emailHandler.HandleVerifyEmailToken)
 		auth.POST("/forgot-password", r.userHandler.ForgotPassword)
 		auth.POST("/reset-password", r.userHandler.ResetPassword)
-		auth.POST("/refresh-token", r.userHandler.RefreshToken)
-
 		auth.POST("/request-verification-email", r.emailHandler.HandleRequestEmailVerification)
-
 		// Google OAuth endpoints
 		auth.GET("/google/login", r.authHandler.HandleGoogleLogin)
 		auth.GET("/google/callback", r.authHandler.HandleGoogleCallback)
+		// Mobile-native Google Sign-In: accept ID token and issue app tokens
+		auth.POST("/google/mobile/token", r.authHandler.HandleGoogleMobileToken)
 	}
 
-	// Public user routes
-	users := v1.Group("/users")
+	// Admin routes
+	admin := v1.Group("/admin")
+	admin.Use(middleware.AuthMiddleWare(r.jwtService, r.userUsecase))
 	{
-		users.GET("/profile/:id", r.userHandler.GetUser)
+		// admin routes
+		admin.POST("/create-topics", r.topicHandler.CreateTopic)
+		admin.POST("/news", r.newsHandler.AdminCreateNews)
+		admin.GET("/analytics", r.analyticHandler.GetAnalytics)
+		// admin.POST("/topics/:id", r.topicHandler.UpdateTopic)
+		// admin.DELETE("/topics/:id", r.topicHandler.DeleteTopic)
+		admin.POST("/create-sources", r.sourceHandler.CreateSource)
+		admin.POST("/ingest/scraper", r.ingestionHandler.IngestFromProvider)
+		// admin.PUT("/sources/:id", r.sourceHandler.UpdateSource)
+		// admin.DELETE("/sources/:id", r.sourceHandler.DeleteSource)
 	}
 
-	// Protected routes (authentication required)
-	protected := v1.Group("/")
-	protected.Use(middleware.AuthMiddleWare(r.jwtService, r.userUsecase))
+	// user profile routes (authentication required)
+	userProfile := v1.Group("/me")
+	userProfile.Use(middleware.AuthMiddleWare(r.jwtService, r.userUsecase))
 	{
-		// Current user routes
-		protected.GET("/me", r.userHandler.GetCurrentUser)
-		protected.PUT("/me", r.userHandler.UpdateUser)
-
+		// user routes
+		userProfile.GET("", r.userHandler.GetCurrentUser)
+		userProfile.PUT("", r.userHandler.UpdateUser)
+		userProfile.GET("/subscriptions", r.subscriptionHandler.GetSubscriptions)
+		userProfile.POST("/subscriptions", r.subscriptionHandler.AddSubscription)
+		userProfile.DELETE("/subscriptions/:source_slug", r.subscriptionHandler.RemoveSubscription)
+		userProfile.GET("/topics", r.topicHandler.GetUserSubscribedTopics)
+		userProfile.POST("/topics", r.topicHandler.SubscribeTopic)
+		userProfile.DELETE("/topics/:topicID", r.topicHandler.UnsubscribeTopic)
+		userProfile.GET("/subscribed-topics", r.topicHandler.GetUserSubscribedTopics)
+		// personalized feed (For You)
+		userProfile.GET("/for-you", r.newsHandler.GetForYou)
+		// bookmarks
+		userProfile.POST("/bookmarks", r.bookmarkHandler.Save)
+		userProfile.DELETE("/bookmarks/:news_id", r.bookmarkHandler.Unsave)
+		userProfile.GET("/bookmarks", r.bookmarkHandler.List)
 	}
-
+	// public api
+	public := v1.Group("")
+	{
+		// News listing
+		public.GET("/news", r.newsHandler.GetNews)
+		public.GET("/news/today", r.newsHandler.GetTodayNews)
+		public.GET("/news/trending", r.newsHandler.GetTrendingNews)
+		public.GET("/topics/:topicID/news", r.newsHandler.GetNewsByTopic)
+		public.GET("/topics", r.topicHandler.GetTopics)
+		public.GET("/sources", r.sourceHandler.GetSources)
+	}
 	// Logout route (no authentication required just accept the refresh token from the request body and invalidate the user session)
 	v1.POST("/logout", r.userHandler.Logout)
+
+	// ai api
+	ai := v1.Group("")
+	{
+		// Utilities
+		ai.POST("/summarize", r.summarizerHandler.Summarize)
+		ai.POST("/news/ingest", r.ingestionHandler.IngestNews)
+		// Chat endpoints
+		ai.POST("/chat/general", r.chatHandler.ChatGeneral)
+		ai.POST("/chat/news/:id", r.chatHandler.ChatForNews)
+		// Translation endpoints
+		ai.POST("/translate", r.translatorHandler.Translate)
+		ai.POST("/news/:id/translate", r.translatorHandler.TranslateNews)
+	}
 }

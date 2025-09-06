@@ -1,0 +1,1165 @@
+openapi: 3.0.3
+info:
+  title: NewsBrief Core API
+  version: 1.0.0
+  description: |
+    REST API for authentication, user profile, topics, sources, news ingestion, summarization, translation, and chat.
+    Protected endpoints require a Bearer JWT.
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local
+  - url: https://news-brief-core-api.onrender.com/api/v1
+    description: Global
+paths:
+  /auth/register:
+    post:
+      operationId: registerUser
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRequest"
+            example:
+              email: jdoe@example.com
+              password: Password123!
+              fullname: John Doe
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "400": { description: Validation error }
+        "409": { description: Email already exists }
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+            example:
+              email: jdoe@example.com
+              password: Password123!
+      responses:
+        "200":
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401": { description: Invalid credentials }
+  /auth/refresh-token:
+    post:
+      operationId: refreshToken
+      tags: [auth]
+      summary: Refresh access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RefreshTokenRequest" }
+            example: { refresh_token: "<refresh jwt>" }
+      responses:
+        "200":
+          description: Tokens refreshed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RefreshTokenResponse" }
+        "400": { description: Missing/invalid token }
+        "401": { description: Expired/invalid token }
+  /auth/verify-email:
+    get:
+      operationId: verifyEmail
+      tags: [auth]
+      summary: Verify email
+      parameters:
+        - name: token
+          in: query
+          required: true
+          schema: { type: string }
+        - name: verifier
+          in: query
+          required: true
+          schema: { type: string }
+        - name: platform
+          in: query
+          schema: { type: string, enum: [web, mobile] }
+      responses:
+        "200":
+          description: Verified
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EmailVerifyResponse" }
+        "400": { description: Invalid/expired token }
+  /auth/forgot-password:
+    post:
+      operationId: forgotPassword
+      tags: [auth]
+      summary: Request password reset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ForgotPasswordRequest" }
+            example: { email: jdoe@example.com }
+      responses:
+        "200": { description: Message sent }
+  /auth/reset-password:
+    post:
+      operationId: resetPassword
+      tags: [auth]
+      summary: Reset password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ResetPasswordRequest" }
+            example:
+              { token: "<t>", verifier: "<v>", password: NewPassword123! }
+      responses:
+        "200": { description: Password reset }
+        "400": { description: Invalid token/password }
+  /auth/request-verification-email:
+    post:
+      operationId: resendVerificationEmail
+      tags: [auth]
+      summary: Resend verification email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RequestVerificationEmail" }
+            example: { email: jdoe@example.com }
+      responses:
+        "200": { description: Sent }
+  /auth/google/login:
+    get:
+      operationId: googleLogin
+      tags: [auth]
+      summary: Google OAuth login
+      responses:
+        "302": { description: Redirect to Google }
+  /auth/google/callback:
+    get:
+      operationId: googleCallback
+      tags: [auth]
+      summary: Google OAuth callback
+      responses:
+        "200": { description: Success }
+        "401": { description: Unauthorized }
+  /admin/create-topics:
+    post:
+      operationId: createTopic
+      tags: [admin]
+      summary: Create a topic
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AdminCreateTopicRequest" }
+      responses:
+        "201": { description: Created }
+        "403": { description: Forbidden }
+  /admin/create-sources:
+    post:
+      operationId: createSource
+      tags: [admin]
+      summary: Create a source
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SourceDTO" }
+      responses:
+        "201": { description: Created }
+        "403": { description: Forbidden }
+  /me:
+    get:
+      operationId: getCurrentUser
+      tags: [user]
+      summary: Get current user
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          {
+            description: OK,
+            content:
+              {
+                application/json:
+                  { schema: { $ref: "#/components/schemas/UserResponse" } },
+              },
+          }
+        "401": { description: Unauthorized }
+    put:
+      operationId: updateCurrentUser
+      tags: [user]
+      summary: Update current user
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateUserRequest" }
+      responses:
+        "200":
+          {
+            description: Updated,
+            content:
+              {
+                application/json:
+                  { schema: { $ref: "#/components/schemas/UserResponse" } },
+              },
+          }
+  /me/subscriptions:
+    get:
+      operationId: getSubscriptions
+      tags: [user]
+      summary: Get subscriptions
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          {
+            description: OK,
+            content:
+              {
+                application/json:
+                  {
+                    schema:
+                      { $ref: "#/components/schemas/SubscriptionsResponseDTO" },
+                  },
+              },
+          }
+    post:
+      operationId: addSubscription
+      tags: [user]
+      summary: Add subscription
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AddSubscriptionRequest" }
+      responses:
+        "201": { description: Created }
+  /me/subscriptions/{source_slug}:
+    delete:
+      operationId: removeSubscription
+      tags: [user]
+      summary: Remove subscription
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: source_slug
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: OK }
+  /me/topics:
+    post:
+      operationId: subscribeTopics
+      tags: [user]
+      summary: Subscribe to multiple topics (batch)
+      description: |
+        Accepts an array of topic IDs. If the array is empty, the server is a no-op and returns 200.
+        If non-empty, the topics are subscribed idempotently and a success message is returned.
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SubscribeTopicsRequest" }
+            example:
+              topics:
+                [
+                  "f1d3ff84-12ab-4cde-98ef-abcdef123456",
+                  "0cc175b9-6a6a-4e2f-bb1d-1234567890ab",
+                ]
+      responses:
+        "200":
+          description: Subscribed (or no-op when empty)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MessageResponse" }
+              example: { message: "Subscribed to topic successfully" }
+        "400": { description: Invalid topic IDs or payload }
+        "401": { description: Unauthorized }
+  /me/topics/{topicID}:
+    delete:
+      operationId: unsubscribeTopic
+      tags: [user]
+      summary: Unsubscribe from a topic
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: topicID
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Unsubscribed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MessageResponse" }
+              example: { message: "Unsubscribed from topic successfully" }
+  "401": { description: Unauthorized }
+  "404": { description: Topic or user not found }
+  /me/subscribed-topics:
+    get:
+      operationId: listSubscribedTopics
+      tags: [user]
+      summary: List subscribed topics
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          {
+            description: OK,
+            content:
+              {
+                application/json:
+                  {
+                    schema:
+                      {
+                        type: array,
+                        items: { $ref: "#/components/schemas/TopicDTO" },
+                      },
+                  },
+              },
+          }
+  /me/for-you:
+    get:
+      operationId: listForYou
+      tags: [user, news]
+      summary: Personalized feed (For You)
+      description: Returns news from the user's subscribed sources.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, default: 10 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NewsListResponseDTO"
+              example:
+                news:
+                  - id: "8f6b2c8a-7e3b-4c9d-b1f2-8d2e5a9b1234"
+                    title: "Inflation falls to 20%"
+                    body: "..."
+                    summary_en: "Inflation declined to 20% from 25% last month."
+                    language: "en"
+                    source_id: "d1e2f3a4-b5c6-7890-abcd-ef1234567890"
+                    topics: ["economy"]
+                    published_at: "2025-09-01T12:00:00Z"
+                    created_at: "2025-09-01T12:05:00Z"
+                    updated_at: "2025-09-01T12:05:00Z"
+                total: 42
+                total_pages: 5
+                page: 1
+                limit: 10
+  /me/bookmarks:
+    post:
+      operationId: saveBookmark
+      tags: [user, bookmarks]
+      summary: Save a bookmark for the authenticated user
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SaveBookmarkRequest" }
+            example: { news_id: "6c0b1a64-1b0f-4e53-9463-8d5c8bb4c9c1" }
+      responses:
+        "201":
+          {
+            description: Created,
+            content:
+              {
+                application/json:
+                  { schema: { $ref: "#/components/schemas/MessageResponse" } },
+              },
+          }
+        "400": { description: Invalid request }
+        "401": { description: Unauthorized }
+        "409": { description: Already bookmarked }
+    get:
+      operationId: listBookmarks
+      tags: [user, bookmarks]
+      summary: List bookmarks for the authenticated user
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NewsListResponseDTO" }
+  /topics/{topicID}/news:
+    get:
+      operationId: listNewsByTopic
+      tags: [news, topics]
+      summary: List news for a given topic
+      description: Returns paginated news where the news document contains the given topic ID in its topics array.
+      parameters:
+        - in: path
+          name: topicID
+          required: true
+          schema: { type: string }
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, default: 10 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NewsListResponseDTO"
+              example:
+                news:
+                  - id: 6c0b1a64-1b0f-4e53-9463-8d5c8bb4c9c1
+                    title: Example headline
+                    body: Example body...
+                    language: en
+                    source_id: 8f3c2a18-5a2b-4d3b-9b8a-7e2f1c0a9d11
+                    topics: ["f1d3ff84-12ab-4cde-98ef-abcdef123456"]
+                    published_at: 2025-09-01T08:30:00Z
+                    created_at: 2025-09-01T08:30:10Z
+                    updated_at: 2025-09-01T08:35:00Z
+                total: 1
+                total_pages: 1
+                page: 1
+                limit: 10
+        "400": { description: Missing or invalid topicID }
+        "500": { description: Internal server error }
+  /news/today:
+    get:
+      operationId: getTodayNews
+      tags: [news]
+      summary: Get today's news (exactly 4 most recent items)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NewsListResponseDTO" }
+        "500": { description: Server error }
+  /news/trending:
+    get:
+      operationId: getTrendingNews
+      tags: [news]
+      summary: Get trending news (paginated, sorted by recency)
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, default: 10 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NewsListResponseDTO" }
+        "500": { description: Server error }
+
+  /admin/ingest/scraper:
+    post:
+      operationId: ingestFromProvider
+      tags: [admin, ingestion]
+      summary: Fetch latest news from external provider, summarize, classify topics, and save
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/IngestFromProviderRequest" }
+            example: { query: "", top_k: 5 }
+      responses:
+        "201":
+          description: Ingestion result
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/IngestFromProviderResponse" }
+              example: { ingested: 5, ids: ["..."], skipped: 0 }
+        "400": { description: Invalid request }
+        "401": { description: Unauthorized }
+        "502": { description: Provider error }
+  /me/bookmarks/{news_id}:
+    delete:
+      operationId: unsaveBookmark
+      tags: [user, bookmarks]
+      summary: Remove a bookmark for the authenticated user
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: news_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          {
+            description: OK,
+            content:
+              {
+                application/json:
+                  { schema: { $ref: "#/components/schemas/MessageResponse" } },
+              },
+          }
+        "401": { description: Unauthorized }
+        "404": { description: Not Found }
+  /topics:
+    get:
+      operationId: listTopics
+      tags: [topics]
+      summary: List topics
+      responses:
+        "200":
+          {
+            description: OK,
+            content:
+              {
+                application/json:
+                  {
+                    schema: { $ref: "#/components/schemas/TopicsResponseDTO" },
+                  },
+              },
+          }
+  /sources:
+    get:
+      operationId: listSources
+      tags: [sources]
+      summary: List sources
+      responses:
+        "200":
+          {
+            description: OK,
+            content:
+              {
+                application/json:
+                  {
+                    schema: { $ref: "#/components/schemas/SourcesResponseDTO" },
+                  },
+              },
+          }
+  /logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RefreshTokenRequest" }
+      responses:
+        "200": { description: Logged out }
+        "400": { description: Invalid token }
+  /summarize:
+    post:
+      operationId: summarizeNews
+      tags: [utilities]
+      summary: Summarize news by ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SummarizeRequest" }
+      responses:
+        "200":
+          {
+            description: Summary,
+            content:
+              {
+                application/json:
+                  {
+                    schema: { $ref: "#/components/schemas/SummarizeResponse" },
+                  },
+              },
+          }
+        "404": { description: News not found }
+  /news/ingest:
+    post:
+      operationId: ingestNews
+      tags: [utilities]
+      summary: Ingest news (summarize then save)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/NewsIngestRequest" }
+            example:
+              title: Ethiopia launches new satellite
+              body: |
+                Ethiopia has successfully launched its third earth observation satellite...
+              language: en
+              source_id: 8f3c2a18-5a2b-4d3b-9b8a-7e2f1c0a9d11
+              topics:
+                [
+                  "f1d3ff84-12ab-4cde-98ef-abcdef123456",
+                  "0cc175b9-6a6a-4e2f-bb1d-1234567890ab",
+                ]
+              published_at: 2025-09-01T08:30:00Z
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NewsIngestResponse" }
+              example:
+                id: 6c0b1a64-1b0f-4e53-9463-8d5c8bb4c9c1
+                title: Ethiopia launches new satellite
+                language: en
+                source_id: 8f3c2a18-5a2b-4d3b-9b8a-7e2f1c0a9d11
+                topics:
+                  [
+                    "f1d3ff84-12ab-4cde-98ef-abcdef123456",
+                    "0cc175b9-6a6a-4e2f-bb1d-1234567890ab",
+                  ]
+                summary_en: Ethiopia has launched its third satellite focusing on agriculture and climate monitoring...
+                summary_am: ኢትዮጵያ ሶስተኛውን ሳተላይት ለማህበረሰብ አገልግሎት ተመልክቶ ሰከነ...
+                published_at: 2025-09-01T08:30:00Z
+                created_at: 2025-09-01T08:30:10Z
+        "400": { description: Validation error }
+  /news:
+    get:
+      operationId: listNews
+      tags: [news]
+      summary: List news (paginated)
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NewsListResponseDTO"
+              example:
+                news:
+                  - id: 6c0b1a64-1b0f-4e53-9463-8d5c8bb4c9c1
+                    title: Ethiopia launches new satellite
+                    body: Ethiopia has successfully launched its third earth observation satellite...
+                    summary_en: Ethiopia has launched its third satellite focusing on agriculture and climate monitoring...
+                    summary_am: ኢትዮጵያ ሶስተኛውን ሳተላይት አነሳች...
+                    language: en
+                    source_id: 8f3c2a18-5a2b-4d3b-9b8a-7e2f1c0a9d11
+                    topics: ["f1d3ff84-12ab-4cde-98ef-abcdef123456"]
+                    published_at: 2025-09-01T08:30:00Z
+                    created_at: 2025-09-01T08:30:10Z
+                    updated_at: 2025-09-01T08:35:00Z
+                total: 1
+                total_pages: 1
+                page: 1
+                limit: 10
+  /chat/general:
+    post:
+      operationId: chatGeneral
+      tags: [chat]
+      summary: General chat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ChatRequest" }
+      responses:
+        "200":
+          {
+            description: Reply,
+            content:
+              {
+                application/json:
+                  { schema: { $ref: "#/components/schemas/ChatResponse" } },
+              },
+          }
+        "500": { description: LLM error }
+  /chat/news/{id}:
+    post:
+      operationId: chatForNews
+      tags: [chat]
+      summary: Chat for a news item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ChatRequest" }
+      responses:
+        "200":
+          {
+            description: Reply,
+            content:
+              {
+                application/json:
+                  { schema: { $ref: "#/components/schemas/ChatResponse" } },
+              },
+          }
+        "404": { description: News not found }
+  /translate:
+    post:
+      operationId: translateText
+      tags: [translation]
+      summary: Translate text
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TranslateRequest" }
+            example:
+              text: "Hello, how are you?"
+              source_lang: en
+              target_lang: am
+      responses:
+        "200":
+          description: Translated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TranslateResponse" }
+              example:
+                translated_text: "ሰላም፣ እንዴት ነህ?"
+        "400": { description: Invalid language or text }
+  /news/{id}/translate:
+    post:
+      operationId: translateNews
+      tags: [translation]
+      summary: Translate news summary and persist
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Updated news
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/News" }
+              example:
+                id: 6c0b1a64-1b0f-4e53-9463-8d5c8bb4c9c1
+                title: Ethiopia launches new satellite
+                body: Ethiopia has successfully launched its third earth observation satellite...
+                summary_en: Ethiopia has launched its third satellite focusing on agriculture and climate monitoring...
+                summary_am: ኢትዮጵያ ሶስተኛውን ሳተላይት አነሳች...
+                language: en
+                source_id: 8f3c2a18-5a2b-4d3b-9b8a-7e2f1c0a9d11
+                topics: ["f1d3ff84-12ab-4cde-98ef-abcdef123456"]
+                published_at: 2025-09-01T08:30:00Z
+                created_at: 2025-09-01T08:30:10Z
+                updated_at: 2025-09-01T08:35:00Z
+        "404": { description: Not Found }
+  /admin/news:
+    post:
+      operationId: adminCreateNews
+      tags: [admin, news]
+      summary: Admin create news (summarize, translate, classify topics, localize date)
+      description: |
+        Creates a news article as an administrator. The server will (1) sanitize title/body, (2) generate an English summary,
+        (3) translate title, body, and summary to the opposite language ensuring bilingual storage (title_en/title_am, body_en/body_am, summary_en/summary_am),
+        (4) classify topics (whitelisted), and (5) compute the Ethiopian localized date string.
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AdminCreateNewsRequest" }
+            example:
+              title: Ethiopia launches new satellite
+              body: |
+                Ethiopia has successfully launched its third earth observation satellite focusing on agriculture and climate monitoring...
+              language: en
+              source_id: 8f3c2a18-5a2b-4d3b-9b8a-7e2f1c0a9d11
+              topics_id: ["f1d3ff84-12ab-4cde-98ef-abcdef123456"]
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/News" }
+        "400": { description: Invalid request }
+        "401": { description: Unauthorized }
+        "403": { description: Forbidden }
+  /admin/analytics:
+    get:
+      operationId: getAnalytics
+      tags: [admin, analytics]
+      summary: Get aggregate application analytics
+      description: Returns global aggregate counters (users, news, sources, topics).
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Analytic" }
+        "401": { description: Unauthorized }
+        "403": { description: Forbidden }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    MessageResponse:
+      type: object
+      properties:
+        message: { type: string }
+    ErrorResponse:
+      type: object
+      properties:
+        error: { type: string }
+    CreateUserRequest:
+      type: object
+      required: [email, password, fullname]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string }
+        fullname: { type: string }
+    UserResponse:
+      type: object
+      properties:
+        id: { type: string }
+        fullname: { type: string }
+        email: { type: string }
+        role: { type: string }
+        avatar_url: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+        preferences: { $ref: "#/components/schemas/PreferencesDTO" }
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string }
+    LoginResponse:
+      type: object
+      properties:
+        user: { $ref: "#/components/schemas/UserResponse" }
+        access_token: { type: string }
+        refresh_token: { type: string }
+    RefreshTokenRequest:
+      type: object
+      required: [refresh_token]
+      properties:
+        refresh_token: { type: string }
+    RefreshTokenResponse:
+      type: object
+      properties:
+        access_token: { type: string }
+        refresh_token: { type: string }
+    ForgotPasswordRequest:
+      type: object
+      required: [email]
+      properties:
+        email: { type: string, format: email }
+    ResetPasswordRequest:
+      type: object
+      required: [token, verifier, password]
+      properties:
+        token: { type: string }
+        verifier: { type: string }
+        password: { type: string }
+    RequestVerificationEmail:
+      type: object
+      required: [email]
+      properties:
+        email: { type: string, format: email }
+    EmailVerifyResponse:
+      type: object
+      properties:
+        message: { type: string }
+        user: { $ref: "#/components/schemas/UserResponse" }
+        access_token: { type: string }
+        refresh_token: { type: string }
+    PreferencesDTO:
+      type: object
+      properties:
+        lang: { type: string }
+        topics: { type: array, items: { type: string } }
+        subscribed_sources: { type: array, items: { type: string } }
+        brief_type: { type: string }
+        data_saver: { type: boolean }
+        notifications: { $ref: "#/components/schemas/NotificationsDTO" }
+    NotificationsDTO:
+      type: object
+      properties:
+        daily_brief: { type: boolean }
+        breaking_news: { type: boolean }
+    UpdateUserRequest:
+      type: object
+      properties:
+        fullname: { type: string }
+    TopicDTO:
+      type: object
+      properties:
+        slug: { type: string }
+        topic_name: { type: string }
+        label:
+          type: object
+          properties:
+            en: { type: string }
+            am: { type: string }
+        story_count: { type: integer }
+
+    TopicsResponseDTO:
+      type: object
+      properties:
+        topics:
+          { type: array, items: { $ref: "#/components/schemas/TopicDTO" } }
+        total_topics: { type: integer }
+
+    SubscribeTopicRequest:
+      type: object
+      required: [topicID]
+      properties:
+        topicID: { type: string }
+    SubscribeTopicsRequest:
+      type: object
+      required: [topics]
+      properties:
+        topics:
+          type: array
+          items: { type: string }
+    SourceDTO:
+      type: object
+      properties:
+        slug: { type: string }
+        name: { type: string }
+        description: { type: string }
+        url: { type: string }
+        logo_url: { type: string }
+        languages: { type: string }
+        topics: { type: array, items: { type: string } }
+        reliability_score: { type: number }
+    SourcesResponseDTO:
+      type: object
+      properties:
+        sources:
+          { type: array, items: { $ref: "#/components/schemas/SourceDTO" } }
+        total_sources: { type: integer }
+    AddSubscriptionRequest:
+      type: object
+      required: [source_key]
+      properties:
+        source_key: { type: string }
+    SubscriptionDetailDTO:
+      type: object
+      properties:
+        source_slug: { type: string }
+        source_name: { type: string }
+        subscribed_at: { type: string, format: date-time }
+        topics: { type: array, items: { type: string } }
+    SubscriptionsResponseDTO:
+      type: object
+      properties:
+        subscriptions:
+          {
+            type: array,
+            items: { $ref: "#/components/schemas/SubscriptionDetailDTO" },
+          }
+        total_subscriptions: { type: integer }
+        subscription_limit: { type: integer }
+    SummarizeRequest:
+      type: object
+      required: [news_id]
+      properties:
+        news_id: { type: string }
+    SummarizeResponse:
+      type: object
+      properties:
+        news_id: { type: string }
+        summary: { type: string }
+        language: { type: string }
+    News:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        body: { type: string }
+        source_url: { type: string, description: "Original source article URL", nullable: true }
+        title_en: { type: string, description: "English title" }
+        title_am: { type: string, description: "Amharic title" }
+        body_en: { type: string }
+        body_am: { type: string }
+        summary_en: { type: string }
+        summary_am: { type: string }
+        language: { type: string }
+        source_id: { type: string, description: "ID of the source" }
+        topics:
+          {
+            type: array,
+            items: { type: string },
+            description: "List of topic IDs",
+          }
+        published_at: { type: string, format: date-time }
+        published_date_localized: { type: string, description: "Ethiopian calendar YYYY-MM-DD" }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    NewsIngestRequest:
+      type: object
+      required: [title, body, language, source_id, published_at]
+      properties:
+        title: { type: string }
+        body: { type: string }
+        language: { type: string, enum: [en, am] }
+        source_id:
+          {
+            type: string,
+            description: "ID of the source to attribute this news to",
+          }
+        topics:
+          {
+            type: array,
+            items: { type: string },
+            description: "Optional list of topic IDs",
+          }
+        published_at: { type: string, format: date-time }
+    NewsIngestResponse:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        title_en: { type: string }
+        title_am: { type: string }
+        source_url: { type: string, nullable: true }
+        language: { type: string }
+        source_id: { type: string }
+        topics: { type: array, items: { type: string } }
+        summary_en: { type: string }
+        summary_am: { type: string }
+        published_at: { type: string, format: date-time }
+        published_date_localized: { type: string }
+        created_at: { type: string, format: date-time }
+    NewsListItemDTO:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        body: { type: string }
+        source_url: { type: string, nullable: true }
+        title_en: { type: string }
+        title_am: { type: string }
+        body_en: { type: string }
+        body_am: { type: string }
+        summary_en: { type: string }
+        summary_am: { type: string }
+        language: { type: string }
+        source_id: { type: string }
+        topics: { type: array, items: { type: string } }
+        published_at: { type: string, format: date-time }
+        published_date_localized: { type: string }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        is_bookmarked:
+          {
+            type: boolean,
+            nullable: true,
+            description: "Present when authenticated; true if current user bookmarked this news",
+          }
+    NewsListResponseDTO:
+      type: object
+      properties:
+        news:
+          type: array
+          items: { $ref: "#/components/schemas/NewsListItemDTO" }
+        total: { type: integer }
+        total_pages: { type: integer }
+        page: { type: integer }
+        limit: { type: integer }
+    SaveBookmarkRequest:
+      type: object
+      required: [news_id]
+      properties:
+        news_id: { type: string }
+    ChatRequest:
+      type: object
+      required: [message]
+      properties:
+        message: { type: string }
+    ChatResponse:
+      type: object
+      properties:
+        reply: { type: string }
+    TranslateRequest:
+      type: object
+      required: [text, source_lang, target_lang]
+      properties:
+        text: { type: string }
+        source_lang: { type: string }
+        target_lang: { type: string }
+    TranslateResponse:
+      type: object
+      properties:
+        translated_text: { type: string }
+    IngestFromProviderRequest:
+      type: object
+      properties:
+        query: { type: string, description: Optional search string; empty for latest }
+        top_k: { type: integer, minimum: 1, default: 5 }
+      required: [top_k]
+    IngestFromProviderResponse:
+      type: object
+      properties:
+        ingested: { type: integer }
+        ids: { type: array, items: { type: string } }
+        skipped: { type: integer }
+    AdminCreateTopicRequest:
+      type: object
+      required: [slug, label]
+      properties:
+        slug: { type: string, description: Unique topic slug }
+        label:
+          type: object
+          description: Bilingual label for the topic
+          required: [en, am]
+          properties:
+            en: { type: string }
+            am: { type: string }
+    AdminCreateNewsRequest:
+      type: object
+      required: [title, body, language, source_id, topics_id]
+      properties:
+        title: { type: string }
+        body: { type: string }
+        language: { type: string, enum: [en, am], description: Primary language of provided content; system auto-stores bilingual variants }
+        source_id: { type: string }
+        topics_id:
+          type: array
+          items: { type: string }
+          description: List of topic IDs (will be validated/normalized against whitelist)
+    Analytic:
+      type: object
+      properties:
+        id: { type: string }
+        total_users: { type: integer }
+        total_news: { type: integer }
+        total_sources: { type: integer }
+        total_topics: { type: integer }

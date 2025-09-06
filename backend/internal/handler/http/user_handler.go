@@ -3,6 +3,8 @@ package http
 import (
 	"fmt"
 	"net/http"
+	"strings"
+	"time"
 
 	"github.com/RealEskalate/G6-NewsBrief/internal/domain/contract"
 	"github.com/RealEskalate/G6-NewsBrief/internal/handler/http/dto"
@@ -42,13 +44,13 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 		return
 	}
 
-	_, err := h.userUsecase.Register(c.Request.Context(), req.Username, req.Email, req.Password, req.FirstName, req.LastName)
+	user, err := h.userUsecase.Register(c.Request.Context(), req.Email, req.Password, req.Fullname)
 	if err != nil {
 		ErrorHandler(c, http.StatusConflict, err.Error())
 		return
 	}
 
-	MessageHandler(c, http.StatusCreated, "User created successfully. Please check your email to verify your account.")
+	SuccessHandler(c, http.StatusCreated, user)
 }
 
 // Login handles user authentication
@@ -172,17 +174,33 @@ func (h *UserHandler) ResetPassword(c *gin.Context) {
 // RefreshToken handles token refresh
 func (h *UserHandler) RefreshToken(c *gin.Context) {
 	var req dto.RefreshTokenRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		ErrorHandler(c, http.StatusBadRequest, "Invalid request payload")
+	// Try JSON first, but don't fail early on bind error; we support multiple sources
+	_ = c.ShouldBindJSON(&req)
+
+	token := req.RefreshToken
+	if token == "" {
+		// Try X-Refresh-Token header
+		token = c.GetHeader("X-Refresh-Token")
+	}
+	if token == "" {
+		// Try Authorization: Bearer <token>
+		auth := c.GetHeader("Authorization")
+		if strings.HasPrefix(strings.ToLower(auth), "bearer ") {
+			token = strings.TrimSpace(auth[7:])
+		}
+	}
+	if token == "" {
+		// Try cookie
+		if cookie, err := c.Cookie("refresh_token"); err == nil {
+			token = cookie
+		}
+	}
+	if token == "" {
+		ErrorHandler(c, http.StatusBadRequest, "Refresh token required (body.refresh_token or X-Refresh-Token or Authorization Bearer or cookie)")
 		return
 	}
 
-	if req.RefreshToken == "" {
-		ErrorHandler(c, http.StatusBadRequest, "Refresh token required")
-		return
-	}
-
-	newAccessToken, newRefreshToken, err := h.userUsecase.RefreshToken(c.Request.Context(), req.RefreshToken)
+	newAccessToken, newRefreshToken, err := h.userUsecase.RefreshToken(c.Request.Context(), token)
 	if err != nil {
 		ErrorHandler(c, http.StatusUnauthorized, "Invalid or expired refresh token")
 		return
@@ -216,18 +234,36 @@ func (h *UserHandler) Logout(c *gin.Context) {
 func updateUserRequestToMap(req dto.UpdateUserRequest) map[string]interface{} {
 	updates := make(map[string]interface{})
 
-	if req.Username != nil {
-		updates["username"] = *req.Username
+	if req.Fullname != nil {
+		updates["fullname"] = *req.Fullname
 	}
-	if req.FirstName != nil {
-		updates["firstname"] = *req.FirstName
-	}
-	if req.LastName != nil {
-		updates["lastname"] = *req.LastName
-	}
-	if req.AvatarURL != nil {
-		updates["avatarURL"] = *req.AvatarURL
+	return updates
+}
+
+// UpdatePreferences handles PATCH /v1/me/preferences
+func (h *UserHandler) UpdatePreferences(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		ErrorHandler(c, http.StatusUnauthorized, "User not authenticated")
+		return
 	}
 
-	return updates
+	var req dto.UpdatePreferencesRequest
+	// Use ShouldBindJSON for partial updates, as `binding:"required"` won't work well.
+	if err := c.ShouldBindJSON(&req); err != nil {
+		ErrorHandler(c, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	updatedPrefs, err := h.userUsecase.UpdatePreferences(c.Request.Context(), userID.(string), req)
+	if err != nil {
+		ErrorHandler(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response := gin.H{
+		"preferences": updatedPrefs, // Assuming DTO for preferences exists
+		"updated_at":  time.Now(),
+	}
+	SuccessHandler(c, http.StatusOK, response)
 }
