@@ -86,6 +86,7 @@ type PreferencesDTO struct {
 
 // SourceDTO represents a single source in an API response.
 type SourceDTO struct {
+	ID               string   `json:"id,omitempty"`
 	Slug             string   `json:"slug"`
 	Name             string   `json:"name"`
 	Description      string   `json:"description"`
@@ -107,6 +108,7 @@ func MapSourcesToDTOs(sources []entity.Source) []SourceDTO {
 	sourceDTOs := make([]SourceDTO, len(sources))
 	for i, source := range sources {
 		sourceDTOs[i] = SourceDTO{
+			ID:               source.ID,
 			Slug:             source.Slug,
 			Name:             source.Name,
 			Description:      source.Description,
