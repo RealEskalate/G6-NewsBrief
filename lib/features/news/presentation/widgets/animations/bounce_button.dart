@@ -52,7 +52,7 @@ class _BounceButtonState extends State<BounceButton>
             ? FloatingActionButton(
                 onPressed: widget.onTap,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(24),
                 ),
                 backgroundColor: widget.backgroundColor ?? Colors.orange,
                 foregroundColor: widget.iconColor ?? Colors.white,

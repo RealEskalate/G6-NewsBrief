@@ -5,43 +5,78 @@ import 'package:newsbrief/features/news/presentation/cubit/news_state.dart';
 import 'package:newsbrief/features/news/presentation/widgets/animations/globe_background.dart';
 import 'package:newsbrief/features/news/presentation/widgets/chat_bot_popup.dart';
 import 'package:newsbrief/features/news/presentation/widgets/news_card.dart';
-
 import 'package:newsbrief/features/news/presentation/widgets/animations/bounce_button.dart';
 import 'package:easy_localization/easy_localization.dart';
 
+import 'saved_pages.dart';
+
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final VoidCallback? onBookmarkTap;
+
+  const HomePage({super.key, this.onBookmarkTap});
 
   @override
-  State<HomePage> createState() => _HomePageViewState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageViewState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
   bool _isChatbotVisible = false;
+  bool _isLanguagePressed = false;
+  bool _isNotificationPressed = false;
+
   late ScrollController _scrollController;
   double _scrollOffset = 0;
 
-  void _toggleChatbot() {
-    setState(() {
-      _isChatbotVisible = !_isChatbotVisible;
-    });
-  }
+  late final AnimationController _chatbotController;
+  late final Animation<Offset> _chatbotOffsetAnimation;
+
+  final LinearGradient activeGradient = const LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF111827), Colors.black],
+  );
 
   @override
   void initState() {
     super.initState();
+
     _scrollController = ScrollController()
       ..addListener(() {
         setState(() {
           _scrollOffset = _scrollController.offset * 0.2;
         });
       });
+
+    _chatbotController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+
+    _chatbotOffsetAnimation = Tween<Offset>(
+      begin: const Offset(0, 1),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _chatbotController,
+      curve: Curves.easeOutCubic,
+    ));
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _chatbotController.dispose();
     super.dispose();
+  }
+
+  void _toggleChatbot() {
+    setState(() {
+      _isChatbotVisible = !_isChatbotVisible;
+      if (_isChatbotVisible) {
+        _chatbotController.forward();
+      } else {
+        _chatbotController.reverse();
+      }
+    });
   }
 
   @override
@@ -50,135 +85,147 @@ class _HomePageViewState extends State<HomePage> {
     final size = MediaQuery.of(context).size;
     final textColor = theme.colorScheme.onBackground;
 
-    return Scaffold(
-      backgroundColor: theme.colorScheme.background,
-      body: Stack(
-        children: [
-          const GlobeBackground(),
-
-          SafeArea(
-            child: Padding(
-              padding: EdgeInsets.all(size.width * 0.04),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 🔹 Header
-                  Row(
-                    children: [
-                      Text(
-                        'app_name'.tr(),
-                        style: TextStyle(
-                          fontSize: size.width > 600 ? 36 : 28,
-                          fontWeight: FontWeight.bold,
-                          color: textColor,
-                        ),
-                      ),
-                      const Spacer(),
-                      BounceButton(
-                        icon: Icons.language_rounded,
-                        iconColor: textColor,
-                        onTap: () {}, // language picker
-                      ),
-                      BounceButton(
-                        icon: Icons.notifications_none,
-                        onTap: () {},
-                        iconColor: textColor,
-                      ),
-                    ],
-                  ),
-
-                  SizedBox(height: size.height * 0.04),
-
-                  Text(
-                    'for_you'.tr(),
-                    style: TextStyle(
-                      fontSize: size.width > 600 ? 24 : 18,
-                      fontWeight: FontWeight.bold,
-                      color: textColor,
-                    ),
-                  ),
-
-                  SizedBox(height: size.height * 0.02),
-
-                  // 🔹 BlocBuilder for News
-                  Expanded(
-                    child: BlocBuilder<NewsCubit, NewsState>(
-                      builder: (context, state) {
-                        if (state is NewsLoading) {
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        } else if (state is NewsLoaded) {
-                          final newsList = state.news;
-                          return ListView.builder(
-                            controller: _scrollController,
-                            physics: const BouncingScrollPhysics(),
-                            itemCount: newsList.length,
-                            itemBuilder: (context, index) {
-                              final news = newsList[index];
-                              return GestureDetector(
-                                onTap: () {
-                                  Navigator.pushNamed(
-                                    context,
-                                    '/news_detail',
-                                    arguments: {
-                                      'topic': news.topics.isNotEmpty
-                                          ? news.topics[0]
-                                          : 'for_you'.tr(),
-                                      'title': news.title,
-                                      'source': news.soureceId,
-                                      'imageUrl':
-                                          "https://picsum.photos/200/300?random=$index",
-                                      'detail': news.body,
-                                    },
-                                  );
-                                },
-                                child: NewsCard(
-                                  topics: news.topics[0],
-                                  title: news.title,
-                                  description: news.body,
-                                  source: news.soureceId,
-                                  imageUrl:
-                                      "https://picsum.photos/200/300?random=$index",
-                                  onBookmark: () {
-                                    // context.read<NewsCubit>().bookmark(news);
-                                  },
-                                ),
-                              );
-                            },
-                          );
-                        } else if (state is NewsError) {
-                          return Center(child: Text(state.message));
-                        }
-                        return const SizedBox();
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // 🔹 Chatbot popup
-          if (_isChatbotVisible)
-            Align(
-              alignment: Alignment.bottomCenter,
+    return DefaultTabController(
+      length: 4,
+      child: Scaffold(
+        backgroundColor: theme.colorScheme.background,
+        body: Stack(
+          children: [
+            const GlobeBackground(),
+            SafeArea(
               child: Padding(
-                padding: EdgeInsets.all(size.width * 0.04),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxHeight: size.height * 0.6),
-                  child: ChatbotPopup(onClose: _toggleChatbot),
+                padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: size.height * 0.01),
+
+                    // Header
+                    Row(
+                      children: [
+                        Text(
+                          'app_name'.tr(),
+                          style: TextStyle(
+                            fontSize: size.width > 600 ? 36 : 28,
+                            fontWeight: FontWeight.bold,
+                            color: textColor,
+                          ),
+                        ),
+                        const Spacer(),
+                        BounceButton(
+                          icon: Icons.language_rounded,
+                          iconColor: textColor,
+                          onTap: () {}, // language picker
+                        ),
+                        BounceButton(
+                          icon: Icons.notifications_none,
+                          onTap: () {},
+                          iconColor: textColor,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // TabBar
+                    TabBar(
+                      labelColor: textColor,
+                      indicatorColor: theme.colorScheme.primary,
+                      isScrollable: true,
+                      tabs: [
+                        Tab(text: 'for_you'.tr()),
+                        Tab(text: 'trending'.tr()),
+                        Tab(text: 'subscribed'.tr()),
+                        Tab(text: 'offline'.tr()),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // TabBarView
+                    Expanded(
+                      child: TabBarView(
+                        children: [
+                          _buildNewsList(size),
+                          _buildNewsList(size),
+                          _buildNewsList(size),
+                          _buildNewsList(size),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-        ],
+
+            // Chatbot Popup
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: SlideTransition(
+                position: _chatbotOffsetAnimation,
+                child: Padding(
+                  padding: EdgeInsets.all(size.width * 0.04),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxHeight: size.height * 0.6),
+                    child: ChatbotPopup(onClose: _toggleChatbot),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        floatingActionButton: BounceButton(
+          icon: Icons.chat_outlined,
+          onTap: _toggleChatbot,
+          isFab: true,
+          iconColor: theme.colorScheme.onPrimary,
+        ),
       ),
-      floatingActionButton: BounceButton(
-        icon: Icons.chat_outlined,
-        onTap: _toggleChatbot,
-        isFab: true,
-        iconColor: theme.colorScheme.onPrimary,
-      ),
+    );
+  }
+
+  // Build news list with Bloc integration
+  Widget _buildNewsList(Size size) {
+    return BlocBuilder<NewsCubit, NewsState>(
+      builder: (context, state) {
+        if (state is NewsLoading) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (state is NewsLoaded) {
+          final newsList = state.news;
+          return ListView.builder(
+            controller: _scrollController,
+            physics: const BouncingScrollPhysics(),
+            itemCount: newsList.length,
+            itemBuilder: (context, index) {
+              final news = newsList[index];
+              return GestureDetector(
+                onTap: () {
+                  Navigator.pushNamed(
+                    context,
+                    '/news_detail',
+                    arguments: {
+                      'topic': news.topics.isNotEmpty ? news.topics[0] : 'for_you'.tr(),
+                      'title': news.title,
+                      'source': news.soureceId,
+                      'imageUrl': "https://picsum.photos/200/300?random=$index",
+                      'detail': news.body,
+                    },
+                  );
+                },
+                child: NewsCard(
+                  topics: news.topics.isNotEmpty ? news.topics[0] : '',
+                  title: news.title,
+                  description: news.body,
+                  source: news.soureceId,
+                  imageUrl: "https://picsum.photos/200/300?random=$index",
+                  onBookmark: widget.onBookmarkTap,
+                ),
+              );
+            },
+          );
+        } else if (state is NewsError) {
+          return Center(child: Text(state.message));
+        }
+        return const SizedBox();
+      },
     );
   }
 }
