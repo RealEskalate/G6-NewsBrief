@@ -9,7 +9,8 @@ class AppTheme {
     colorScheme: const ColorScheme.light(
       primary: Colors.black,
       onPrimary: Colors.white,
-      secondary: Colors.blue,
+      secondary: Color(0xFF2563EB),
+      surface: Color(0xFFFAFAFA),
       error: Colors.red,
       onBackground: Colors.black,
     ),
@@ -29,7 +30,8 @@ class AppTheme {
     colorScheme: const ColorScheme.dark(
       primary: Colors.white,
       onPrimary: Colors.black,
-      secondary: Colors.blue,
+      secondary: Color(0xFF2563EB),
+      surface: Color(0xFF111827),
       error: Colors.red,
       onBackground: Colors.white,
     ),

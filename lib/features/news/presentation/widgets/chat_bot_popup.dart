@@ -15,20 +15,24 @@ class _ChatbotPopupState extends State<ChatbotPopup>
   late AnimationController _controller;
   late Animation<Offset> _slideAnimation;
 
+  final List<String> messages = [
+    "Hi there! I'm Tim, your News Brief Assistant. How can I help you today?",
+  ];
+
   @override
   void initState() {
     super.initState();
 
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 400),
     );
 
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 1),
       end: Offset.zero,
     ).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
     );
 
     _controller.forward();
@@ -40,13 +44,18 @@ class _ChatbotPopupState extends State<ChatbotPopup>
     super.dispose();
   }
 
+  LinearGradient get assistantGradient => const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Color(0xFF111827),
+          Colors.black,
+        ],
+      );
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final background = theme.colorScheme.surface;
-    final headerBackground = theme.colorScheme.background;
-    final textColor = theme.colorScheme.onBackground;
-    final iconColor = theme.colorScheme.onBackground;
+    final iconColor = Colors.grey[600]!;
 
     return SlideTransition(
       position: _slideAnimation,
@@ -57,7 +66,7 @@ class _ChatbotPopupState extends State<ChatbotPopup>
           height: 500,
           width: 350,
           decoration: BoxDecoration(
-            color: background,
+            color: Colors.grey[50],
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
@@ -69,24 +78,24 @@ class _ChatbotPopupState extends State<ChatbotPopup>
           ),
           child: Column(
             children: [
-              // Header
+              // Header with gradient
               Container(
                 padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: headerBackground,
+                  gradient: assistantGradient,
                   borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(16)),
+                      const BorderRadius.vertical(top: Radius.circular(16)),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       'assistant'.tr(),
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
-                        color: textColor,
+                        color: Colors.white,
                       ),
                     ),
                     IconButton(
@@ -97,49 +106,123 @@ class _ChatbotPopupState extends State<ChatbotPopup>
                 ),
               ),
 
-              // Chat messages placeholder
+              // Chat messages
               Expanded(
-                child: Center(
-                  child: Text(
-                    'chat_placeholder'.tr(),
-                    style: TextStyle(color: textColor),
-                  ),
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(12),
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Container(
+                          constraints: const BoxConstraints(maxWidth: 280),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(16),
+                              topRight: Radius.circular(16),
+                              bottomRight: Radius.circular(16),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black12,
+                                blurRadius: 6,
+                                offset: Offset(2, 2),
+                              ),
+                            ],
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 10),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Assistant avatar with gradient background
+                              Container(
+                                width: 24,
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  gradient: assistantGradient,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Center(
+                                  child: Text(
+                                    'T',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+
+                              // Gradient text for assistant message (wrapped)
+                              Flexible(
+                                child: ShaderMask(
+                                  shaderCallback: (bounds) =>
+                                      assistantGradient.createShader(
+                                    Rect.fromLTWH(
+                                        0, 0, bounds.width, bounds.height),
+                                  ),
+                                  child: Text(
+                                    messages[index],
+                                    softWrap: true,
+                                    overflow: TextOverflow.visible,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
 
-              // Input field + buttons
+              // Input field + buttons with gradient background
               Container(
                 padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 decoration: BoxDecoration(
-                  color: headerBackground,
-                  borderRadius: const BorderRadius.vertical(
-                      bottom: Radius.circular(16)),
+                  gradient: assistantGradient,
+                  borderRadius:
+                      const BorderRadius.vertical(bottom: Radius.circular(16)),
                 ),
                 child: Row(
                   children: [
                     Expanded(
-                      child: TextField(
-                        decoration: InputDecoration(
-                          hintText: 'ask_brief'.tr(),
-                          hintStyle:
-                          TextStyle(color: textColor.withOpacity(0.6)),
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 12),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25.0),
-                          ),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: assistantGradient,
+                          borderRadius: BorderRadius.circular(25.0),
                         ),
-                        style: TextStyle(color: textColor),
+                        child: TextField(
+                          decoration: InputDecoration(
+                            hintText: 'ask_brief'.tr(),
+                            hintStyle: const TextStyle(color: Colors.white70),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
+                            border: InputBorder.none,
+                            suffixIcon: IconButton(
+                              icon: Icon(Icons.mic, color: iconColor),
+                              onPressed: () {},
+                            ),
+                          ),
+                          style: const TextStyle(color: Colors.white),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
                     IconButton(
                       icon: Icon(Icons.send, color: iconColor),
-                      onPressed: () {},
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.mic, color: iconColor),
                       onPressed: () {},
                     ),
                   ],
