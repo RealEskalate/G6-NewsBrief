@@ -1,5 +1,3 @@
-
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -119,21 +117,6 @@ class _FollowingPageState extends State<FollowingPage>
     );
   }
 
-  void _openNewsDetail(dynamic news) {
-    Navigator.pushNamed(
-      context,
-      '/news_detail',
-      arguments: {
-        'topic': news.topics[0] ?? 'for_you'.tr(), // use topic if available
-        'title': news.title,
-        'source':
-            news.soureceId?? '', // use available source field
-        'imageUrl': 'https://picsum.photos/200/300?random=${1}', // default empty if no image
-        'detail': news.body ?? news.description ?? '', // full news text
-      },
-    );
-  }
-
   // void _toggleSubscription(String slug) {
   //   final userCubit = context.read<UserCubit>();
   //   if (subscribedSources.contains(slug)) {
@@ -159,6 +142,13 @@ class _FollowingPageState extends State<FollowingPage>
       appBar: AppBar(
         backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
+        automaticallyImplyLeading: true, // ensures back arrow is shown
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushNamed(context, '/root'); // goes back
+          },
+        ),
         title: Text(
           'following_title'.tr(),
           style: TextStyle(
@@ -255,7 +245,12 @@ class _FollowingPageState extends State<FollowingPage>
               ),
 
               const SizedBox(height: 20),
-
+              Text(
+                "Todays",
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               // 🔹 Today’s News (NewsCubit)
               BlocBuilder<NewsCubit, NewsState>(
                 builder: (context, state) {
@@ -264,13 +259,19 @@ class _FollowingPageState extends State<FollowingPage>
                       children: state.news
                           .map(
                             (news) => GestureDetector(
-                              onTap: () => _openNewsDetail(news),
+                              onTap: () {},
                               child: NewsCard(
-                                topics: news.topics.isNotEmpty ? news.topics[0] : '',
+                                id: news.id,
+                                topics: news.topics.isNotEmpty
+                                    ? news.topics[0]
+                                    : 'General',
                                 title: news.title,
                                 description: news.body,
-                                source: news.soureceId,
-                                imageUrl: '',
+                                source: news.soureceId.isNotEmpty
+                                    ? news.soureceId
+                                    : 'EBC',
+                                imageUrl:
+                                    'https://picsum.photos/200/300?random=${1}',
                               ),
                             ),
                           )
@@ -337,7 +338,7 @@ class _FollowingPageState extends State<FollowingPage>
                                       source["slug"],
                                     );
                                   },
-                                  
+
                                   child: Text(
                                     'subscribe'.tr(),
                                     style: TextStyle(
@@ -375,9 +376,12 @@ class _FollowingPageState extends State<FollowingPage>
                       children: state.news
                           .map(
                             (news) => GestureDetector(
-                              onTap: () => _openNewsDetail(news),
+                              onTap: () {},
                               child: NewsCard(
-                                topics: news.topics.isNotEmpty ? news.topics[0] : '',
+                                id: news.id,
+                                topics: news.topics.isNotEmpty
+                                    ? news.topics[0]
+                                    : '',
                                 title: news.title,
                                 description: news.body,
                                 source: news.soureceId,

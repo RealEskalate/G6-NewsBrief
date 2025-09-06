@@ -179,13 +179,8 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<void> updateMe({required String name, required String email}) async {
-    try {
-      return await remote.updateMe(name, email);
-    } catch (e, stack) {
-      log("Error in updateMe: $e", stackTrace: stack);
-      rethrow;
-    }
+  Future<UserEntity> updateMe({required String name}) async {
+    return await remote.updateMe(name);
   }
 
   @override

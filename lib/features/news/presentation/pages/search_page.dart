@@ -37,20 +37,7 @@ class _SearchPageState extends State<SearchPage>
     context.read<NewsCubit>().fetchTrendingNews();
   }
 
-  void _openNewsDetail(dynamic news) {
-    Navigator.pushNamed(
-      context,
-      '/news_detail',
-      arguments: {
-        'topic': news.topics[0] ?? 'trending'.tr(),
-        'title': news.title,
-        'source': news.soureceId,
-        'imageUrl': 'https://picsum.photos/200/300?random=${1}',
-        'detail': news.body,
-      },
-    );
-  }
-
+  
   @override
   void dispose() {
     _searchController.dispose();
@@ -69,6 +56,13 @@ class _SearchPageState extends State<SearchPage>
       appBar: AppBar(
         backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
+        automaticallyImplyLeading: true, // ensures back arrow is shown
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushNamed(context, '/root'); // goes back
+          },
+        ),
         title: Text('search'.tr(), style: theme.textTheme.titleLarge),
         
       ),
@@ -185,17 +179,16 @@ class _SearchPageState extends State<SearchPage>
                               opacity: isVisible ? 1.0 : 0.0,
                               child: Transform.translate(
                                 offset: Offset(0, isVisible ? 0 : 30),
-                                child: GestureDetector(
-                                  onTap: () => _openNewsDetail(news),
+                                
                                   child: NewsCard(
-                                    topics: news.topics.isNotEmpty ? news.topics[0] : '',
+                                    id: news.id,
+                                    topics: news.topics.isNotEmpty ? news.topics[0] : 'General',
                                     title: news.title,
                                     description: news.body,
-                                    source: news.soureceId,
+                                    source: news.soureceId.isNotEmpty ? news.soureceId : 'EBC',
                                     imageUrl: 'https://picsum.photos/200/300?random=$index',
                                   ),
                                 ),
-                              ),
                             );
                           })
                           .toList(),

@@ -72,13 +72,14 @@ class AuthRemoteDataSources {
     }
   }
 
-  Future<void> updateMe(String name, String email) async {
-    try {
-      final res = await api.put('/me', data: {'name': name, 'email': email});
-      log("UpdateMe response: $res");
-    } catch (e, s) {
-      log("UpdateMe failed: $e", stackTrace: s);
-      rethrow;
+  Future<UserModel> updateMe(String fullName) async {
+    final response = await api.put('/me', data: {'fullname': fullName});
+
+    if (response.statusCode == 200) {
+      print( "UpdateMe response: ${response.data}" );
+      return UserModel.fromJson((response.data));
+    } else {
+      throw Exception('Failed to update user');
     }
   }
 

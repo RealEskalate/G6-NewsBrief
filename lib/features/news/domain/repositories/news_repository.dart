@@ -1,3 +1,5 @@
+import 'package:newsbrief/features/news/domain/entities/bookmark.dart';
+import 'package:newsbrief/features/news/domain/entities/chat_message.dart';
 import 'package:newsbrief/features/news/domain/entities/news.dart';
 
 abstract class NewsRepository {
@@ -9,4 +11,13 @@ abstract class NewsRepository {
     int page = 1,
     int limit = 10,
   });
+
+  Future<void> addBookmark(String newsId);
+  Future<void> removeBookmark(String newsId);
+  Future<List<Bookmark>> getBookmarks();
+
+
+  Future<ChatMessage> generalChat(String message);
+  Future<ChatMessage> newsChat(String newsId, String message);
+
 }

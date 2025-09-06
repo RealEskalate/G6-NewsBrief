@@ -263,7 +263,7 @@ class _ProfilePageState extends State<ProfilePage>
                       ),
                       IndicatorCard(
                         title: "saved_news".tr(),
-                        count: 34,
+                        count: userTopics.length * 2,
                         color: theme.brightness == Brightness.dark
                             ? Colors.blueGrey.shade800
                             : Colors.blueGrey.shade100,

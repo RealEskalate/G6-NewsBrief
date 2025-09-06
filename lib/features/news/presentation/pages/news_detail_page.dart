@@ -1,12 +1,14 @@
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:newsbrief/features/news/presentation/widgets/animations/bounce_button.dart';
 import 'package:newsbrief/features/news/presentation/widgets/animations/globe_background.dart';
 import 'package:newsbrief/features/news/presentation/widgets/chat_bot_popup.dart';
-import 'dart:math' as math;
+import '../cubit/bookmark_cubit.dart';
 
 class NewsDetailPage extends StatefulWidget {
+  final String id; // unique news id for bookmarking
   final String topics;
   final String title;
   final String source;
@@ -15,6 +17,7 @@ class NewsDetailPage extends StatefulWidget {
 
   const NewsDetailPage({
     super.key,
+    required this.id,
     required this.topics,
     required this.title,
     required this.source,
@@ -26,8 +29,7 @@ class NewsDetailPage extends StatefulWidget {
   State<NewsDetailPage> createState() => _NewsDetailPageState();
 }
 
-class _NewsDetailPageState extends State<NewsDetailPage>
-    with TickerProviderStateMixin {
+class _NewsDetailPageState extends State<NewsDetailPage> with TickerProviderStateMixin {
   bool _isChatbotVisible = false;
   bool _isPlaying = false;
   double _audioSpeed = 0.5;
@@ -51,71 +53,35 @@ class _NewsDetailPageState extends State<NewsDetailPage>
   @override
   void initState() {
     super.initState();
-
-    // Initialize TTS
     _flutterTts = FlutterTts();
     _flutterTts.setLanguage("en-US");
     _flutterTts.setSpeechRate(_audioSpeed);
-    _flutterTts.setCompletionHandler(() {
-      setState(() {
-        _isPlaying = false;
-      });
-    });
+    _flutterTts.setCompletionHandler(() => setState(() => _isPlaying = false));
 
     // Animations
-    _globeController =
-        AnimationController(
-          vsync: this,
-          duration: const Duration(seconds: 2),
-          lowerBound: 0.9,
-          upperBound: 1.1,
-        )..addStatusListener((status) {
-          if (status == AnimationStatus.completed) {
-            _globeController.reverse();
-          } else if (status == AnimationStatus.dismissed) {
-            _globeController.forward();
-          }
-        });
-
-    _audioSheetController = AnimationController(
+    _globeController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(seconds: 2),
+      lowerBound: 0.9,
+      upperBound: 1.1,
+    )..addStatusListener((status) {
+        if (status == AnimationStatus.completed) _globeController.reverse();
+        else if (status == AnimationStatus.dismissed) _globeController.forward();
+      });
+
+    _audioSheetController = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
+    _progressController = AnimationController(vsync: this, duration: const Duration(seconds: 225));
+    _discController = AnimationController(vsync: this, duration: const Duration(seconds: 5))..repeat();
+    _chatbotController = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
+    _chatbotOffsetAnimation = Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero).animate(
+      CurvedAnimation(parent: _chatbotController, curve: Curves.easeOutCubic),
     );
-
-    _progressController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 225),
-    );
-
-    _discController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 5),
-    )..repeat();
-
-    _chatbotController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-
-    _chatbotOffsetAnimation =
-        Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero).animate(
-          CurvedAnimation(
-            parent: _chatbotController,
-            curve: Curves.easeOutCubic,
-          ),
-        );
   }
 
-  void _toggleChatbot() {
-    setState(() {
-      _isChatbotVisible = !_isChatbotVisible;
-    });
-  }
+  void _toggleChatbot() => setState(() => _isChatbotVisible = !_isChatbotVisible);
 
   Future<void> _togglePlay() async {
-    setState(() {
-      _isPlaying = !_isPlaying;
-    });
+    setState(() => _isPlaying = !_isPlaying);
 
     if (_isPlaying) {
       _globeController.forward();
@@ -123,12 +89,8 @@ class _NewsDetailPageState extends State<NewsDetailPage>
       _discController.repeat();
       _progressController.forward();
 
-      // Set TTS language based on toggle
-      if (_language == 'EN') {
-        await _flutterTts.setLanguage("en-US");
-      } else {
-        await _flutterTts.setLanguage("am-ET");
-      }
+      if (_language == 'EN') await _flutterTts.setLanguage("en-US");
+      else await _flutterTts.setLanguage("am-ET");
 
       await _flutterTts.setSpeechRate(_audioSpeed);
       await _flutterTts.speak(widget.detail);
@@ -154,9 +116,7 @@ class _NewsDetailPageState extends State<NewsDetailPage>
 
   String formatDuration(Duration d) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
-    final minutes = twoDigits(d.inMinutes.remainder(60));
-    final seconds = twoDigits(d.inSeconds.remainder(60));
-    return "$minutes:$seconds";
+    return "${twoDigits(d.inMinutes.remainder(60))}:${twoDigits(d.inSeconds.remainder(60))}";
   }
 
   @override
@@ -178,32 +138,48 @@ class _NewsDetailPageState extends State<NewsDetailPage>
                 leading: Padding(
                   padding: const EdgeInsets.only(left: 8),
                   child: CircleAvatar(
-                    backgroundColor: theme.colorScheme.background.withOpacity(
-                      0.8,
-                    ),
+                    backgroundColor: theme.colorScheme.background.withOpacity(0.8),
                     child: IconButton(
-                      icon: Icon(
-                        Icons.arrow_back,
-                        color: theme.colorScheme.secondary,
-                      ),
+                      icon: Icon(Icons.arrow_back, color: theme.colorScheme.secondary),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ),
                 ),
                 actions: [
+                  BlocBuilder<BookmarkCubit, BookmarkState>(
+                    builder: (context, state) {
+                      bool isBookmarked = false;
+                      if (state is BookmarkLoaded) {
+                        isBookmarked = state.bookmarks.any((b) => b.newsId == widget.id);
+                      }
+
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        child: CircleAvatar(
+                          backgroundColor: theme.colorScheme.background.withOpacity(0.8),
+                          child: IconButton(
+                            icon: Icon(
+                              isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                              color: theme.colorScheme.secondary,
+                            ),
+                            onPressed: () {
+                              if (isBookmarked) {
+                                context.read<BookmarkCubit>().removeBookmark(widget.id);
+                              } else {
+                                context.read<BookmarkCubit>().addBookmark(widget.id);
+                              }
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 6),
                     child: CircleAvatar(
-                      backgroundColor: theme.colorScheme.background.withOpacity(
-                        0.8,
-                      ),
+                      backgroundColor: theme.colorScheme.background.withOpacity(0.8),
                       child: IconButton(
-                        icon: Icon(
-                          _isPlaying
-                              ? Icons.pause_circle_filled_outlined
-                              : Icons.play_circle_filled_outlined,
-                          color: theme.colorScheme.secondary,
-                        ),
+                        icon: Icon(_isPlaying ? Icons.pause_circle_filled_outlined : Icons.play_circle_filled_outlined, color: theme.colorScheme.secondary),
                         onPressed: _togglePlay,
                       ),
                     ),
@@ -211,14 +187,9 @@ class _NewsDetailPageState extends State<NewsDetailPage>
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 6),
                     child: CircleAvatar(
-                      backgroundColor: theme.colorScheme.background.withOpacity(
-                        0.8,
-                      ),
+                      backgroundColor: theme.colorScheme.background.withOpacity(0.8),
                       child: IconButton(
-                        icon: Icon(
-                          Icons.more_vert,
-                          color: theme.colorScheme.secondary,
-                        ),
+                        icon: Icon(Icons.more_vert, color: theme.colorScheme.secondary),
                         onPressed: () {},
                       ),
                     ),
@@ -229,15 +200,8 @@ class _NewsDetailPageState extends State<NewsDetailPage>
                     fit: StackFit.expand,
                     children: [
                       ClipRRect(
-                        borderRadius: const BorderRadius.only(
-                          bottomLeft: Radius.circular(16),
-                          bottomRight: Radius.circular(16),
-                        ),
-                        child: Image.network(
-                          widget.imageUrl,
-                          fit: BoxFit.cover,
-                          width: size.width,
-                        ),
+                        borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(16), bottomRight: Radius.circular(16)),
+                        child: Image.network(widget.imageUrl, fit: BoxFit.cover, width: size.width),
                       ),
                       if (_isPlaying)
                         Center(
@@ -246,15 +210,8 @@ class _NewsDetailPageState extends State<NewsDetailPage>
                             child: Container(
                               height: size.height * 0.12,
                               width: size.height * 0.12,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.black.withOpacity(0.3),
-                              ),
-                              child: const Icon(
-                                Icons.public,
-                                color: Colors.white,
-                                size: 40,
-                              ),
+                              decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.black.withOpacity(0.3)),
+                              child: const Icon(Icons.public, color: Colors.white, size: 40),
                             ),
                           ),
                         ),
@@ -269,47 +226,19 @@ class _NewsDetailPageState extends State<NewsDetailPage>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        widget.topics,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.secondary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      Text(widget.topics, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.secondary, fontWeight: FontWeight.w600)),
                       const SizedBox(height: 8),
-                      Text(
-                        widget.title,
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.onBackground,
-                        ),
-                      ),
+                      Text(widget.title, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.onBackground)),
                       const SizedBox(height: 12),
                       Row(
                         children: [
-                          Text(
-                            widget.source,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.secondary,
-                            ),
-                          ),
+                          Text(widget.source, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.secondary)),
                           const Spacer(),
-                          ElevatedButton(
-                            onPressed: () {},
-                            style: ElevatedButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                            ),
-                            child: Text('Subscribe'.tr()),
-                          ),
+                          ElevatedButton(onPressed: () {}, style: ElevatedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))), child: Text('Subscribe'.tr())),
                         ],
                       ),
                       const SizedBox(height: 20),
-                      Text(
-                        widget.detail,
-                        style: theme.textTheme.bodyLarge?.copyWith(height: 1.6),
-                      ),
+                      Text(widget.detail, style: theme.textTheme.bodyLarge?.copyWith(height: 1.6)),
                       const SizedBox(height: 16),
                     ],
                   ),
@@ -317,6 +246,7 @@ class _NewsDetailPageState extends State<NewsDetailPage>
               ),
             ],
           ),
+      
           if (_isChatbotVisible)
             Align(
               alignment: Alignment.bottomCenter,
