@@ -306,7 +306,7 @@ class _HomePageState extends State<HomePage>
                         tabs: [
                           Tab(text: 'for_you'.tr()),
                           Tab(text: 'trending'.tr()),
-                          Tab(text: 'subscribed'.tr()),
+                          Tab(text: 'today'.tr()),
                           Tab(text: 'offline'.tr()),
                         ],
                       ),

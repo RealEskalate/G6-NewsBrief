@@ -245,7 +245,7 @@ class AuthRemoteDataSources {
 
   Future<void> unSubscribeToSources({required String source}) async {
     try {
-      final res = await api.delete("/me/subscriptions", data: source);
+      final res = await api.delete("/me/subscriptions/$source");
       print(res);
     } catch (e) {
       log("UnSubscribeToSources $e");
