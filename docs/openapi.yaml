@@ -1004,6 +1004,7 @@ components:
         id: { type: string }
         title: { type: string }
         body: { type: string }
+        source_url: { type: string, description: "Original source article URL", nullable: true }
         title_en: { type: string, description: "English title" }
         title_am: { type: string, description: "Amharic title" }
         body_en: { type: string }
@@ -1048,6 +1049,7 @@ components:
         title: { type: string }
         title_en: { type: string }
         title_am: { type: string }
+        source_url: { type: string, nullable: true }
         language: { type: string }
         source_id: { type: string }
         topics: { type: array, items: { type: string } }
@@ -1062,6 +1064,7 @@ components:
         id: { type: string }
         title: { type: string }
         body: { type: string }
+        source_url: { type: string, nullable: true }
         title_en: { type: string }
         title_am: { type: string }
         body_en: { type: string }

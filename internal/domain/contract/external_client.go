@@ -25,6 +25,7 @@ type INewsProviderClient interface {
 type ProviderItem struct {
 	ID            string `json:"id"`
 	Title         string `json:"title"`
+	Text          string `json:"text"`
 	SourceURL     string `json:"source_url"`
 	SourceSite    string `json:"source_site"`
 	SourceType    string `json:"source_type"`

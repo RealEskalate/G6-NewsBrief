@@ -17,9 +17,9 @@ type EthiopianDate struct {
 // or Sept 12 in Gregorian leap years). This is a simplified conversion sufficient for
 // displaying a localized date string YYYY-MM-DD. It does not handle historical calendar reforms.
 func ToEthiopian(t time.Time) EthiopianDate {
-	// Determine Ethiopian year
+	// Determine Ethiopian year (adjusted offset to 7 to correct year display)
 	gYear, _, _ := t.Date()
-	ethYear := gYear - 8
+	ethYear := gYear - 7
 	// Ethiopian new year in Gregorian
 	newYear := time.Date(gYear, time.September, 11, 0, 0, 0, 0, t.Location())
 	// In Gregorian leap year Ethiopian new year shifts to Sept 12

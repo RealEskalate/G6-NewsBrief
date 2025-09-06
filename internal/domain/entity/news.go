@@ -6,6 +6,8 @@ type News struct {
 	ID    string `bson:"_id,omitempty" json:"id"`
 	Title string `bson:"title" json:"title"`
 	Body  string `bson:"body" json:"body"`
+	// Optional original source article URL
+	SourceURL string `bson:"source_url,omitempty" json:"source_url,omitempty"`
 	// Bilingual stored fields for instant toggle
 	TitleEN string `bson:"title_en,omitempty" json:"title_en,omitempty"`
 	TitleAM string `bson:"title_am,omitempty" json:"title_am,omitempty"`

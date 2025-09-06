@@ -138,7 +138,7 @@ func main() {
 	topicUsecase := usecase.NewTopicUsecase(topicRepo, analyticRepo)
 	sourceUsecase := usecase.NewSourceUsecase(sourceRepo, analyticRepo)
 	subscriptionUsecase := usecase.NewSubscriptionUsecase(userRepo, sourceRepo)
-	providerIngestionUC := usecase.NewProviderIngestionUsecase(providerClient, geminiClient, translatorClient, topicRepo, newsRepo, uuidGenerator)
+	providerIngestionUC := usecase.NewProviderIngestionUsecase(providerClient, geminiClient, translatorClient, topicRepo, newsRepo, uuidGenerator, sourceRepo)
 	// Pass Prometheus metrics to handlers or usecases as needed (import from metrics package)
 
 	//---------------------- Admin seeder-------------------------------------

@@ -40,7 +40,7 @@ func NewRouter(userUsecase contract.IUserUseCase, emailVerUC contract.IEmailVeri
 	ingestionUC := usecase.NewNewsIngestionUsecase(geminiClient, newsRepo, uuidGen)
 	providerClient := external_services.NewNewsProviderClient()
 	translatorClient := external_services.NewTranslatorClient()
-	providerIngestionUC := usecase.NewProviderIngestionUsecase(providerClient, geminiClient, translatorClient, topicRepo, newsRepo, uuidGen)
+	providerIngestionUC := usecase.NewProviderIngestionUsecase(providerClient, geminiClient, translatorClient, topicRepo, newsRepo, uuidGen, sourceRepo)
 	chatbotUC := usecase.NewChatbotUsecase(geminiClient, translatorClient, newsRepo)
 	translatorUC := usecase.NewsTranslatorUsecase(translatorClient, newsRepo)
 	// news usecase needs userRepo and sourceRepo for For-You feed

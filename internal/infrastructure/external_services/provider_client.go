@@ -1,7 +1,6 @@
 package external_services
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -29,24 +28,20 @@ func NewNewsProviderClient() contract.INewsProviderClient {
 }
 
 func (c *NewsProviderClient) Search(query string, topK int) ([]contract.ProviderItem, error) {
+	// New endpoint ignores query; using stored news listing with limit
 	if topK <= 0 {
-		topK = 5
+		topK = 100 // default limit requested
 	}
-	payload := map[string]any{
-		"query": query,
-		"top_k": topK,
-	}
-	data, _ := json.Marshal(payload)
-	url := fmt.Sprintf("%s/api/v1/news/search", c.baseURL)
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+	url := fmt.Sprintf("%s/api/v1/news/stored?limit=%d", c.baseURL, topK)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Content-Type", "application/json")
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
+	
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return nil, fmt.Errorf("provider status %d", resp.StatusCode)
