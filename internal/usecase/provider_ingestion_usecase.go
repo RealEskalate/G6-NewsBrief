@@ -81,7 +81,12 @@ func (uc *providerIngestion) IngestFromProvider(ctx context.Context, query strin
 			if labelEN == "" {
 				continue
 			}
-			t := &entity.Topic{ID: uc.uuidGen.NewUUID(), Slug: slug, Label: entity.BilingualField{EN: labelEN, AM: labelEN}}
+			labelAM, err := uc.translator.Translate(labelEN, "en", "am")
+			if err != nil{
+				continue
+			}
+						
+			t := &entity.Topic{ID: uc.uuidGen.NewUUID(), Slug: slug, Label: entity.BilingualField{EN: labelEN, AM: labelAM}}
 			if err := uc.topics.CreateTopic(ctx, t); err == nil {
 				topicIDs = append(topicIDs, t.ID)
 			}
@@ -159,7 +164,7 @@ func (uc *providerIngestion) IngestFromProvider(ctx context.Context, query strin
 				}
 			}
 		}
-		
+
 		n := &entity.News{
 			ID:                     newsID,
 			Title:                  cleanTitle,
