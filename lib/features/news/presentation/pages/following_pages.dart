@@ -1,5 +1,3 @@
-
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -144,6 +142,13 @@ class _FollowingPageState extends State<FollowingPage>
       appBar: AppBar(
         backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
+        automaticallyImplyLeading: true, // ensures back arrow is shown
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushNamed(context, '/root'); // goes back
+          },
+        ),
         title: Text(
           'following_title'.tr(),
           style: TextStyle(
@@ -257,11 +262,16 @@ class _FollowingPageState extends State<FollowingPage>
                               onTap: () {},
                               child: NewsCard(
                                 id: news.id,
-                                topics: news.topics.isNotEmpty ? news.topics[0] : 'General',
+                                topics: news.topics.isNotEmpty
+                                    ? news.topics[0]
+                                    : 'General',
                                 title: news.title,
                                 description: news.body,
-                                source: news.soureceId.isNotEmpty ? news.soureceId : 'EBC',
-                                imageUrl: 'https://picsum.photos/200/300?random=${1}',
+                                source: news.soureceId.isNotEmpty
+                                    ? news.soureceId
+                                    : 'EBC',
+                                imageUrl:
+                                    'https://picsum.photos/200/300?random=${1}',
                               ),
                             ),
                           )
@@ -328,7 +338,7 @@ class _FollowingPageState extends State<FollowingPage>
                                       source["slug"],
                                     );
                                   },
-                                  
+
                                   child: Text(
                                     'subscribe'.tr(),
                                     style: TextStyle(
@@ -369,7 +379,9 @@ class _FollowingPageState extends State<FollowingPage>
                               onTap: () {},
                               child: NewsCard(
                                 id: news.id,
-                                topics: news.topics.isNotEmpty ? news.topics[0] : '',
+                                topics: news.topics.isNotEmpty
+                                    ? news.topics[0]
+                                    : '',
                                 title: news.title,
                                 description: news.body,
                                 source: news.soureceId,

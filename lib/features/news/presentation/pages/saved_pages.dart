@@ -11,7 +11,16 @@ class SavedPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('saved'.tr())),
+      appBar: AppBar(
+        automaticallyImplyLeading: true, // ensures back arrow is shown
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushNamed(context, '/root'); // goes back
+          },
+        ),
+        title: Text('saved'.tr()),
+      ),
       body: BlocBuilder<BookmarkCubit, BookmarkState>(
         builder: (context, state) {
           if (state is BookmarkLoading) {
@@ -35,7 +44,8 @@ class SavedPage extends StatelessWidget {
                           topics: bookmark.topics[0],
                           title: bookmark.title,
                           source: bookmark.soureceId,
-                          imageUrl: 'https://picsum.photos/200/300?random=$index',
+                          imageUrl:
+                              'https://picsum.photos/200/300?random=$index',
                           detail: bookmark.body,
                         ),
                       ),

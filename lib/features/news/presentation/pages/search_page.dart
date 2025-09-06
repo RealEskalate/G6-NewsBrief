@@ -56,6 +56,13 @@ class _SearchPageState extends State<SearchPage>
       appBar: AppBar(
         backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
+        automaticallyImplyLeading: true, // ensures back arrow is shown
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushNamed(context, '/root'); // goes back
+          },
+        ),
         title: Text('search'.tr(), style: theme.textTheme.titleLarge),
         
       ),
