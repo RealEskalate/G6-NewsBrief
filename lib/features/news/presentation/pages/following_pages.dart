@@ -1,7 +1,14 @@
+
+
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:newsbrief/core/widgets/topic_chip.dart';
 import 'package:newsbrief/features/news/presentation/widgets/news_card.dart';
+import 'package:newsbrief/features/news/presentation/cubit/news_cubit.dart';
+import 'package:newsbrief/features/news/presentation/cubit/news_state.dart';
+import 'package:newsbrief/features/auth/presentation/cubit/user_cubit.dart';
+// import 'package:newsbrief/features/auth/presentation/cubit/user_state.dart';
 
 class FollowingPage extends StatefulWidget {
   const FollowingPage({super.key});
@@ -13,18 +20,19 @@ class FollowingPage extends StatefulWidget {
 class _FollowingPageState extends State<FollowingPage>
     with SingleTickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
-  final List<String> _selectedTopics = [];
-
   final ScrollController _scrollController = ScrollController();
-  final ScrollController _chipScrollController = ScrollController();
-  final ScrollController _sourcesScrollController = ScrollController();
 
   late final AnimationController _animationController;
 
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(() => setState(() {}));
+
+    // Load topics, sources, and initial news
+    context.read<UserCubit>().loadSubscribedTopics();
+    context.read<UserCubit>().loadAllSources();
+    context.read<NewsCubit>().fetchTodayNews();
+    context.read<NewsCubit>().fetchTrendingNews();
 
     _animationController = AnimationController(
       vsync: this,
@@ -32,33 +40,96 @@ class _FollowingPageState extends State<FollowingPage>
     )..forward();
   }
 
-  void _addTopic() {
-    debugPrint("Add topic tapped");
-  }
+  void _showAddTopicDialog() {
+    final theme = Theme.of(context);
 
-  void _toggleTopic(String topic) {
-    setState(() {
-      if (_selectedTopics.contains(topic)) {
-        _selectedTopics.remove(topic);
-      } else {
-        _selectedTopics.add(topic);
-      }
-    });
+    // Ask the cubit to load all topics (if not already loaded)
+    context.read<UserCubit>().loadAllTopics();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return BlocBuilder<UserCubit, UserState>(
+          builder: (context, state) {
+            if (state is UserLoading) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (state is AllTopicsLoaded) {
+              final topics = state.topics;
+              // print(topics); // this should be List<Map<String, dynamic>>
+              return AlertDialog(
+                backgroundColor: theme.scaffoldBackgroundColor,
+                title: Text(
+                  "add_new_topic".tr(),
+                  style: TextStyle(color: theme.colorScheme.onBackground),
+                ),
+                content: SizedBox(
+                  width: double.maxFinite,
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: topics.length,
+                    itemBuilder: (context, index) {
+                      final topic = topics[index];
+                      print(topic);
+                      final label = topic['label']['en'];
+                      return ListTile(
+                        title: Text(
+                          label,
+                          style: TextStyle(
+                            color: theme.colorScheme.onBackground,
+                          ),
+                        ),
+                        onTap: () {
+                          // Subscribe with the topic's ID
+                          context.read<UserCubit>().subscribe([topic['id']]);
+                          Navigator.pop(context);
+                        },
+                      );
+                    },
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      "cancel".tr(),
+                      style: TextStyle(
+                        color: theme.colorScheme.onBackground.withOpacity(0.6),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            } else if (state is UserError) {
+              return AlertDialog(
+                title: Text("error".tr()),
+                content: Text(state.message),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text("ok".tr()),
+                  ),
+                ],
+              );
+            } else {
+              return const SizedBox.shrink();
+            }
+          },
+        );
+      },
+    );
   }
 
   void _openNewsDetail(dynamic news) {
-    String t = news.title;
-    String s = news.source;
-    String d = news.description;
     Navigator.pushNamed(
       context,
       '/news_detail',
       arguments: {
-        'topic': 'for_you'.tr(),
-        'title': t.tr(),
-        'source': s.tr(),
-        'imageUrl': news.imageUrl,
-        'detail': d.tr(),
+        'topic': news.topics[0] ?? 'for_you'.tr(), // use topic if available
+        'title': news.title,
+        'source':
+            news.soureceId?? '', // use available source field
+        'imageUrl': 'https://picsum.photos/200/300?random=${1}', // default empty if no image
+        'detail': news.body ?? news.description ?? '', // full news text
       },
     );
   }
@@ -66,103 +137,14 @@ class _FollowingPageState extends State<FollowingPage>
   @override
   void dispose() {
     _scrollController.dispose();
-    _chipScrollController.dispose();
-    _sourcesScrollController.dispose();
     _searchController.dispose();
     _animationController.dispose();
     super.dispose();
   }
 
-  Widget _buildAnimatedChip(String topic, int index) {
-    return AnimatedBuilder(
-      animation: _animationController,
-      builder: (context, child) {
-        final value = (_animationController.value - (index * 0.05)).clamp(0.0, 1.0);
-        return Transform.translate(
-          offset: Offset(-50 * (1 - value), 0),
-          child: Opacity(opacity: value, child: child),
-        );
-      },
-      child: Padding(
-        padding: const EdgeInsets.only(right: 8),
-        child: TopicChip(
-          title: topic.tr(),
-          onDeleted: _selectedTopics.contains(topic) ? () => _toggleTopic(topic) : null,
-          // onTap: () => _toggleTopic(topic),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAnimatedSource(int index) {
-    return AnimatedBuilder(
-      animation: _animationController,
-      builder: (context, child) {
-        final value = (_animationController.value - (index * 0.05)).clamp(0.0, 1.0);
-        return Transform.translate(
-          offset: Offset(50 * (1 - value), 0),
-          child: Opacity(opacity: value, child: child),
-        );
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        margin: const EdgeInsets.only(right: 12),
-        width: 140,
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 6,
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const CircleAvatar(
-              radius: 28,
-              backgroundImage: NetworkImage(
-                "https://picsum.photos/200/200?random=20",
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              "Source $index",
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: () {
-                debugPrint("Subscribed to Source $index");
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-              child: Text(
-                'subscribe'.tr(),
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onPrimary,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
     return Scaffold(
       appBar: AppBar(
@@ -180,156 +162,232 @@ class _FollowingPageState extends State<FollowingPage>
       ),
       body: Scrollbar(
         controller: _scrollController,
-        thumbVisibility: true,
-        radius: const Radius.circular(8),
         child: SingleChildScrollView(
           controller: _scrollController,
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 🔹 Search Bar
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: 'search'.tr(),
-                    prefixIcon: const Icon(Icons.search),
-                    filled: true,
-                    fillColor: colorScheme.surfaceVariant,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // 🔹 Horizontal Topic Chips
-              SizedBox(
-                height: 46,
-                child: Scrollbar(
-                  controller: _chipScrollController,
-                  thumbVisibility: true,
-                  radius: const Radius.circular(8),
-                  child: ListView(
-                    controller: _chipScrollController,
-                    scrollDirection: Axis.horizontal,
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    children: [
-                      GestureDetector(
-                        onTap: _addTopic,
-                        child: Chip(
-                          avatar: Icon(Icons.add, color: colorScheme.onPrimary),
-                          label: const Text(''),
-                          backgroundColor: colorScheme.primary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      ...topics.asMap().entries.map((entry) {
-                        final index = entry.key;
-                        final topic = entry.value;
-                        return _buildAnimatedChip(topic, index);
-                      }),
-                    ],
+              TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'search'.tr(),
+                  prefixIcon: const Icon(Icons.search),
+                  filled: true,
+                  fillColor: theme.colorScheme.surfaceVariant,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide.none,
                   ),
                 ),
               ),
               const SizedBox(height: 16),
 
-              // 🔹 First 3 News Cards
-              ...sampleNews.asMap().entries.map((entry) {
-                final index = entry.key;
-                final news = entry.value;
-                final cardPosition = index * 250.0;
-                final scrollOffset =
-                    _scrollController.hasClients ? _scrollController.offset : 0;
-                final isVisible = scrollOffset + 600 > cardPosition;
+              // 🔹 Topics Row (UserCubit)
+              // 🔹 Topics Row
+              BlocBuilder<UserCubit, UserState>(
+                builder: (context, state) {
+                  if (state is SubscribedTopicsLoaded) {
+                    final topics = state.topics;
+                    print('topics count: ${topics.length}');
 
-                return AnimatedOpacity(
-                  duration: const Duration(milliseconds: 500),
-                  opacity: isVisible ? 1.0 : 0.0,
-                  child: Transform.translate(
-                    offset: Offset(0, isVisible ? 0 : 30),
-                    child: GestureDetector(
-                      onTap: () => _openNewsDetail(news),
-                      child: NewsCard(
-                        title: news.title,
-                        description: news.description,
-                        source: news.source,
-                        imageUrl: news.imageUrl,
+                    return SizedBox(
+                      height: 56, // Enough height for chips
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        itemCount:
+                            topics.length + 1, // +1 for "Add Topic" button
+                        separatorBuilder: (_, __) => const SizedBox(width: 8),
+                        itemBuilder: (context, index) {
+                          if (index == 0) {
+                            // First item: Add Topic button
+                            return GestureDetector(
+                              onTap: _showAddTopicDialog,
+                              child: Chip(
+                                avatar: const Icon(
+                                  Icons.add,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                                label: const SizedBox.shrink(),
+                                backgroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.primary,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                              ),
+                            );
+                          }
+
+                          final topic = topics[index - 1];
+                          final label = topic['label']['en'];
+                          print('label$label');
+                          return TopicChip(
+                            title: label,
+                            onTap: () {
+                              context.read<NewsCubit>().fetchNewsByTopic(
+                                topic['id'],
+                              );
+                            },
+                          );
+                        },
                       ),
-                    ),
-                  ),
-                );
-              }).toList(),
+                    );
+                  } else if (state is UserLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else {
+                    return const SizedBox.shrink();
+                  }
+                },
+              ),
 
               const SizedBox(height: 20),
 
-              // 🔹 Sources horizontal section
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Text(
-                  'following_sources'.tr(),
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              // 🔹 Today’s News (NewsCubit)
+              BlocBuilder<NewsCubit, NewsState>(
+                builder: (context, state) {
+                  if (state is NewsLoaded) {
+                    return Column(
+                      children: state.news
+                          .map(
+                            (news) => GestureDetector(
+                              onTap: () => _openNewsDetail(news),
+                              child: NewsCard(
+                                topics: news.topics[0],
+                                title: news.title,
+                                description: news.body,
+                                source: news.soureceId,
+                                imageUrl: '',
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    );
+                  } else if (state is NewsLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else {
+                    return const SizedBox.shrink();
+                  }
+                },
+              ),
+
+              const SizedBox(height: 20),
+
+              // 🔹 Sources Row (UserCubit)
+              Text(
+                'following_sources'.tr(),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 20),
-              SizedBox(
-                height: 160,
-                child: Scrollbar(
-                  controller: _sourcesScrollController,
-                  thumbVisibility: true,
-                  radius: const Radius.circular(8),
-                  child: ListView(
-                    controller: _sourcesScrollController,
-                    scrollDirection: Axis.horizontal,
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    children: List.generate(6, (index) {
-                      return _buildAnimatedSource(index);
-                    }),
-                  ),
-                ),
+              const SizedBox(height: 12),
+
+              BlocBuilder<UserCubit, UserState>(
+                builder: (context, state) {
+                  if (state is AllSourcesLoaded) {
+                    return SizedBox(
+                      height: 160,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: state.sources.length,
+                        itemBuilder: (context, index) {
+                          final source = state.sources[index];
+                          return Container(
+                            width: 140,
+                            margin: const EdgeInsets.only(right: 12),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surface,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  blurRadius: 6,
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                CircleAvatar(
+                                  radius: 28,
+                                  backgroundImage: NetworkImage(
+                                    source["logoUrl"] ??
+                                        "https://picsum.photos/200",
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                Text(source["name"]),
+                                const SizedBox(height: 8),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    context.read<UserCubit>().addSources(
+                                      source["slug"],
+                                    );
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: theme.colorScheme.primary,
+                                  ),
+                                  child: Text(
+                                    'subscribe'.tr(),
+                                    style: TextStyle(
+                                      color: theme.colorScheme.onPrimary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  } else {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                },
               ),
 
               const SizedBox(height: 20),
 
-              // 🔹 More News Cards
-              ...sampleNews.asMap().entries.map((entry) {
-                final index = entry.key + 3;
-                final news = entry.value;
-                final cardPosition = index * 250.0;
-                final scrollOffset =
-                    _scrollController.hasClients ? _scrollController.offset : 0;
-                final isVisible = scrollOffset + 600 > cardPosition;
+              // 🔹 Trending News
+              Text(
+                "Trending",
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
 
-                return AnimatedOpacity(
-                  duration: const Duration(milliseconds: 500),
-                  opacity: isVisible ? 1.0 : 0.0,
-                  child: Transform.translate(
-                    offset: Offset(0, isVisible ? 0 : 30),
-                    child: GestureDetector(
-                      onTap: () => _openNewsDetail(news),
-                      child: NewsCard(
-                        title: news.title,
-                        description: news.description,
-                        source: news.source,
-                        imageUrl: news.imageUrl,
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
+              BlocBuilder<NewsCubit, NewsState>(
+                builder: (context, state) {
+                  if (state is NewsLoaded) {
+                    return Column(
+                      children: state.news
+                          .map(
+                            (news) => GestureDetector(
+                              onTap: () => _openNewsDetail(news),
+                              child: NewsCard(
+                                topics: news.topics[0],
+                                title: news.title,
+                                description: news.body,
+                                source: news.soureceId,
+                                imageUrl:
+                                    'https://picsum.photos/200/300?random=${1}',
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    );
+                  } else if (state is NewsLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else {
+                    return const SizedBox.shrink();
+                  }
+                },
+              ),
             ],
           ),
         ),

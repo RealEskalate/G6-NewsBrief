@@ -1,11 +1,11 @@
 import 'package:newsbrief/features/news/domain/entities/news.dart';
 import 'package:newsbrief/features/news/domain/repositories/news_repository.dart';
 
-class GetTrendingNews {
+class GetTodayNews {
   final NewsRepository repository;
-  GetTrendingNews(this.repository);
+  GetTodayNews(this.repository);
 
-  Future<List<News>> call({int page = 1, int limit = 10}) {
-    return repository.getTrendingNews(page: page, limit: limit);
+  Future<List<News>> call() {
+    return repository.getTodayNews();
   }
 }

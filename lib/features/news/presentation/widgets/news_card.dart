@@ -1,8 +1,10 @@
-// news_card.dart
+
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 
 class NewsCard extends StatefulWidget {
+  final String topics;
   final String title;
   final String description;
   final String source;
@@ -11,6 +13,7 @@ class NewsCard extends StatefulWidget {
 
   const NewsCard({
     super.key,
+    required this.topics,
     required this.title,
     required this.description,
     required this.source,
@@ -23,6 +26,64 @@ class NewsCard extends StatefulWidget {
 }
 
 class _NewsCardState extends State<NewsCard> {
+  final FlutterTts flutterTts = FlutterTts();
+  bool isPlaying = false;
+
+  Future<void> _toggleSpeech(BuildContext context) async {
+    if (isPlaying) {
+      await flutterTts.stop();
+      setState(() => isPlaying = false);
+      return;
+    }
+
+    // 🔹 Detect current app language
+    final langCode = context.locale.languageCode;
+
+    // Map EasyLocalization language codes to TTS supported languages
+    String ttsLang;
+    switch (langCode) {
+      case 'am':
+        ttsLang = "am-ET"; // Amharic
+        break;
+      case 'fr':
+        ttsLang = "fr-FR";
+        break;
+      case 'es':
+        ttsLang = "es-ES";
+        break;
+      default:
+        ttsLang = "en-US";
+    }
+
+    // 🔹 Check if the language is available on the device
+    final List<dynamic> availableLanguages =
+        await flutterTts.getLanguages ?? [];
+
+    if (!availableLanguages.contains(ttsLang)) {
+      debugPrint("⚠️ TTS language $ttsLang not available. Falling back to en-US");
+      ttsLang = "en-US";
+    }
+
+    await flutterTts.setLanguage(ttsLang);
+    await flutterTts.setPitch(1.0);
+    await flutterTts.setSpeechRate(0.5);
+
+    String content = "${widget.title}. ${widget.description}";
+    await flutterTts.speak(content);
+
+    setState(() => isPlaying = true);
+
+    flutterTts.setCompletionHandler(() {
+      setState(() => isPlaying = false);
+    });
+  }
+
+  @override
+  void dispose() {
+    flutterTts.stop();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -124,12 +185,9 @@ class _NewsCardState extends State<NewsCard> {
                     ),
                     const SizedBox(width: 10),
                     GestureDetector(
-                      onTap: () {
-                        // TODO: Hook up FlutterTTS here
-                        debugPrint("Play news audio: ${widget.title}");
-                      },
+                      onTap: () => _toggleSpeech(context),
                       child: Icon(
-                        Icons.volume_up,
+                        isPlaying ? Icons.stop : Icons.volume_up,
                         size: 18,
                         color: textColor,
                       ),

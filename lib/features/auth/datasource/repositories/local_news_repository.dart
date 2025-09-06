@@ -7,7 +7,7 @@ class LocalNewsRepository {
   static const _newsKey = 'local_news';
 
   /// Add a news item locally
-  Future<void> addNews(News news) async {
+  Future<void> addNews(NewsModel news) async {
     final prefs = await SharedPreferences.getInstance();
     final currentNews = prefs.getStringList(_newsKey) ?? [];
 
@@ -18,12 +18,12 @@ class LocalNewsRepository {
   }
 
   /// Get all locally stored news
-  Future<List<News>> getAllNews() async {
+  Future<List<NewsModel>> getAllNews() async {
     final prefs = await SharedPreferences.getInstance();
     final currentNews = prefs.getStringList(_newsKey) ?? [];
 
     return currentNews
-        .map((newsString) => News.fromJson(jsonDecode(newsString)))
+        .map((newsString) => NewsModel.fromJson(jsonDecode(newsString)))
         .toList();
   }
 
