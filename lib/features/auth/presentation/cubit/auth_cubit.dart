@@ -1,6 +1,6 @@
 import 'dart:async';
-
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:newsbrief/core/storage/token_secure_storage.dart';
 import 'package:newsbrief/features/auth/domain/usecases/forgot_password.dart';
 import 'package:newsbrief/features/auth/domain/usecases/get_interests_usecase.dart';
 import 'package:newsbrief/features/auth/domain/usecases/get_me.dart';
@@ -25,6 +25,9 @@ class AuthCubit extends Cubit<AuthState> {
   final LoginWithGoogleUseCase loginWithGoogleUseCase;
   final GetInterestsUseCase getInterestsUseCase;
 
+  // ✅ Token storage
+  final TokenSecureStorage tokenStorage = TokenSecureStorage();
+
   AuthCubit({
     required this.loginUser,
     required this.registerUser,
@@ -41,14 +44,16 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> login({required String email, required String password}) async {
     emit(AuthLoading());
     try {
-      // loginUser now returns AuthResponseEntity (user + tokens)
       final authResponse = await loginUser(email: email, password: password);
 
-      if (authResponse.user.isVerified == false) {
+      // ✅ Save tokens
+      await tokenStorage.writeAccessToken(authResponse.accessToken);
+      await tokenStorage.writeRefreshToken(authResponse.refreshToken);
+
+      if (!authResponse.user.isVerified) {
         emit(const AuthEmailActionSuccess('Please verify your email.'));
       }
-      // Cache tokens locally if needed (already done in repository)
-      // emit authenticated state with user entity
+
       emit(AuthAuthenticated(authResponse.user));
     } catch (e) {
       emit(AuthError(_msg(e)));
@@ -60,10 +65,11 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       final response = await registerUser(email: email, password: password, name: name);
 
-      emit(
-        const AuthEmailActionSuccess('Registered. Please verify your email.'),
-      );
+      // ✅ Save tokens
+      await tokenStorage.writeAccessToken(response.accessToken);
+      await tokenStorage.writeRefreshToken(response.refreshToken);
 
+      emit(const AuthEmailActionSuccess('Registered. Please verify your email.'));
       emit(AuthAuthenticated(response.user));
     } catch (e) {
       emit(AuthError(_msg(e)));
@@ -95,7 +101,12 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> verifyEmailRequest(String token) async {
     emit(AuthLoading());
     try {
-      await verifyEmail(token: token); // now returns Tokens
+      final tokens = await verifyEmail(token: token);
+
+      // ✅ Save new tokens from verify
+      await tokenStorage.writeAccessToken(tokens.accessToken);
+      await tokenStorage.writeRefreshToken(tokens.refreshToken);
+
       final user = await getMe();
       emit(AuthAuthenticated(user));
     } catch (e) {
@@ -127,6 +138,10 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthLoading());
     try {
       await logout(refreshToken: refreshToken);
+
+      // ✅ Clear tokens on logout
+      await tokenStorage.clear();
+
       emit(AuthLoggedOut());
     } catch (e) {
       emit(AuthError(_msg(e)));
@@ -137,9 +152,12 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthLoading());
     try {
       final authResponse = await loginWithGoogleUseCase();
-      print(authResponse);
+
+      // ✅ Save tokens
+      await tokenStorage.writeAccessToken(authResponse.accessToken);
+      await tokenStorage.writeRefreshToken(authResponse.refreshToken);
+
       final res = await getMe();
-      print(res);
       emit(AuthAuthenticated(res));
     } catch (e) {
       emit(AuthError(_msg(e)));

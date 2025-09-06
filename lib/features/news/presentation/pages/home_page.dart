@@ -159,7 +159,6 @@ class _HomePageState extends State<HomePage>
                           onTap: () => _showLanguagePicker(context),
                           child: Row(
                             children: [
-                              // Label based on current language
                               Text(
                                 context.locale.languageCode == 'en'
                                     ? 'EN'
@@ -229,7 +228,7 @@ class _HomePageState extends State<HomePage>
 
                     SizedBox(height: size.height * 0.02),
 
-                    // TabBarView
+                    // TabBarView with scrolling animations
                     Expanded(
                       child: TabBarView(
                         children: [
@@ -285,7 +284,7 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  // News list builder
+  // News list builder with scrolling animations
   Widget _buildNewsList(Size size) {
     return ListView.builder(
       controller: _scrollController,

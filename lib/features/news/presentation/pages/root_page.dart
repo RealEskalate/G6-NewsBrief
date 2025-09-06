@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:animations/animations.dart'; // <-- for PageTransitionSwitcher
+import 'package:animations/animations.dart'; // For PageTransitionSwitcher
 import 'package:easy_localization/easy_localization.dart';
 
 import 'package:newsbrief/features/auth/presentation/cubit/auth_cubit.dart';
@@ -44,13 +44,14 @@ class _RootPageState extends State<RootPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final textColor = theme.colorScheme.onBackground;
-    final backgroundColor = theme.colorScheme.background;
+    final backgroundColor = theme.scaffoldBackgroundColor; // Correct dark/light
     final indicatorColor = theme.colorScheme.surfaceVariant;
     final secondaryColor = theme.colorScheme.secondary;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: backgroundColor, // Uses AppTheme colors automatically
 
+      // Animated page transitions
       body: PageTransitionSwitcher(
         duration: const Duration(milliseconds: 300),
         transitionBuilder: (child, animation, secondaryAnimation) {
@@ -88,9 +89,7 @@ class _RootPageState extends State<RootPage> {
 
             if (state is AuthAuthenticated) {
               final name = state.user.fullName;
-              if (name.isNotEmpty) {
-                firstLetter = name[0].toUpperCase();
-              }
+              if (name.isNotEmpty) firstLetter = name[0].toUpperCase();
             }
 
             return NavigationBar(

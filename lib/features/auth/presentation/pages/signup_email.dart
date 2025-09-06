@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:newsbrief/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:newsbrief/features/auth/presentation/cubit/auth_state.dart';
+import 'package:newsbrief/features/auth/presentation/cubit/user_cubit.dart';
 import 'interests.dart';
 
 class SignupEmailPage extends StatefulWidget {
@@ -17,7 +18,7 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController =
-  TextEditingController();
+      TextEditingController();
   bool agreeToTerms = false;
 
   @override
@@ -123,15 +124,17 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
               BlocConsumer<AuthCubit, AuthState>(
                 listener: (context, state) {
                   if (state is AuthAuthenticated) {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => BlocProvider.value(
-                          value: context.read<AuthCubit>(),
-                          child: const InterestsScreen(),
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => BlocProvider.value(
+                            value: context.read<UserCubit>(),
+                            child: const InterestsScreen(),
+                          ),
                         ),
-                      ),
-                    );
+                      );
+                    });
                   } else if (state is AuthEmailActionSuccess) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -150,8 +153,10 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
                 },
                 builder: (context, state) {
                   return CustomHoverButton(
-                    iconWidget:
-                    Icon(Icons.email, color: theme.colorScheme.onPrimary),
+                    iconWidget: Icon(
+                      Icons.email,
+                      color: theme.colorScheme.onPrimary,
+                    ),
                     text: state is AuthLoading
                         ? 'signing_up'.tr()
                         : 'sign_up'.tr(),
@@ -159,45 +164,31 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
                     textColor: theme.colorScheme.onPrimary,
                     onTap: (state is! AuthLoading && agreeToTerms)
                         ? () {
-                      if (passwordController.text !=
-                          confirmPasswordController.text) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content:
-                            Text('passwords_not_match'.tr()),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                        return;
-                      }
+                            if (passwordController.text !=
+                                confirmPasswordController.text) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('passwords_not_match'.tr()),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                              return;
+                            }
 
-                      context.read<AuthCubit>().register(
-                        emailController.text,
-                        passwordController.text,
-                        fullNameController.text,
-                      );
-
-                      if (state is AuthAuthenticated) {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => BlocProvider.value(
-                              value: context.read<AuthCubit>(),
-                              child: const InterestsScreen(),
-                            ),
-                          ),
-                        );
-                      }
-                    }
+                            // Trigger registration
+                            context.read<AuthCubit>().register(
+                              emailController.text,
+                              passwordController.text,
+                              fullNameController.text,
+                            );
+                          }
                         : null,
                   );
                 },
               ),
               const SizedBox(height: 16),
               OutlinedButton.icon(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/root');
-                },
+                onPressed: () => Navigator.pushNamed(context, '/root'),
                 label: Text(
                   'continue_as_guest'.tr(),
                   style: TextStyle(color: theme.colorScheme.onBackground),
@@ -279,19 +270,19 @@ class _CustomHoverButtonState extends State<CustomHoverButton>
                   borderRadius: BorderRadius.circular(30),
                   boxShadow: _hovering
                       ? [
-                    BoxShadow(
-                      color: Colors.black26,
-                      offset: const Offset(0, 4),
-                      blurRadius: 8,
-                    ),
-                  ]
+                          BoxShadow(
+                            color: Colors.black26,
+                            offset: const Offset(0, 4),
+                            blurRadius: 8,
+                          ),
+                        ]
                       : [
-                    BoxShadow(
-                      color: Colors.black12,
-                      offset: const Offset(0, 2),
-                      blurRadius: 4,
-                    ),
-                  ],
+                          BoxShadow(
+                            color: Colors.black12,
+                            offset: const Offset(0, 2),
+                            blurRadius: 4,
+                          ),
+                        ],
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,

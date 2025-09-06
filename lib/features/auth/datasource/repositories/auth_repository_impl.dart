@@ -16,20 +16,6 @@ class AuthRepositoryImpl implements AuthRepository {
 
   final List<User> _users = [];
 
-  final List<User> _predefinedUsers = [
-    User(
-      fullName: "Test User",
-      email: "test@example.com",
-      password: "password123",
-      interests: ['Technology', 'Sports'],
-    ),
-    User(
-      fullName: "Demo User",
-      email: "demo@example.com",
-      password: "demo123",
-      interests: ['Business', 'Health'],
-    ),
-  ];
   final List<String> _dummyInterests = [
     'Technology',
     'Business',
@@ -63,52 +49,6 @@ class AuthRepositoryImpl implements AuthRepository {
     'Comics & Animation',
     'Technology Startups',
   ];
-
-  @override
-  Future<void> signUp(User user) async {
-    try {
-      if (user.fullName.isEmpty ||
-          user.email.isEmpty ||
-          user.password.isEmpty) {
-        throw Exception('Full Name, Email, and Password cannot be empty');
-      }
-      _users.add(user);
-      await Future.delayed(const Duration(seconds: 1));
-    } catch (e) {
-      throw ServerException(e.toString());
-    }
-  }
-
-  @override
-  Future<User> Login({required String email, required String password}) async {
-    try {
-      if (email.isEmpty || password.isEmpty) {
-        throw Exception('Email and password can not be empty');
-      }
-
-      await Future.delayed(const Duration(seconds: 1));
-
-      // Check in predefined users first
-      try {
-        final predefinedUser = _predefinedUsers.firstWhere(
-          (user) => user.email == email && user.password == password,
-        );
-        return predefinedUser;
-      } catch (e) {
-        // If not found in predefined users, check in registered users
-        try {
-          final registeredUser = _users.firstWhere(
-            (user) => user.email == email && user.password == password,
-          );
-          return registeredUser;
-        } catch (e) {
-          throw Exception('Invalid email or password');
-        }
-      }
-    } catch (e) {
-      throw ServerException(e.toString());
-    }
-  }
 
   @override
   Future<List<String>> getAvailableInterests() async {
@@ -151,7 +91,17 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<AuthResponseModel> loginWithGoogle() async {
     try {
       final response = await remote.loginWithGoogle();
-      return AuthResponseModel.fromJson(response as Map<String, dynamic>);
+      await local.cacheTokens(
+        access: response.accessToken,
+        refresh: response.refreshToken,
+      );
+      final user = await remote.getMe();
+      final AuthResponse = AuthResponseModel(
+        user: user,
+        accessToken: response.accessToken,
+        refreshToken: response.refreshToken,
+      );
+      return AuthResponseModel.fromJson(AuthResponse as Map<String, dynamic>);
     } catch (e) {
       throw ServerException(e.toString());
     }
@@ -270,7 +220,7 @@ class AuthRepositoryImpl implements AuthRepository {
         avatarUrl: res.user.avatarUrl,
         isVerified: res.user.isVerified,
         createdAt: res.user.createdAt,
-        notification: false,
+        notification: res.user.notification,
       );
       await local.cacheTokens(
         access: res.accessToken,
@@ -294,25 +244,12 @@ class AuthRepositoryImpl implements AuthRepository {
     required String name,
   }) async {
     try {
-      final res = await remote.register(email, password, name);
-      
-      final user = UserEntity(
-        id: res.user.id,
-        username: res.user.username,
-        email: res.user.email,
-        role: res.user.role,
-        fullName: res.user.fullName,
-        avatarUrl: res.user.avatarUrl,
-        isVerified: res.user.isVerified,
-        createdAt: res.user.createdAt,
-        notification: false,
-      );
-      await local.cacheTokens(
-        access: res.accessToken,
-        refresh: res.refreshToken,
-      );
+      await remote.register(email, password, name);
+
+      final res = await remote.login(email, password);
+
       return AuthResponseModel(
-        user: user,
+        user: res.user,
         accessToken: res.accessToken,
         refreshToken: res.refreshToken,
       );
@@ -330,7 +267,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> subscribeToSource({required String sourceSlug}) async {
-    await remote.subscribeToSources(source: sourceSlug);
+    await remote.subscribeToSources(sources: sourceSlug);
   }
 
   @override
@@ -339,20 +276,34 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<List<String>> getSubscribedTopics() async {
+  Future<List<Map<String, dynamic>>> getSubscribedTopics() async {
     final response = await remote.getSubscribedTopics();
-    return (response).map((t) => t["slug"].toString()).toList();
+    print(response.runtimeType); // should be List<dynamic>
+    return List<Map<String, dynamic>>.from(response);
   }
 
   @override
-  Future<List<String>> getAllTopics() async {
+  Future<List<Map<String, dynamic>>> getAllTopics() async {
     final response = await remote.getAllTopics();
-    return (response).map((t) => t["slug"].toString()).toList();
+    final topicsList = response;
+    return topicsList.cast<Map<String, dynamic>>(); // keep as list of maps
   }
 
   @override
-  Future<List<String>> getAllSources() async {
+  Future<List<Map<String, dynamic>>> getAllSources() async {
     final response = await remote.getAllSources();
-    return (response).map((s) => s["slug"].toString()).toList();
+    final sourcesList = response;
+    return sourcesList.cast<Map<String, dynamic>>(); // keep as list of maps
+  }
+
+  @override
+  Future<void> subscribeTopics(List<String> topicIds) async {
+    if (topicIds.isEmpty) return;
+    await remote.subscribeTopics(topicIds);
+  }
+
+  @override
+  Future<void> unsubscribeTopic(String topicId) async {
+    await remote.unsubscribeTopic(topicId);
   }
 }

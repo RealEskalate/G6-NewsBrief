@@ -24,7 +24,26 @@ class _EditProfilePageState extends State<EditProfilePage> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: ""); // default empty
+    _nameController = TextEditingController(text: "");
+
+    // Listeners to refresh UI for enabling/disabling buttons and showing warnings
+    _nameController.addListener(() => setState(() {}));
+    _oldPasswordController.addListener(() => setState(() {}));
+    _newPasswordController.addListener(() => setState(() {}));
+  }
+
+  bool get _isChangeNameEnabled => _nameController.text.trim().isNotEmpty;
+
+  bool get _isResetPasswordEnabled {
+    final oldPass = _oldPasswordController.text.trim();
+    final newPass = _newPasswordController.text.trim();
+    return oldPass.isNotEmpty && newPass.isNotEmpty && oldPass != newPass;
+  }
+
+  bool get _showSamePasswordWarning {
+    final oldPass = _oldPasswordController.text.trim();
+    final newPass = _newPasswordController.text.trim();
+    return oldPass.isNotEmpty && newPass.isNotEmpty && oldPass == newPass;
   }
 
   @override
@@ -81,13 +100,20 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       Positioned(
                         bottom: 0,
                         right: 0,
-                        child: CircleAvatar(
-                          radius: 18,
-                          backgroundColor: theme.colorScheme.primary,
-                          child: Icon(
-                            Icons.edit,
-                            color: theme.colorScheme.onPrimary,
-                            size: 18,
+                        child: Material(
+                          color: theme.colorScheme.primary,
+                          shape: const CircleBorder(),
+                          child: InkWell(
+                            customBorder: const CircleBorder(),
+                            onTap: () {},
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Icon(
+                                Icons.edit,
+                                size: 18,
+                                color: theme.colorScheme.onPrimary,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -96,7 +122,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 ),
                 const SizedBox(height: 40),
 
-                // Change Name button
+                // Change Name Section
                 ListTile(
                   leading: Icon(Icons.person_outline, color: theme.colorScheme.onBackground),
                   title: Text("Change Name".tr(), style: TextStyle(color: theme.colorScheme.onBackground)),
@@ -107,23 +133,38 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   onTap: () => setState(() => _showChangeName = !_showChangeName),
                 ),
                 if (_showChangeName) ...[
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 12),
                   _buildTextField(
                     controller: _nameController,
                     label: "Name".tr(),
                     icon: Icons.person,
                   ),
-                  const SizedBox(height: 15),
-                  TextButton(
-                    onPressed: () {},
-                    child: Text(
-                      'Change'.tr(),
-                      style: TextStyle(color: theme.colorScheme.primary, fontSize: 15),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _isChangeNameEnabled
+                          ? () {
+                        // Your existing change name logic
+                      }
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: theme.colorScheme.primary,
+                        foregroundColor: theme.colorScheme.onPrimary,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 2,
+                      ),
+                      child: Text(
+                        'Change'.tr(),
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
+                  const SizedBox(height: 24),
                 ],
 
-                // Reset Password button
+                // Reset Password Section
                 ListTile(
                   leading: Icon(Icons.key, color: theme.colorScheme.onBackground),
                   title: Text("Reset Password".tr(), style: TextStyle(color: theme.colorScheme.onBackground)),
@@ -134,37 +175,67 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   onTap: () => setState(() => _showResetPassword = !_showResetPassword),
                 ),
                 if (_showResetPassword) ...[
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 12),
                   _buildTextField(
                     controller: _oldPasswordController,
                     label: "Old Password".tr(),
                     icon: Icons.key,
                     obscureText: true,
                   ),
-                  const SizedBox(height: 15),
+                  const SizedBox(height: 16),
                   _buildTextField(
                     controller: _newPasswordController,
                     label: "New Password".tr(),
                     icon: Icons.key_rounded,
                     obscureText: true,
                   ),
-                  const SizedBox(height: 15),
-                  TextButton(
-                    onPressed: () async {
-                      final token = await storage.readAccessToken();
-                      if (token != null) {
-                        context.read<AuthCubit>().resetPassword(
-                          password: _oldPasswordController.text,
-                          token: token,
-                        );
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("No valid token found".tr())),
-                        );
+                  const SizedBox(height: 8),
+
+                  // Animated Warning
+                  AnimatedOpacity(
+                    duration: const Duration(milliseconds: 300),
+                    opacity: _showSamePasswordWarning ? 1.0 : 0.0,
+                    child: _showSamePasswordWarning
+                        ? Text(
+                      "New password must be different from old password".tr(),
+                      style: TextStyle(
+                        color: Colors.redAccent,
+                        fontSize: 12,
+                      ),
+                    )
+                        : const SizedBox.shrink(),
+                  ),
+                  const SizedBox(height: 16),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _isResetPasswordEnabled
+                          ? () async {
+                        final token = await storage.readAccessToken();
+                        if (token != null) {
+                          context.read<AuthCubit>().resetPassword(
+                            password: _oldPasswordController.text,
+                            token: token,
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("No valid token found".tr())),
+                          );
+                        }
                       }
-                    },
-                    child: Text(
-                      'Change'.tr(),
-                      style: TextStyle(color: theme.colorScheme.primary, fontSize: 15),
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: theme.colorScheme.primary,
+                        foregroundColor: theme.colorScheme.onPrimary,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 2,
+                      ),
+                      child: Text(
+                        'Change'.tr(),
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
                 ],
@@ -188,6 +259,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       obscureText: obscureText,
       decoration: InputDecoration(
         labelText: label,
+        floatingLabelBehavior: FloatingLabelBehavior.auto,
         prefixIcon: Icon(icon, color: theme.colorScheme.primary),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         focusedBorder: OutlineInputBorder(

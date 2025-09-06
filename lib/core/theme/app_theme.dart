@@ -25,7 +25,7 @@ class AppTheme {
   static final darkTheme = ThemeData(
     brightness: Brightness.dark,
     primaryColor: Colors.white,
-    scaffoldBackgroundColor: Colors.black,
+    scaffoldBackgroundColor: const Color(0xFF202020),
     fontFamily: 'Inter',
     colorScheme: const ColorScheme.dark(
       primary: Colors.white,
