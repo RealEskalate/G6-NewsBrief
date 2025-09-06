@@ -21,12 +21,12 @@ class RootPage extends StatefulWidget {
 class _RootPageState extends State<RootPage> {
   int currentPage = 0;
 
-  final List<Widget> _pages = const [
+  final List<Widget> _pages = [
     HomePage(),
-    FollowingPage(),
-    SearchPage(),
-    SavedPage(),
-    ProfilePage(),
+    const FollowingPage(),
+    const SearchPage(),
+    const SavedPage(),
+    const ProfilePage(),
   ];
 
   @override

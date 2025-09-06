@@ -51,6 +51,7 @@ dependencies:
   flutter_secure_storage: ^9.2.4
 
   animations: ^2.0.11 
+  flutter_tts: ^4.2.3
 
 
 

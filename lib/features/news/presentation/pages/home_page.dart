@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:newsbrief/features/news/presentation/cubit/news_cubit.dart';
+import 'package:newsbrief/features/news/presentation/cubit/news_state.dart';
 import 'package:newsbrief/features/news/presentation/widgets/animations/globe_background.dart';
 import 'package:newsbrief/features/news/presentation/widgets/chat_bot_popup.dart';
 import 'package:newsbrief/features/news/presentation/widgets/news_card.dart';
@@ -10,10 +13,10 @@ class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<HomePage> createState() => _HomePageViewState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageViewState extends State<HomePage> {
   bool _isChatbotVisible = false;
   late ScrollController _scrollController;
   double _scrollOffset = 0;
@@ -24,38 +27,9 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  void _showLanguagePicker(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text('select_language'.tr()),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              title: Text('english'.tr()),
-              onTap: () async {
-                await context.setLocale(const Locale('en'));
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              title: Text('amharic'.tr()),
-              onTap: () async {
-                await context.setLocale(const Locale('am'));
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   void initState() {
     super.initState();
-
     _scrollController = ScrollController()
       ..addListener(() {
         setState(() {
@@ -73,14 +47,11 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final textColor = theme.colorScheme.onBackground;
-    final background = theme.colorScheme.background;
-
     final size = MediaQuery.of(context).size;
-    final isTablet = size.width > 600;
+    final textColor = theme.colorScheme.onBackground;
 
     return Scaffold(
-      backgroundColor: background,
+      backgroundColor: theme.colorScheme.background,
       body: Stack(
         children: [
           const GlobeBackground(),
@@ -97,7 +68,7 @@ class _HomePageState extends State<HomePage> {
                       Text(
                         'app_name'.tr(),
                         style: TextStyle(
-                          fontSize: isTablet ? 36 : 28,
+                          fontSize: size.width > 600 ? 36 : 28,
                           fontWeight: FontWeight.bold,
                           color: textColor,
                         ),
@@ -106,7 +77,7 @@ class _HomePageState extends State<HomePage> {
                       BounceButton(
                         icon: Icons.language_rounded,
                         iconColor: textColor,
-                        onTap: () => _showLanguagePicker(context),
+                        onTap: () {}, // language picker
                       ),
                       BounceButton(
                         icon: Icons.notifications_none,
@@ -118,11 +89,10 @@ class _HomePageState extends State<HomePage> {
 
                   SizedBox(height: size.height * 0.04),
 
-                  // 🔹 Section Title
                   Text(
                     'for_you'.tr(),
                     style: TextStyle(
-                      fontSize: isTablet ? 24 : 18,
+                      fontSize: size.width > 600 ? 24 : 18,
                       fontWeight: FontWeight.bold,
                       color: textColor,
                     ),
@@ -130,57 +100,57 @@ class _HomePageState extends State<HomePage> {
 
                   SizedBox(height: size.height * 0.02),
 
-                  // 🔹 Animated News List
+                  // 🔹 BlocBuilder for News
                   Expanded(
-                    child: ListView.builder(
-                      controller: _scrollController,
-                      physics: const BouncingScrollPhysics(),
-                      itemCount: sampleNews.length,
-                      itemBuilder: (context, index) {
-                        return MouseRegion(
-                          cursor: SystemMouseCursors.click,
-                          child: TweenAnimationBuilder(
-                            tween: Tween<double>(begin: 0, end: 1),
-                            duration: Duration(
-                              milliseconds: 600 + (index * 120),
-                            ),
-                            curve: Curves.easeInOut,
-                            builder: (context, value, child) {
-                              return Transform.translate(
-                                offset: Offset(0, 50 * (1 - value)),
-                                child: Opacity(opacity: value, child: child),
-                              );
-                            },
-                            child: Padding(
-                              padding: EdgeInsets.only(
-                                bottom: size.height * 0.02,
-                              ),
-                              child: GestureDetector(
+                    child: BlocBuilder<NewsCubit, NewsState>(
+                      builder: (context, state) {
+                        if (state is NewsLoading) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        } else if (state is NewsLoaded) {
+                          final newsList = state.news;
+                          return ListView.builder(
+                            controller: _scrollController,
+                            physics: const BouncingScrollPhysics(),
+                            itemCount: newsList.length,
+                            itemBuilder: (context, index) {
+                              final news = newsList[index];
+                              return GestureDetector(
                                 onTap: () {
                                   Navigator.pushNamed(
                                     context,
                                     '/news_detail',
                                     arguments: {
-                                      'topic': 'for_you'
-                                          .tr(), // or actual topic
-                                      'title': sampleNews[index].title.tr(),
-                                      'source': sampleNews[index].source.tr(),
-                                      'imageUrl': sampleNews[index].imageUrl,
-                                      'detail': sampleNews[index].description
-                                          .tr(), // or full detail if available
+                                      'topic': news.topics.isNotEmpty
+                                          ? news.topics[0]
+                                          : 'for_you'.tr(),
+                                      'title': news.title,
+                                      'source': news.soureceId,
+                                      'imageUrl':
+                                          "https://picsum.photos/200/300?random=$index",
+                                      'detail': news.body,
                                     },
                                   );
                                 },
                                 child: NewsCard(
-                                  title: sampleNews[index].title,
-                                  description: sampleNews[index].description,
-                                  source: sampleNews[index].source,
-                                  imageUrl: sampleNews[index].imageUrl,
+                                  topics: news.topics[0],
+                                  title: news.title,
+                                  description: news.body,
+                                  source: news.soureceId,
+                                  imageUrl:
+                                      "https://picsum.photos/200/300?random=$index",
+                                  onBookmark: () {
+                                    // context.read<NewsCubit>().bookmark(news);
+                                  },
                                 ),
-                              ),
-                            ),
-                          ),
-                        );
+                              );
+                            },
+                          );
+                        } else if (state is NewsError) {
+                          return Center(child: Text(state.message));
+                        }
+                        return const SizedBox();
                       },
                     ),
                   ),
@@ -203,8 +173,6 @@ class _HomePageState extends State<HomePage> {
             ),
         ],
       ),
-
-      // 🔹 FAB with BounceButton
       floatingActionButton: BounceButton(
         icon: Icons.chat_outlined,
         onTap: _toggleChatbot,

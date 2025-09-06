@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:newsbrief/core/widgets/topic_chip.dart';
 import 'package:newsbrief/features/news/presentation/widgets/news_card.dart';
+import 'package:newsbrief/features/news/presentation/cubit/news_cubit.dart';
+import 'package:newsbrief/features/news/presentation/cubit/news_state.dart';
+import 'package:newsbrief/features/auth/presentation/cubit/user_cubit.dart';
+// import 'package:newsbrief/features/auth/presentation/cubit/user_state.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -13,7 +18,6 @@ class SearchPage extends StatefulWidget {
 class _SearchPageState extends State<SearchPage>
     with SingleTickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
-  final List<String> _selectedTopics = [];
   final ScrollController _verticalScrollController = ScrollController();
   final ScrollController _topicScrollController = ScrollController();
   late final AnimationController _animationController;
@@ -22,32 +26,27 @@ class _SearchPageState extends State<SearchPage>
   void initState() {
     super.initState();
     _verticalScrollController.addListener(() => setState(() {}));
+
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
     )..forward();
+
+    // Load topics & trending news at startup
+    context.read<UserCubit>().loadAllTopics();
+    context.read<NewsCubit>().fetchTrendingNews();
   }
 
-  void _toggleTopic(String topic) {
-    setState(() {
-      if (_selectedTopics.contains(topic)) {
-        _selectedTopics.remove(topic);
-      } else {
-        _selectedTopics.add(topic);
-      }
-    });
-  }
-
-  void _openNewsDetail(NewsCardData news) {
+  void _openNewsDetail(dynamic news) {
     Navigator.pushNamed(
       context,
       '/news_detail',
       arguments: {
-        'topic': 'for_you'.tr(),
-        'title': news.title.tr(),
-        'source': news.source.tr(),
-        'imageUrl': news.imageUrl,
-        'detail': news.description.tr(),
+        'topic': news.topics[0] ?? 'trending'.tr(),
+        'title': news.title,
+        'source': news.soureceId,
+        'imageUrl': 'https://picsum.photos/200/300?random=${1}',
+        'detail': news.body,
       },
     );
   }
@@ -97,52 +96,59 @@ class _SearchPageState extends State<SearchPage>
                   ),
                 ),
               ),
-
               const SizedBox(height: 12),
 
-              // 🔹 Horizontal Topic Chips with slide + fade animation
-              SizedBox(
-                height: 46,
-                child: Scrollbar(
-                  controller: _topicScrollController,
-                  thumbVisibility: true,
-                  radius: const Radius.circular(8),
-                  child: ListView.builder(
-                    controller: _topicScrollController,
-                    scrollDirection: Axis.horizontal,
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: topics.length,
-                    itemBuilder: (context, index) {
-                      final topic = topics[index];
-                      return TweenAnimationBuilder(
-                        tween: Tween<Offset>(
-                          begin: const Offset(-1, 0),
-                          end: Offset.zero,
-                        ),
-                        duration: Duration(milliseconds: 300 + index * 100),
-                        curve: Curves.easeOut,
-                        builder: (context, Offset offset, child) {
-                          return Transform.translate(
-                            offset: offset * 50,
-                            child: Opacity(
-                              opacity: 1 - offset.dx.abs(),
-                              child: Padding(
-                                padding: const EdgeInsets.only(right: 8),
-                                child: TopicChip(
-                                  title: topic.tr(),
-                                  onDeleted: _selectedTopics.contains(topic)
-                                      ? () => _toggleTopic(topic)
-                                      : null,
-                                  // onTap: () => _toggleTopic(topic),
-                                ),
-                              ),
+              // 🔹 Animated Horizontal Topic Chips
+              BlocBuilder<UserCubit, UserState>(
+                builder: (context, state) {
+                  if (state is AllTopicsLoaded) {
+                    final topics = state.topics;
+
+                    return SizedBox(
+                      height: 46,
+                      child: ListView.separated(
+                        controller: _topicScrollController,
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        itemCount: topics.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 8),
+                        itemBuilder: (context, index) {
+                          final topic = topics[index];
+                          final label = topic['label']['en'];
+
+                          return TweenAnimationBuilder<Offset>(
+                            tween: Tween<Offset>(
+                              begin: const Offset(-1, 0),
+                              end: Offset.zero,
                             ),
+                            duration: Duration(milliseconds: 300 + index * 100),
+                            curve: Curves.easeOut,
+                            builder: (context, offset, child) {
+                              return Transform.translate(
+                                offset: offset * 50,
+                                child: Opacity(
+                                  opacity: 1 - offset.dx.abs(),
+                                  child: TopicChip(
+                                    title: label,
+                                    onTap: () {
+                                      context
+                                          .read<NewsCubit>()
+                                          .fetchNewsByTopic(topic['id']);
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
                           );
                         },
-                      );
-                    },
-                  ),
-                ),
+                      ),
+                    );
+                  } else if (state is UserLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else {
+                    return const SizedBox.shrink();
+                  }
+                },
               ),
 
               const SizedBox(height: 20),
@@ -154,37 +160,53 @@ class _SearchPageState extends State<SearchPage>
                   fontWeight: FontWeight.bold,
                 ),
               ),
-
               const SizedBox(height: 12),
 
-              // 🔹 Vertical Animated News Cards
-              Column(
-                children: sampleNews.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final news = entry.value;
-                  final cardPosition = index * 250.0;
-                  final scrollOffset = _verticalScrollController.hasClients
-                      ? _verticalScrollController.offset
-                      : 0.0;
-                  final isVisible = scrollOffset + 600 > cardPosition;
+              // 🔹 Trending News Cards
+              BlocBuilder<NewsCubit, NewsState>(
+                builder: (context, state) {
+                  if (state is NewsLoaded) {
+                    return Column(
+                      children: state.news
+                          .asMap()
+                          .entries
+                          .map((entry) {
+                            final index = entry.key;
+                            final news = entry.value;
+                            final cardPosition = index * 250.0;
+                            final scrollOffset = _verticalScrollController.hasClients
+                                ? _verticalScrollController.offset
+                                : 0.0;
+                            final isVisible = scrollOffset + 600 > cardPosition;
 
-                  return AnimatedOpacity(
-                    duration: const Duration(milliseconds: 500),
-                    opacity: isVisible ? 1.0 : 0.0,
-                    child: Transform.translate(
-                      offset: Offset(0, isVisible ? 0 : 30),
-                      child: GestureDetector(
-                        onTap: () => _openNewsDetail(news),
-                        child: NewsCard(
-                          title: news.title,
-                          description: news.description,
-                          source: news.source,
-                          imageUrl: news.imageUrl,
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
+                            return AnimatedOpacity(
+                              duration: const Duration(milliseconds: 500),
+                              opacity: isVisible ? 1.0 : 0.0,
+                              child: Transform.translate(
+                                offset: Offset(0, isVisible ? 0 : 30),
+                                child: GestureDetector(
+                                  onTap: () => _openNewsDetail(news),
+                                  child: NewsCard(
+                                    topics: news.topics[0],
+                                    title: news.title,
+                                    description: news.body,
+                                    source: news.soureceId,
+                                    imageUrl: 'https://picsum.photos/200/300?random=$index',
+                                  ),
+                                ),
+                              ),
+                            );
+                          })
+                          .toList(),
+                    );
+                  } else if (state is NewsLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (state is NewsError) {
+                    return Center(child: Text(state.message));
+                  } else {
+                    return const SizedBox.shrink();
+                  }
+                },
               ),
             ],
           ),
