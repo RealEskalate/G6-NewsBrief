@@ -1,7 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:newsbrief/features/auth/domain/entities/auth_entities.dart';
 
-
 abstract class AuthState extends Equatable {
   const AuthState();
   @override
@@ -27,6 +26,9 @@ class AuthEmailActionSuccess extends AuthState {
 }
 
 class AuthLoggedOut extends AuthState {}
+
+/// ✅ New guest state
+class AuthGuest extends AuthState {}
 
 class AuthError extends AuthState {
   final String message;

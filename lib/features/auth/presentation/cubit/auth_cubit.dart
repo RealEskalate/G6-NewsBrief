@@ -185,5 +185,10 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  /// ✅ Guest login method
+  Future<void> continueAsGuest() async {
+    emit(AuthGuest());
+  }
+
   String _msg(Object e) => e.toString().replaceFirst('Exception: ', '');
 }

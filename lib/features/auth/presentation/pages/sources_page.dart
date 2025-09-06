@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/storage/token_secure_storage.dart';
-
 
 class SourcesPage extends StatefulWidget {
   const SourcesPage({super.key});
@@ -33,7 +33,7 @@ class _SourcesPageState extends State<SourcesPage> {
     final token = await TokenSecureStorage().readAccessToken();
     if (token == null || token.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Authorization token missing.')),
+        SnackBar(content: Text('authorization_token_missing'.tr())),
       );
       setState(() => _isLoading = false);
       return;
@@ -64,21 +64,21 @@ class _SourcesPageState extends State<SourcesPage> {
 
       if (response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Source created successfully!')),
+          SnackBar(content: Text('source_created_successfully'.tr())),
         );
         _formKey.currentState!.reset();
       } else if (response.statusCode == 403) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Forbidden: You cannot create sources.')),
+          SnackBar(content: Text('forbidden_create_sources'.tr())),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${response.body}')),
+          SnackBar(content: Text('${'error'.tr()}: ${response.body}')),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Network error: $e')),
+        SnackBar(content: Text('${'network_error'.tr()}: $e')),
       );
     } finally {
       setState(() => _isLoading = false);
@@ -108,45 +108,45 @@ class _SourcesPageState extends State<SourcesPage> {
           children: [
             TextFormField(
               controller: _slugController,
-              decoration: const InputDecoration(labelText: 'Slug'),
-              validator: (val) => val == null || val.isEmpty ? 'Enter slug' : null,
+              decoration: InputDecoration(labelText: 'slug'.tr()),
+              validator: (val) => val == null || val.isEmpty ? 'enter_slug'.tr() : null,
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _nameController,
-              decoration: const InputDecoration(labelText: 'Name'),
-              validator: (val) => val == null || val.isEmpty ? 'Enter name' : null,
+              decoration: InputDecoration(labelText: 'name'.tr()),
+              validator: (val) => val == null || val.isEmpty ? 'enter_name'.tr() : null,
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _descController,
-              decoration: const InputDecoration(labelText: 'Description'),
+              decoration: InputDecoration(labelText: 'description'.tr()),
               maxLines: 3,
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _urlController,
-              decoration: const InputDecoration(labelText: 'URL'),
+              decoration: InputDecoration(labelText: 'url'.tr()),
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _logoUrlController,
-              decoration: const InputDecoration(labelText: 'Logo URL'),
+              decoration: InputDecoration(labelText: 'logo_url'.tr()),
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _languagesController,
-              decoration: const InputDecoration(labelText: 'Languages (comma-separated)'),
+              decoration: InputDecoration(labelText: 'languages'.tr()),
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _topicsController,
-              decoration: const InputDecoration(labelText: 'Topics (comma-separated)'),
+              decoration: InputDecoration(labelText: 'topics'.tr()),
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _reliabilityController,
-              decoration: const InputDecoration(labelText: 'Reliability Score'),
+              decoration: InputDecoration(labelText: 'reliability_score'.tr()),
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 32),
@@ -154,7 +154,7 @@ class _SourcesPageState extends State<SourcesPage> {
               onPressed: _isLoading ? null : _createSource,
               child: _isLoading
                   ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text('Create Source'),
+                  : Text('create_source'.tr()),
               style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(50)),
             ),
           ],
