@@ -1,6 +1,7 @@
 from app.services.lang_detector import detect_language
 import chromadb
 from typing import List, Dict
+from datetime import datetime
 import logging
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -12,23 +13,38 @@ class VectorDBService:
         self.collection = client.get_or_create_collection("news_articles")
 
     def get_articles(self, limit: int = 10) -> List[Dict]:
-        """Retrieve articles from ChromaDB."""
+        """Retrieve articles from ChromaDB, sorted by crawl_timestamp (newest first)."""
         try:
-            results = self.collection.get(limit=limit)
+            # get all docs (ids come for free)
+            results = self.collection.get(include=["metadatas", "documents"])
+
             articles = []
             for i in range(len(results["ids"])):
+                meta = results["metadatas"][i]
                 articles.append({
                     "id": results["ids"][i],
-                    "title": results["metadatas"][i]["title"],
+                    "title": meta["title"],
                     "text": results["documents"][i],
-                    "source_url": results["metadatas"][i]["source_url"],
-                    "source_site": results["metadatas"][i]["source_site"],
-                    "source_type": results["metadatas"][i]["source_type"],
-                    "published_date": results["metadatas"][i]["published_date"],
-                    "crawl_timestamp": results["metadatas"][i]["crawl_timestamp"],
-                    "lang": results["metadatas"][i].get("lang", detect_language(results["documents"][i]))
+                    "source_url": meta["source_url"],
+                    "source_site": meta["source_site"],
+                    "source_type": meta["source_type"],
+                    "published_date": meta["published_date"],
+                    "crawl_timestamp": meta["crawl_timestamp"],
+                    "lang": meta.get("lang", detect_language(results["documents"][i]))
                 })
-            logger.info(f"Retrieved {len(articles)} articles from ChromaDB")
+
+            # ✅ Sort by crawl_timestamp descending (latest first)
+            articles.sort(
+                key=lambda x: datetime.fromisoformat(
+                    x["crawl_timestamp"].replace("Z", "+00:00")
+                ),
+                reverse=True
+            )
+
+            # ✅ Apply limit after sorting
+            articles = articles[:limit]
+
+            logger.info(f"Retrieved {len(articles)} articles (sorted by crawl_timestamp DESC) from ChromaDB")
             return articles
         except Exception as e:
             logger.error(f"Failed to retrieve articles: {e}")
